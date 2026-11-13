@@ -1,5 +1,5 @@
 {
-  "schema": "kaopu.regression-refinement-candidate/1.1",
+  "schema": "kaopu.regression-refinement-candidate/1.2",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
   "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
@@ -9,7 +9,8 @@
     "copying excavator-specific geometry/constants/frames into unrelated targets",
     "claiming method implementation without exact dependencies or a target-specific replay",
     "treating method approval as target visual/production/user acceptance",
-    "silently following a mutable exemplar by filename after its content revision changes"
+    "silently following a mutable exemplar by filename after its content revision changes",
+    "treating a carried pass log from another environment as a fresh clean-room replay"
   ],
   "methodAnchor": {
     "approvedMethodExemplar": [
@@ -69,6 +70,17 @@
       "expectedSha256",
       "revisionDisposition",
       "reauditReceipt"
+    ],
+    "cleanRoomReplayReceipt": [
+      "subjectSha256",
+      "entrypoint",
+      "dependencyResolution",
+      "environment",
+      "startedAt",
+      "exitCode",
+      "fatalErrors",
+      "testCounts",
+      "verifier"
     ]
   },
   "auditRules": [
@@ -78,7 +90,8 @@
     "one minimal target replay must pass before method implementation is claimed",
     "method implementation never implies ADOPTED or USER-ACCEPTED",
     "same filename or libraryFileId never proves same exemplar revision",
-    "a changed versionId, size or modifiedAt invalidates the exemplar binding until the new bytes are re-audited and pinned by digest"
+    "a changed versionId, size or modifiedAt invalidates the exemplar binding until the new bytes are re-audited and pinned by digest",
+    "embedded TEST_RESULT text is Observation only until the current digest passes a clean-room replay with dependency resolution and exit code"
   ],
   "initialExactSubject": {
     "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
@@ -132,7 +145,66 @@
       "decision": "HOLD_TARGET_TRIAL_NOT_BOUND_TO_METHOD_ANCHOR"
     }
   },
-  "decision": "HOLD_TARGET_TRIAL_UNBOUND_AND_EXEMPLAR_REVISION_UNAUDITED",
+  "n285FreshObservation": {
+    "observedAt": "2026-11-14T03:36:48+08:00",
+    "sourceExemplar": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "17",
+      "sizeBytes": 7778432,
+      "modifiedAt": "2026-11-14T03:27:10+08:00",
+      "sha256": "d244dd3961a6f96f88db573b25f5bf4351975c3f4078f8520085974e95de5e07",
+      "fileCount": 1205,
+      "manifest": {
+        "entries": 1204,
+        "missing": 0,
+        "mismatch": 0
+      },
+      "dependencyScan": {
+        "scannedCodeFiles": 513,
+        "relativeReferences": 908,
+        "missingRelativeTargets": 453
+      },
+      "packageClaims": {
+        "r05TestResult": {
+          "passed": 3,
+          "failed": 0
+        },
+        "browserDeviceAcceptance": false,
+        "publicationStatus": "UNPUBLISHED"
+      },
+      "cleanRoomReplay": {
+        "entrypoint": "zx5a-whole-viewer-r05/weather-integration.test.mjs",
+        "passed": 0,
+        "failed": 1,
+        "exitCode": 1,
+        "fatalError": "ERR_MODULE_NOT_FOUND",
+        "missingDependency": "front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js"
+      },
+      "contractFiles": {
+        "taskAnchor": 0,
+        "deliveryReceipt": 0,
+        "publicationProof": 0,
+        "methodAnchor": 0
+      },
+      "decision": "HOLD_V17_CLEAN_REPLAY_FAILED"
+    },
+    "firstTargetCandidate": {
+      "filename": "88号函数火车 · 总装候选.txt",
+      "libraryFileId": "libfile_9aff9f5528f08191a47e5ba0a6e801ed",
+      "versionId": "145",
+      "sizeBytes": 11744,
+      "modifiedAt": "2026-11-14T01:21:13+08:00",
+      "reportedRevision": "R309",
+      "reportedScope": "515件已建部分；双外缸/十字头/主杆/可拆导向总成；非完整列车",
+      "methodAnchorId": "MISSING",
+      "boundExemplarVersionOrDigest": "MISSING",
+      "targetReplayReceipt": "MISSING",
+      "independentVerifierReceipt": "MISSING",
+      "decision": "HOLD_TARGET_PROGRESS_OBSERVED_BUT_METHOD_BINDING_MISSING"
+    }
+  },
+  "decision": "HOLD_V17_CLEAN_REPLAY_FAILED_AND_TRAIN_R309_UNBOUND",
   "adoption": "NOT_ADOPTED",
   "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed."
 }
