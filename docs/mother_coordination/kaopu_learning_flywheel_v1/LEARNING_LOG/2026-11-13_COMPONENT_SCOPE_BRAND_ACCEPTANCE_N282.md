@@ -126,4 +126,4 @@ Apply only when the user gives scope-specific acceptance or rejection and the sc
 - production/Main/asset change: no;
 - KPI effect: `UNKNOWN`.
 
-Lifecycle: `POSTED=false` until the targeted #91 route is created; `ACKNOWLEDGED=false`; Candidate `IMPLEMENTED=true`; `GATE-RUN=true`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle: `POSTED=true` at [#91 issuecomment-6847245450](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6847245450); `ACKNOWLEDGED=false`; Candidate `IMPLEMENTED=true`; `GATE-RUN=true`; `ADOPTED=false`; `USER-ACCEPTED=false`.
