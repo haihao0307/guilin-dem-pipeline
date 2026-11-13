@@ -6,7 +6,7 @@
 </style></head><body>
 <header><b>KAOPU <span>GPU NOISE HAIR · R02</span></b><span>Procedural strand lookdev · GPU renderer with WebGL2 fallback</span></header>
 <main><section id="stage"><canvas id="view"></canvas><div id="overlay">GPU hair strand lookdev<div id="fps">Starting renderer…</div></div></section>
-<aside><h1>Noise-wave Shader</h1><p>重新构建的独立发丝观察台。保留双频波形、平滑噪声相位、根梢锚定和实例化发丝压力测试。优先尝试 WebGPU；当前环境不支持或初始化超时则自动切换 WebGL2，不再无限停留在初始化状态。</p>
+<aside><h1>Noise-wave Shader</h1><p>重新构建的独立发丝观察台。保留双频波形、平滑噪声相位、根梢锚定和实例化发丝压力测试。页面会检测 WebGPU 支持状态；为避免原版初始化卡死，本版实际预览采用 WebGL2 实例化 GPU 渲染路径，不再无限停留在初始化状态。</p>
 <div class="control"><label>波浪幅度 <output id="ampOut">1.8 mm</output></label><input id="amp" type="range" min="0" max="8" step=".1" value="1.8"></div>
 <div class="control"><label>每根发丝波数 <output id="freqOut">3.0</output></label><input id="freq" type="range" min=".1" max="12" step=".1" value="3"></div>
 <div class="control"><label>噪声相位强度 <output id="noiseOut">0.35</output></label><input id="noise" type="range" min="0" max="1.2" step=".01" value=".35"></div>
