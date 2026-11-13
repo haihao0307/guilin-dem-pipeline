@@ -1,0 +1,128 @@
+{
+  "schema": "kaopu/npc-r03-browser-failure-review@1",
+  "status": "FAILED_CANDIDATE_RCA_AND_TARGETED_CAMERA_FIX_NOT_REVERIFIED",
+  "sourceHead": "b508bc994733e8dec07c9ce385fe71890a44328d",
+  "workflowRun": 39534586116,
+  "workflowJob": 119008168723,
+  "runURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39534586116",
+  "artifact": {
+    "id": 12318285514,
+    "name": "npc-native-interaction-r03-b508bc994733e8dec07c9ce385fe71890a44328d",
+    "bytes": 34537222,
+    "sha256": "84b305b18c0ccea9a3cc69515fd0bd4fbb4bdc4928899474f17f2fd1d10bf1a8"
+  },
+  "failedPreview": {
+    "bytes": 66603687,
+    "sha256": "4087a67df10ee3c62d0645ff02afef3d0f0643f81d3c64dc4f3360e568099440"
+  },
+  "evidenceFiles": {
+    "qa.json": {
+      "sha256": "b25f1297216968963f3b672a0d14dafb810873560b5683fe87c4105c82ff589b",
+      "bytes": 47439280
+    },
+    "failure.json": {
+      "sha256": "fb0bb7c53b4c58d9fce7d11bb05453bb3d8205d58964db0690b40ecd1cbb80b7",
+      "bytes": 25564820
+    },
+    "failure.png": {
+      "sha256": "31b3e1c59fb0d7b821b361f34621d0184d3e4409bfe21643ee57de07ba7ce36c",
+      "bytes": 298713
+    },
+    "initial.json": {
+      "sha256": "31df8ad6f2f8e85cdfee7f44ba7bcf445880f8da675bce33cd46e3f171ace3cf",
+      "bytes": 17993431
+    },
+    "suite-final.json": {
+      "sha256": "d6c7285bfc5253b141f8ce9a0c15f545ff4dcc9cd4aec2cc2c2093a4e56fe332",
+      "bytes": 50533023
+    }
+  },
+  "firstFailure": {
+    "stage": "identity-task UI, independent review invalidation and actual JSON export",
+    "error": "page.waitForFunction: Timeout 180000ms exceeded.",
+    "source": "verify-browser.cjs:1422",
+    "condition": "A completed and recovered; B already-sorted and recovered; C review.checked",
+    "stageStartedUTC": "2026-10-21T03:00:41.1862266Z",
+    "failedUTC": "2026-10-21T03:03:45.3187227Z"
+  },
+  "observed": {
+    "startupPassed": true,
+    "coldReadyMS": 64124,
+    "bootCompletedMS": 63925.40000000001,
+    "nativeRendererCalls": 6,
+    "nativeMaxInFlight": 1,
+    "appErrors": [],
+    "lastSuccessfulStage": "built-in R02 suite with all six original R01 cases",
+    "identityEpoch": 18,
+    "completedFrameCount": 35,
+    "firstSerial": 355,
+    "lastSerial": 389,
+    "allSerialsConsecutive": true,
+    "phaseCounts": {
+      "waiting": 1,
+      "approach": 13,
+      "close": 6,
+      "lift": 13,
+      "transfer": 2
+    },
+    "firstSimulationTime": 153.05833333335846,
+    "lastCompletedSimulationTime": 156.75000000002177,
+    "completedSimulationAdvanceSeconds": 3.691666666663309,
+    "lastWorldSnapshotTime": 156.867,
+    "lastCompletedPhase": "transfer",
+    "lastCompletedHolder": "A",
+    "camera": "all",
+    "everyFrameUnpausedObservation": true,
+    "identityEpochMedianGPUFrameMS": 5172.09999999986,
+    "cameraTimingComparison": {
+      "population": "same failure.json completedFrameTrace; mode observation and paused false; samples span different tasks and are not an isolated identical-scene benchmark",
+      "cameras": {
+        "all": {
+          "samples": 37,
+          "medianGPUFrameMS": 5184.300000000047
+        },
+        "contact": {
+          "samples": 228,
+          "medianGPUFrameMS": 1380.0999999999767
+        }
+      }
+    },
+    "visualReview": "failure.png shows the all-camera view with the window frame obstructing the bottle/hand contact region",
+    "continuousThreeActionGateRun": false,
+    "fullSuitePassed": false,
+    "publicPublished": false
+  },
+  "rootCause": {
+    "notDeadlocked": "35 consecutive actual GPU completions advanced A from waiting through approach, close and lift to transfer; physical simulation advanced 3.691666666663311 seconds.",
+    "productDefect": "station() selects the existing all camera. Identity plan, bottle contention and window contention did not select their existing operation camera afterward; ProbeSuite.begin also retained all.",
+    "mechanism": "The frame-acknowledged clock correctly waits for the complete original rendering. The all-camera observation had substantially longer frame completion times in this run, so the task exhausted the unchanged 180-second wall-clock wait while still progressing.",
+    "verificationLimit": "The camera change is a targeted correction supported by these measurements and the visibility defect. Its final timing and complete interaction result still require a new full browser and final-public run."
+  },
+  "targetedFix": {
+    "file": "Workbench.mjs",
+    "beforeSHA256": "97cae4eb7414f69aa46d3c31b5373a8ca2aedecd1f1914690b1f5b898dae6f06",
+    "afterSHA256": "ccf459c074375146ea53847a7ed37c94e6cf56f053910cacdb1326e32773328a",
+    "changes": [
+      "npc-plan: use existing contact camera after enterMode",
+      "npc-contend: use existing contact camera after enterMode",
+      "npc-window-contend: use existing window camera after station",
+      "ProbeSuite.begin: use existing window/contact camera according to task kind"
+    ],
+    "preserved": [
+      "camera coordinates",
+      "native complete people",
+      "materials and skin",
+      "original data",
+      "physical skill modules",
+      "fixed 1/120s physics",
+      "0.12-second maximum advance per observed frame",
+      "all task and startup timeout thresholds"
+    ]
+  },
+  "acceptance": {
+    "browserPass": false,
+    "publicURLVerified": false,
+    "productionReady": false,
+    "requiredNext": "Run unchanged browser and publication gates on the new immutable source."
+  }
+}

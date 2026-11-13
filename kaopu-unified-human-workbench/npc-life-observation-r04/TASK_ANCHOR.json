@@ -1,0 +1,62 @@
+{
+  "schema": "kaopu.mother-task-anchor/2.0",
+  "taskId": "NPC-R04-AUTHORITY-20261021",
+  "userDirective": "从头审核一下这个架构，你自己找重点进行迭代",
+  "dispatchTime": "2026-10-21T06:28:24.642358+00:00",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "branch": "feature/npc-life-observation-r04-20261021",
+  "baseSha": "1ba2b58eb3fdd6efe60b993240e988980547c93e",
+  "targetObject": "NPC life observation R07 native workbench",
+  "targetDefectOrChange": "Protect one physical-world writer through versioned commands and detached state snapshots; prevent stale review and verification/UI interference",
+  "acceptedBaselineSha": "1ba2b58eb3fdd6efe60b993240e988980547c93e",
+  "expectedArtifact": "Fresh standalone interactive native 3D workbench and same-byte fixed public HTTPS page",
+  "allowedPaths": [
+    "kaopu-unified-human-workbench/npc-life-observation-r04/**",
+    ".github/workflows/npc-life-observation-r04.yml"
+  ],
+  "protectedInvariants": [
+    "Complete original R07 people/rig/materials/weights",
+    "Existing finite-force bottle and hinged window physics",
+    "1/120s physical step and GPU-acknowledged observation",
+    "Prior immutable public versions and independent branches",
+    "Draft PR only; no merge or force push"
+  ],
+  "forbiddenRoutes": [
+    "placeholder native substitution",
+    "screenshot deliverable",
+    "stale page as new",
+    "silent fallback",
+    "weakened physical/browser acceptance"
+  ],
+  "acceptanceGates": [
+    "Mutating a returned snapshot cannot change live tasks or physics",
+    "Environment command invalidates stale review synchronously while paused",
+    "Queued commands obey completed GPU boundaries and scene/task generations",
+    "Verification owns mutations until completion or explicit cancel; normal commands cannot corrupt suite",
+    "Runtime status and normal export do not contain an accumulated full verification report",
+    "Retained physical and original native browser checks",
+    "Public HTTP exact bytes/source and actual browser interaction"
+  ],
+  "referenceSet": [
+    "Current R03 GitHub source",
+    "Humanoid Rig Lab Next supplied project master and sync rules"
+  ],
+  "visualAcceptance": false,
+  "productionReady": false,
+  "real3DChecklist": {
+    "noGeneratedImageSubstitute": true,
+    "productionSourceModified": true,
+    "interactive3DRequired": true,
+    "live3DRuntime": true,
+    "publicHTTPSAndBrowserRequired": true,
+    "screenshotOnlyIsFailure": true
+  },
+  "status": "SOURCE_CANDIDATE_READY_FOR_BROWSER_VERIFICATION",
+  "findings": [
+    "Returned snapshot could mutate active window task",
+    "Paused target change left old review valid",
+    "UI and numerical suite shared unguarded mutation authority",
+    "Manual steps bypassed pending GPU frame",
+    "Routine export carried full historical numerical report"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "sourceHead": "85a4d7185c5d22918d6a02a50789de7caf382023",
+  "runId": 39534051283,
+  "jobId": 119006439981,
+  "classification": "verification transport failure before startup acceptance; independent screenshot also exposed a real startup-shell CSS regression",
+  "firstFailure": "Network.getResponseBody request body evicted from inspector cache for 66.6 MB file-protocol document",
+  "applicationErrorsAtFailure": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "headErrors": [],
+    "appErrors": []
+  },
+  "observedStartup": {
+    "elapsedMS": 2157.600000000006,
+    "status": "loading",
+    "firstPaint": [
+      {
+        "name": "first-paint",
+        "startTime": 224,
+        "duration": 0
+      },
+      {
+        "name": "first-contentful-paint",
+        "startTime": 224,
+        "duration": 0
+      }
+    ],
+    "ready": false
+  },
+  "rootCause": {
+    "verification": "response.body used CDP inspector retention for the large file even in file protocol mode",
+    "actualShell": "body.npc-observe > :not(#npc-app) has an ID from :not plus a class, outranking #npc-boot-shell at equal !important; it hides the failure shell once Workbench starts"
+  },
+  "fix": {
+    "verification": "local actual file URL/path + bytes; same explicitly buffered CDP session capture for HTTP document",
+    "actualShell": "exclude #npc-boot-shell from hiding selector and assert visibility after Workbench activation"
+  },
+  "gatesUnchanged": [
+    "exact HTML SHA and byte size",
+    "180s cold startup",
+    "12 native renderer calls",
+    "original geometry and physical tests",
+    "continuous real UI"
+  ],
+  "delivered": false
+}
