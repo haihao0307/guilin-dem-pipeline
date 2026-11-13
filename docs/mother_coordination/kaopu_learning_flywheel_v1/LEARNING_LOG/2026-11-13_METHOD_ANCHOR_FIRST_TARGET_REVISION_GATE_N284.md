@@ -122,7 +122,7 @@ No new teacher entered audition. The CMU/SEI production-plan teacher remains `TE
 
 - existing regression Candidate: `IMPLEMENTED=true` on this learning branch;
 - revision and target historical replay: `GATE-RUN=true`;
-- coordinator routing: `POSTED=false` until this record is linked from #91;
+- coordinator routing: `POSTED=true` at [#91 issuecomment-6857763983](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6857763983);
 - Mother response: `ACKNOWLEDGED=false`;
 - production implementation: `IMPLEMENTED=false`;
 - adoption: `ADOPTED=false`;
