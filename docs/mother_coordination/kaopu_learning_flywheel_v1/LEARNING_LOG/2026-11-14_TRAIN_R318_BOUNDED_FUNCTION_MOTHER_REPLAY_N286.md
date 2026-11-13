@@ -143,7 +143,7 @@ No new teacher entered audition. CMU/SEI remains `TEACHER_CANDIDATE` in lifecycl
 
 ## Lifecycle
 
-- coordinator routing: `POSTED=false` until linked from #91;
+- coordinator routing: `POSTED=true` at [#91 issuecomment-6867798841](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-6867798841);
 - target bounded replay: `IMPLEMENTED=true`;
 - bounded function gate: `GATE-RUN=true / PASS`;
 - source-fidelity gate: `GATE-RUN=true / FAIL`;
