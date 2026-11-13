@@ -1,5 +1,5 @@
 {
-  "schema": "kaopu.regression-refinement-candidate/1.2",
+  "schema": "kaopu.regression-refinement-candidate/1.3",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
   "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
@@ -10,7 +10,8 @@
     "claiming method implementation without exact dependencies or a target-specific replay",
     "treating method approval as target visual/production/user acceptance",
     "silently following a mutable exemplar by filename after its content revision changes",
-    "treating a carried pass log from another environment as a fresh clean-room replay"
+    "treating a carried pass log from another environment as a fresh clean-room replay",
+    "collapsing a bounded target replay pass into whole-target or source-fidelity acceptance"
   ],
   "methodAnchor": {
     "approvedMethodExemplar": [
@@ -91,7 +92,8 @@
     "method implementation never implies ADOPTED or USER-ACCEPTED",
     "same filename or libraryFileId never proves same exemplar revision",
     "a changed versionId, size or modifiedAt invalidates the exemplar binding until the new bytes are re-audited and pinned by digest",
-    "embedded TEST_RESULT text is Observation only until the current digest passes a clean-room replay with dependency resolution and exit code"
+    "embedded TEST_RESULT text is Observation only until the current digest passes a clean-room replay with dependency resolution and exit code",
+    "record functional-mother replay and source-fidelity replay as separate gates; a pass in one never substitutes for the other"
   ],
   "initialExactSubject": {
     "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
@@ -204,7 +206,80 @@
       "decision": "HOLD_TARGET_PROGRESS_OBSERVED_BUT_METHOD_BINDING_MISSING"
     }
   },
-  "decision": "HOLD_V17_CLEAN_REPLAY_FAILED_AND_TRAIN_R309_UNBOUND",
+  "decision": "PROBATION_BOUNDED_FUNCTION_MOTHERS_HOLD_REFERENCE_REPLAY_AND_METHOD_BINDING",
   "adoption": "NOT_ADOPTED",
-  "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed."
+  "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed.",
+  "n286FreshObservation": {
+    "observedAt": "2026-11-14T07:41:15+08:00",
+    "targetArtifact": {
+      "filename": "train-recovery-notes-r318-20261113.zip",
+      "libraryFileId": "libfile_ef5d5fb7f88c81919bcf6359f7acc96a",
+      "versionId": "5",
+      "sizeBytes": 523155,
+      "modifiedAt": "2026-11-14T07:24:18+08:00",
+      "sha256": "cf87e654f48d56315ea7b97fbf0010d8a9bb6659d66b877551a0beec1a770686",
+      "fileCount": 92
+    },
+    "provenance": {
+      "declaredReferenceLibraryId": "libfile_29c09ae0aedc8191a33d98ad75256469",
+      "declaredReferencePayloadSha256": "829caf7934c5d58d59a35f0e2125ae1ccc1c551447a62fed22bf4bd2170673b2",
+      "declaredPublishedSiteVersion": "v122",
+      "declaredPublishedSourceCommit": "0029c26e482660eea3bcfb9c9adcf4cafc8ebabf",
+      "oldR318State": "LOST_LOCAL_ONLY",
+      "currentRecoveryIdentity": "INDEPENDENT_RECONSTRUCTION_NOT_BYTE_IDENTICAL"
+    },
+    "boundedFunctionalReplay": {
+      "status": "PASS",
+      "checks": [
+        {
+          "entrypoint": "check-end.mjs",
+          "passed": true,
+          "checks": 2888,
+          "triangles": 8192
+        },
+        {
+          "entrypoint": "check-crown.mjs",
+          "passed": true,
+          "checks": 1836,
+          "triangles": 4608
+        },
+        {
+          "entrypoint": "check-shoulder.mjs",
+          "passed": true,
+          "checks": 2668,
+          "triangles": 6144
+        },
+        {
+          "entrypoint": "check-ridge.mjs",
+          "passed": true,
+          "checks": 7812,
+          "triangles": 1344
+        }
+      ],
+      "totalDerivativeAndBoundaryChecks": 15204,
+      "portableEvidence": [
+        "source-free runtime mothers",
+        "explicit parent-boundary ports",
+        "rejected alternatives retained",
+        "honest non-1-to-1 and non-whole scope"
+      ]
+    },
+    "sourceFidelityReplay": {
+      "entrypoint": "check-crown-source.py",
+      "status": "FAIL",
+      "exitCode": 1,
+      "failure": "FileNotFoundError",
+      "missingInput": "/workspace/scratch/2f609cc83d31/train-reference-recovery-2240/A4-original-reference-recovered-20261020.zip",
+      "additionalUnboundInput": "validation-r289-envelope-calibration/ALIGNED-MEASUREMENTS.json",
+      "referenceBytesIncluded": false
+    },
+    "methodBinding": {
+      "methodAnchorId": "MISSING",
+      "zx85ExemplarVersionOrDigest": "MISSING",
+      "dependencyBOM": "MISSING",
+      "deliveryReceipt": "MISSING",
+      "independentVerifierReceipt": "MISSING"
+    },
+    "decision": "PROBATION_BOUNDED_FUNCTION_MOTHERS_HOLD_REFERENCE_REPLAY_AND_METHOD_BINDING"
+  }
 }
