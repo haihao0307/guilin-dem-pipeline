@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#111313">
+  <title>动作研究室 · JST-2 独立实验</title>
+  <meta name="description" content="独立观察 JST-2 官方动作展示，并测试在我们自己人物上的动作适配。">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">跳到动作测试区</a>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="动作研究室首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>动作研究室<span class="brand-en">MOTION STUDY</span></span>
+      </a>
+      <div class="topbar-right">
+        <span class="version-chip"><span class="live-dot"></span> 独立实验 R01 · 02</span>
+        <a class="quiet-link" href="https://viggle.ai/jst2" target="_blank" rel="noopener noreferrer">JST-2 官方介绍 <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="pageTitle">
+        <div>
+          <p class="eyebrow">LEARN · OBSERVE · ADAPT</p>
+          <h1 id="pageTitle">先看动作，再决定如何接入。</h1>
+          <p class="intro-description">对照官方演示与我们自己的人物，检查节奏、全身协调和落脚表现。</p>
+        </div>
+        <div class="experiment-state">
+          <span class="experiment-label">本轮状态</span>
+          <span id="readinessBadge" class="state-badge">等待载入</span>
+          <p>独立页面 · 尚未整合到主平台</p>
+        </div>
+      </section>
+
+      <div class="lab-grid">
+        <aside class="sample-panel panel" aria-labelledby="sampleHeading">
+          <div class="panel-heading">
+            <div><p class="section-kicker">01 / SAMPLES</p><h2 id="sampleHeading">选择动作</h2></div>
+            <span class="small-badge" id="sampleCount">样本</span>
+          </div>
+          <p class="panel-description">先选一个动作，观察它如何带动全身。</p>
+          <div id="sampleList" class="sample-list" role="group" aria-label="动作样本">
+            <div class="samples-empty"><span class="loading-mark" aria-hidden="true"></span><p>正在核对官方样本</p><small>动作来源确认后显示在这里</small></div>
+          </div>
+          <label class="import-motion" for="motionFile"><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 13V3m-4 4 4-4 4 4M4 12v4h12v-4"/></svg><span>导入自己的 GLB 动作</span><input id="motionFile" type="file" accept=".glb,model/gltf-binary"></label>
+          <div class="observation-guide">
+            <span class="guide-icon" aria-hidden="true">◎</span>
+            <div><h3>重点看什么？</h3><p>脚是否滑动 · 重心是否自然<br>躯干与手臂是否一起参与</p></div>
+          </div>
+        </aside>
+
+        <section id="workspace" class="workspace panel" data-view="compare" aria-labelledby="clipTitle">
+          <header class="workspace-heading">
+            <div class="clip-heading"><p class="section-kicker">02 / OBSERVATION</p><h2 id="clipTitle">动作观察台</h2></div>
+            <label class="view-selector"><span class="sr-only">视图模式</span><select id="viewMode" aria-label="视图模式"><option value="compare">对照观察</option><option value="source">只看官方演示</option><option value="native">只看我们的人物</option></select><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></label>
+          </header>
+
+          <div class="viewports">
+            <article id="sourceStage" class="viewport source-stage" aria-label="JST-2 官方公开动作样本">
+              <div class="viewport-label"><span class="source-dot"></span><span class="viewport-name">JST-2 · 官方公开样本</span><span class="viewport-tag">SOURCE</span></div>
+              <div class="media-surface">
+                <canvas id="sourceCanvas" aria-label="JST-2 官方公开动作骨架三维预览"></canvas>
+                <video id="sourceVideo" class="source-video" playsinline muted loop preload="metadata" aria-label="JST-2 官方动作样本视频" hidden></video>
+                <div id="sourcePlaceholder" class="viewport-placeholder"><div class="placeholder-symbol" aria-hidden="true"><svg viewBox="0 0 40 40" width="40" height="40"><circle cx="20" cy="8" r="3"/><path d="M20 13v12m-9-7 9-4 9 4m-9 7-6 9m6-9 6 9"/><circle cx="20" cy="19" r="1"/></svg></div><strong>等待官方样本</strong><span>载入公开的 3D 动作数据</span></div>
+              </div>
+              <footer class="viewport-footer"><span id="sourceStatus">等待载入</span><a id="sourceLink" href="https://viggle.ai/jst2" target="_blank" rel="noopener noreferrer">查看来源 <span aria-hidden="true">↗</span></a></footer>
+            </article>
+
+            <article id="nativeStage" class="viewport native-stage" aria-label="我们自己的人物">
+              <div class="viewport-label"><span class="native-dot"></span><span class="viewport-name">我们的完整人物 · 适配实验</span><span class="viewport-tag">OWN RIG</span></div>
+              <div class="media-surface">
+                <iframe id="nativeFrame" title="自有完整人物与骨架的动作适配实验" src="../native.html" loading="eager" allow="fullscreen"></iframe>
+                <div id="nativePlaceholder" class="viewport-placeholder"><div class="placeholder-symbol" aria-hidden="true"><svg viewBox="0 0 40 40" width="40" height="40"><circle cx="20" cy="8" r="3"/><path d="M20 13v12m-9-7 9-4 9 4m-9 7-6 9m6-9 6 9"/><circle cx="20" cy="19" r="1"/></svg></div><strong>载入我们的人物</strong><span>保留原有模型与骨架</span></div>
+              </div>
+              <footer class="viewport-footer"><span id="nativeStatus">等待载入</span><div class="camera-controls" role="group" aria-label="人物观察视角"><button id="cameraFront" type="button" title="正面视角" disabled>正面</button><button id="cameraSide" type="button" title="侧面视角" disabled>侧面</button><button id="cameraReset" type="button" title="重置视角" disabled>复位</button></div></footer>
+            </article>
+          </div>
+
+          <div class="playback-panel">
+            <div class="timeline-row"><label for="timeline" class="sr-only">动作时间轴</label><input id="timeline" type="range" min="0" max="1" step="0.001" value="0" disabled><output id="timeLabel" for="timeline">0:00 / 0:00</output></div>
+            <div class="playback-row">
+              <div class="transport-controls" role="group" aria-label="播放控制"><button id="prevFrame" class="icon-button" type="button" title="上一帧" aria-label="上一帧" disabled><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 5v10m10-10-8 5 8 5z"/></svg></button><button id="playButton" class="play-button" type="button" disabled><svg class="play-icon" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="m6 4 10 6-10 6z"/></svg><span>播放</span></button><button id="nextFrame" class="icon-button" type="button" title="下一帧" aria-label="下一帧" disabled><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M15 5v10M5 5l8 5-8 5z"/></svg></button><span class="control-divider"></span><label class="speed-control"><span>速度</span><select id="speedSelect" aria-label="播放速度" disabled><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></label></div>
+              <p class="playback-hint">慢放与逐帧，检查动作细节</p>
+            </div>
+          </div>
+
+          <div class="prompt-panel"><span class="prompt-label">动作说明</span><p id="clipPrompt">选择样本后，查看它的输入描述与来源。</p></div>
+          <p class="provenance-note">公开示例回放，非本次在线生成。导入文件只在本页本地读取。</p>
+          <div class="status-line" role="status" aria-live="polite"><span class="status-indicator" aria-hidden="true"></span><span id="statusText">等待载入</span></div>
+        </section>
+      </div>
+
+      <section class="learning-section" aria-labelledby="learningHeading">
+        <div class="section-title-row"><div><p class="section-kicker">03 / WHAT WE CAN LEARN</p><h2 id="learningHeading">这轮实验要回答的三个问题</h2></div><span class="muted-caption">演示能力与适配结果分别记录</span></div>
+        <div class="learning-grid">
+          <article class="learning-card"><span class="learning-number">01</span><h3>一句话能生成什么？</h3><p>观察文字意图如何变成连续动作，尤其是转身、闪避和手势。</p><span class="learning-tag">文字 → 全身动作</span></article>
+          <article class="learning-card"><span class="learning-number">02</span><h3>动作的自然感来自哪里？</h3><p>用慢放看重心、手脚配合与节奏，找出我们现有系统可以学习的地方。</p><span class="learning-tag">协调 · 节奏 · 接触</span></article>
+          <article class="learning-card"><span class="learning-number">03</span><h3>能否用在我们的人物上？</h3><p>单独验证骨架映射与变形效果，再判断是否适合接入平台。</p><span class="learning-tag native-tag">外部动作 → 自有骨架</span></article>
+        </div>
+      </section>
+
+      <section class="detail-strip panel" aria-label="实验记录">
+        <div class="detail-heading"><p class="section-kicker">EXPERIMENT RECORD</p><h2>记录实际结果</h2><p>数值只在完成测量后显示</p></div>
+        <dl id="metrics" class="metrics"><div><dt>动作时长</dt><dd>—</dd></div><div><dt>数据来源</dt><dd>等待载入</dd></div><div><dt>人物适配</dt><dd>等待载入</dd></div></dl>
+        <details class="experiment-details"><summary>实验说明 <span aria-hidden="true">＋</span></summary><p>左侧回放 JST-2 官方页面公开的 3D 动作样本，非本次调用模型生成。右侧单独验证动作在我们自己完整人物与骨架上的适配。</p><p>本页是独立测试入口。整合到主平台之前，仍需检查脚部接触、动作衔接及现有交互流程。自行导入的 GLB 文件只在浏览器本地读取。</p></details>
+      </section>
+    </main>
+
+    <footer class="page-footer"><div><span class="footer-brand">MOTION STUDY</span><span>独立动作实验 · R01 · build 02</span></div><nav aria-label="参考资料"><a href="https://viggle.ai/research/jst2-motion" target="_blank" rel="noopener noreferrer">官方动作研究 ↗</a><a href="https://docs.viggle.ai/v1/introduction" target="_blank" rel="noopener noreferrer">接口文档 ↗</a></nav></footer>
+  </div>
+</body>
+</html>
