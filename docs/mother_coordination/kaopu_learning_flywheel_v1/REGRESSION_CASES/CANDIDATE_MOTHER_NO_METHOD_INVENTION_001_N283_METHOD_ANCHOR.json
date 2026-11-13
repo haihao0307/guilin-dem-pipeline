@@ -1,0 +1,86 @@
+{
+  "schema": "kaopu.regression-refinement-candidate/1.0",
+  "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
+  "refines": "MOTHER-NO-METHOD-INVENTION-001",
+  "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
+  "realFeedback": "User approved the excavator method and directed Automobile, Train, Mechanical Door Lock and Air Conditioner work to be rebuilt under it.",
+  "failurePrevented": [
+    "copying an asset checkpoint as if it were a portable method baseline",
+    "copying excavator-specific geometry/constants/frames into unrelated targets",
+    "claiming method implementation without exact dependencies or a target-specific replay",
+    "treating method approval as target visual/production/user acceptance"
+  ],
+  "methodAnchor": {
+    "approvedMethodExemplar": [
+      "artifactId",
+      "sha256",
+      "status"
+    ],
+    "portableInvariants": [
+      "invariantId",
+      "description",
+      "sourceEvidence",
+      "targetGate"
+    ],
+    "targetVariationPoints": [
+      "variationId",
+      "targetChoice",
+      "referenceSource",
+      "decisionOwner"
+    ],
+    "dependencyBOM": [
+      "dependencyId",
+      "versionOrDigest",
+      "resolver",
+      "licenseOrRights",
+      "availability"
+    ],
+    "excludedObjectSpecificData": [
+      "pathOrConcept",
+      "reason"
+    ],
+    "targetReferenceSet": [
+      "sourceId",
+      "targetScope",
+      "provenance"
+    ],
+    "targetAcceptanceGates": [
+      "gateId",
+      "successCriteria",
+      "verifier"
+    ],
+    "methodReplay": [
+      "targetArtifactId",
+      "base",
+      "head",
+      "result",
+      "rollbackPoint"
+    ]
+  },
+  "auditRules": [
+    "all method-trial dependencies must exist or be immutably resolved",
+    "portable invariants must be separated from object-specific data",
+    "each target must bind its own references and variation choices",
+    "one minimal target replay must pass before method implementation is claimed",
+    "method implementation never implies ADOPTED or USER-ACCEPTED"
+  ],
+  "exactSubject": {
+    "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+    "sizeBytes": 217885,
+    "sha256": "b7eae72e30e6b761e41dd1f9467d7ebc5b07cc713565e58e43e9bac87103a2e5",
+    "manifestEntries": 80,
+    "manifestAllMatch": true,
+    "missingRelativeDependencies": 15,
+    "selfContainedTests": {
+      "passed": 6,
+      "failed": 0
+    },
+    "representativeWholeTest": {
+      "passed": false,
+      "failure": "ERR_MODULE_NOT_FOUND"
+    }
+  },
+  "decision": "HOLD_ASSET_CHECKPOINT_NOT_PORTABLE_METHOD_BASELINE",
+  "adoption": "NOT_ADOPTED",
+  "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed."
+}
