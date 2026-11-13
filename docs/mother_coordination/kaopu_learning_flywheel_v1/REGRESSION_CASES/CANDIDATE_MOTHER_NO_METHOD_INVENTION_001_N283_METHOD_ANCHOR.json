@@ -1,5 +1,5 @@
 {
-  "schema": "kaopu.regression-refinement-candidate/1.0",
+  "schema": "kaopu.regression-refinement-candidate/1.1",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
   "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
@@ -8,12 +8,17 @@
     "copying an asset checkpoint as if it were a portable method baseline",
     "copying excavator-specific geometry/constants/frames into unrelated targets",
     "claiming method implementation without exact dependencies or a target-specific replay",
-    "treating method approval as target visual/production/user acceptance"
+    "treating method approval as target visual/production/user acceptance",
+    "silently following a mutable exemplar by filename after its content revision changes"
   ],
   "methodAnchor": {
     "approvedMethodExemplar": [
       "artifactId",
+      "libraryFileId",
+      "versionId",
       "sha256",
+      "sizeBytes",
+      "modifiedAt",
       "status"
     ],
     "portableInvariants": [
@@ -55,6 +60,15 @@
       "head",
       "result",
       "rollbackPoint"
+    ],
+    "sourceArtifactRevisionGate": [
+      "observedVersionId",
+      "observedSizeBytes",
+      "observedModifiedAt",
+      "expectedVersionId",
+      "expectedSha256",
+      "revisionDisposition",
+      "reauditReceipt"
     ]
   },
   "auditRules": [
@@ -62,9 +76,11 @@
     "portable invariants must be separated from object-specific data",
     "each target must bind its own references and variation choices",
     "one minimal target replay must pass before method implementation is claimed",
-    "method implementation never implies ADOPTED or USER-ACCEPTED"
+    "method implementation never implies ADOPTED or USER-ACCEPTED",
+    "same filename or libraryFileId never proves same exemplar revision",
+    "a changed versionId, size or modifiedAt invalidates the exemplar binding until the new bytes are re-audited and pinned by digest"
   ],
-  "exactSubject": {
+  "initialExactSubject": {
     "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
     "sizeBytes": 217885,
     "sha256": "b7eae72e30e6b761e41dd1f9467d7ebc5b07cc713565e58e43e9bac87103a2e5",
@@ -80,7 +96,43 @@
       "failure": "ERR_MODULE_NOT_FOUND"
     }
   },
-  "decision": "HOLD_ASSET_CHECKPOINT_NOT_PORTABLE_METHOD_BASELINE",
+  "n284FreshObservation": {
+    "observedAt": "2026-11-13T23:37:00+08:00",
+    "sourceExemplar": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "9",
+      "sizeBytes": 2882934,
+      "modifiedAt": "2026-11-13T23:31:00+08:00",
+      "sha256": "UNKNOWN_NOT_REAUDITED",
+      "revisionDisposition": "HOLD_CHANGED_REVISION_NOT_PINNED"
+    },
+    "firstTargetCandidate": {
+      "filename": "88号函数火车 · 总装候选.txt",
+      "libraryFileId": "libfile_9aff9f5528f08191a47e5ba0a6e801ed",
+      "versionId": "138",
+      "sizeBytes": 5601,
+      "modifiedAt": "2026-11-13T23:03:44+08:00",
+      "reportedRevision": "R300",
+      "reportedScope": "六轮箍与三轴验证例（非整车）",
+      "explicitUnknowns": [
+        "WebGPU adapter and GPU image not accepted",
+        "no verified compatible 3D fallback",
+        "installation axes, fit clearances and manufacturing dimensions unknown",
+        "mechanical closure and real dynamics not accepted"
+      ],
+      "methodAnchorId": "MISSING",
+      "boundExemplarVersionOrDigest": "MISSING",
+      "targetRejectedBaseline": "MISSING",
+      "targetReferenceSet": "MISSING",
+      "dependencyBOM": "MISSING",
+      "excludedObjectSpecificData": "MISSING",
+      "targetReplayReceipt": "MISSING",
+      "independentVerifierReceipt": "MISSING",
+      "decision": "HOLD_TARGET_TRIAL_NOT_BOUND_TO_METHOD_ANCHOR"
+    }
+  },
+  "decision": "HOLD_TARGET_TRIAL_UNBOUND_AND_EXEMPLAR_REVISION_UNAUDITED",
   "adoption": "NOT_ADOPTED",
   "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed."
 }
