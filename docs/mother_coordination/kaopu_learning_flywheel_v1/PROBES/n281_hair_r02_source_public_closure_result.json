@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu.learning-validation/1.0",
+  "round": "N281",
+  "date": "2026-11-13",
+  "repository": "haihao0307/guilin-dem-pipeline",
+  "boundedQuestion": "Do the new Hair GPU R02 source and R01 redirect commits actually resolve the user's fixed public R01 URL loading failure?",
+  "userFeedback": {
+    "timeAsiaShanghai": "2026-11-13T10:16:00+08:00",
+    "summary": "The user reported that the fixed Hair GPU R01 page could not open/load and asked for the page to be rebuilt."
+  },
+  "subjects": {
+    "mainHead": "8aec1b1dca9619c0b59fc8fa480f65f226be7145",
+    "r02SourceCommit": "be98efa90f5b965fb7c9ed0a4af329b1852a95d0",
+    "r01RedirectCommit": "09d80dbd58be1471387b697bc43565f42d7da107",
+    "r02ClaimClarificationCommit": "8aec1b1dca9619c0b59fc8fa480f65f226be7145",
+    "mainR01Blob": "a292654c1050809f7600d24c9ba4da3053056da2",
+    "mainR02Blob": "2736fcfaa88ea957d76e3c68c0d1869f27400a2e",
+    "ghPagesHead": "db2692eaa622a97678de1d9560446116e0bb719e",
+    "ghPagesR01Blob": "364b4f3366361b02181f000697977571204be559",
+    "ghPagesR02Blob": null
+  },
+  "sourceFacts": [
+    "main R01 is a redirect to ../kaopu-hair-gpu-r02/index.html",
+    "main R02 is a new single-file WebGL2 renderer that first probes WebGPU availability",
+    "gh-pages still serves the old R01 WebGPU-only page",
+    "gh-pages has no kaopu-hair-gpu-r02/index.html",
+    "all three new main commits have zero associated workflow runs"
+  ],
+  "publicBrowserReplay": {
+    "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-gpu-r01/index.html?kaopu_audit=20261113T1138",
+    "waitSeconds": 8,
+    "title": "KAOPU · GPU Noise Hair Lookdev R01",
+    "visibleVersion": "R01",
+    "statusText": "初始化失败：没有可用的 WebGPU Adapter。",
+    "fpsText": "WebGPU unavailable",
+    "canvasIntrinsicSize": [300, 150],
+    "fatalConsoleError": "Error: 没有可用的 WebGPU Adapter。",
+    "criticalInteractionExecuted": false
+  },
+  "directR02Readback": {
+    "url": "https://haihao0307.github.io/guilin-dem-pipeline/kaopu-hair-gpu-r02/index.html?kaopu_audit=20261113T1138",
+    "githubContentsApi": "404 NOT_FOUND",
+    "browserPage": "GitHub error page",
+    "runtimeTested": false
+  },
+  "r02SourceAudit": {
+    "status": "SOURCE_LEVEL_COMPILE_BLOCKER_OBSERVED_RUNTIME_COMPILE_NOT_RUN",
+    "exactLine": "vec3 eye=vec3(distance*sin(yaw)*cos(pitch),distance*sin(pitch),distance*cos(yaw)*cos(pitch));",
+    "findings": [
+      "yaw is not declared in the GLSL vertex shader",
+      "pitch is not declared in the GLSL vertex shader",
+      "distance is a GLSL built-in function name, not a declared float variable"
+    ],
+    "claimBoundary": "The exact R02 shader was not runtime-compiled in a capable verifier because R02 is not public and the local Chromium compile fixture was blocked by the execution environment. This source audit is a release blocker, not a production runtime verdict."
+  },
+  "applicableRegressionReplay": {
+    "caseId": "TESTED-SUBJECT-NOT-MUTABLE-HEAD-001",
+    "states": [
+      "HOLD_RECEIPT_BINDING_INCOMPLETE",
+      "HOLD_UNTESTED_NONMETADATA_DELTA"
+    ],
+    "reason": "The public artifact has no receipt binding it to any of the three new source commits, and the R02/R01 changes are production source deltas rather than allowlisted metadata.",
+    "publicWebDeliveryGate": "FAIL",
+    "sharedPublicationTargetCAS": "NOT_RUN_NO_PUBLIC_MUTATION_OBSERVED"
+  },
+  "decision": "HOLD_SOURCE_FIX_NOT_PUBLISHED_AND_R02_NOT_RUNTIME_VERIFIED",
+  "institutionalNovelty": "NO_NOVELTY",
+  "teacherStatus": "NO_NOVELTY",
+  "regressionAction": "UPDATE_EVIDENCE_ONLY_NO_DUPLICATE_CASE",
+  "minimumReleaseTrial": [
+    "Repair or explicitly bind every vertex-shader camera symbol; compile and link the exact R02 program in WebGL2.",
+    "Run the exact R02 source through first completed frame, zero fatal console errors, and the wave/count/rotation interactions.",
+    "Publish R02 and the R01 redirect to one exact gh-pages subject using target-wide mutation preconditions.",
+    "Read back both fixed URLs and bind source commit, public blobs, content digests and browser result in one PUBLICATION_PROOF receipt.",
+    "Keep device and user acceptance separate; a 390x844 viewport is not a physical phone."
+  ],
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "source only on main; public implementation false",
+    "GATE-RUN": "exact source/public identity plus independent public-browser replay",
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "frozen": [
+    "main",
+    "gh-pages",
+    "Hair production source",
+    "R2",
+    "global gates",
+    "public access policy"
+  ]
+}
