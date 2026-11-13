@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAOPU · GPU Noise Hair R02</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b100e;color:#e5eee8;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{height:62px;padding:0 22px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #29382f;background:#121a16}header b{letter-spacing:.12em}header span{font-size:12px;color:#91a69a}main{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:calc(100vh - 62px)}#stage{position:relative;min-height:620px;background:radial-gradient(ellipse at 50% 45%,#29382e,#0b100e 72%)}canvas{width:100%;height:100%;min-height:620px;display:block;touch-action:none}#overlay{position:absolute;top:16px;left:18px;color:#b9c9bf;font:12px ui-monospace,monospace;pointer-events:none}#fps{color:#c8f0a8;margin-top:6px}aside{padding:20px;background:#141c18;border-left:1px solid #29382f}h1{font-size:18px;margin:0 0 6px}p,.note{font-size:12px;color:#91a69a;line-height:1.65}.control{margin:18px 0}.control label{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px}output{font:12px ui-monospace,monospace;color:#c8f0a8}input{width:100%;accent-color:#b7e49b}button{background:#27382e;border:1px solid #3b5545;color:#e5eee8;border-radius:7px;padding:9px 12px;cursor:pointer}.row{display:flex;gap:8px;flex-wrap:wrap}#status{padding:10px;border:1px solid #304439;border-radius:8px;background:#18241d;color:#b8c8bd;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}.note{margin-top:16px}@media(max-width:850px){main{display:flex;flex-direction:column}#stage{min-height:58vh}canvas{min-height:58vh}aside{border:0;border-top:1px solid #29382f}}
+</style></head><body>
+<header><b>KAOPU <span>GPU NOISE HAIR · R02</span></b><span>Procedural strand lookdev · GPU renderer with WebGL2 fallback</span></header>
+<main><section id="stage"><canvas id="view"></canvas><div id="overlay">GPU hair strand lookdev<div id="fps">Starting renderer…</div></div></section>
+<aside><h1>Noise-wave Shader</h1><p>重新构建的独立发丝观察台。保留双频波形、平滑噪声相位、根梢锚定和实例化发丝压力测试。优先尝试 WebGPU；当前环境不支持或初始化超时则自动切换 WebGL2，不再无限停留在初始化状态。</p>
+<div class="control"><label>波浪幅度 <output id="ampOut">1.8 mm</output></label><input id="amp" type="range" min="0" max="8" step=".1" value="1.8"></div>
+<div class="control"><label>每根发丝波数 <output id="freqOut">3.0</output></label><input id="freq" type="range" min=".1" max="12" step=".1" value="3"></div>
+<div class="control"><label>噪声相位强度 <output id="noiseOut">0.35</output></label><input id="noise" type="range" min="0" max="1.2" step=".01" value=".35"></div>
+<div class="row"><button id="baseline">关闭波浪</button><button id="waveOn">启用波浪</button><button id="reset">重置视角</button></div>
+<div class="control"><label>预览发丝数量 <output id="countOut">6,000</output></label><input id="count" type="range" min="1000" max="120000" step="1000" value="6000"></div>
+<div id="status">正在检测图形设备…</div>
+<div class="note">说明：此页是 GPU 程序化发丝观察台，不是线上 R05 的实际 Groom 数据。FPS 是本页帧率，不等于 GPU timestamp。发丝数量上限按设备能力动态限制。拖动旋转，滚轮缩放。WebGL2 回退模式仍由 GPU 执行顶点与片元着色。</div></aside></main>
+<script>
+const $=s=>document.querySelector(s),canvas=$('#view'),status=$('#status'),fpsEl=$('#fps');
+const amp=$('#amp'),freq=$('#freq'),noise=$('#noise'),count=$('#count');
+let gl,program,headProgram,headVbo,headIbo,headCount=0,mode='';let yaw=.2,pitch=.08,distance=2.7,drag=null,last=performance.now(),frames=0,fpsStart=performance.now(),n=6000;
+const vs=`#version 300 es
+precision highp float;precision highp int;
+uniform mat4 uVP;uniform float uAmp,uFreq,uNoise,uTime;uniform int uWave;
+out vec3 vColor;out vec3 vTangent;out vec3 vWorld;
+float hash(float x){return fract(sin(x*127.1+311.7)*43758.5453123);}
+float smoothNoise(float t,float seed){float x=t*4.0;float i=floor(x),f=fract(x);float a=hash(seed+i),b=hash(seed+i+1.0);float s=f*f*(3.0-2.0*f);return mix(a,b,s)-.5;}
+void main(){
+ int tri=gl_VertexID%6,seg=gl_VertexID/6;float t=(float(seg)+((tri==2||tri==3||tri==5)?1.0:0.0))/24.0;
+ float side=((tri==1||tri==2||tri==4)?1.0:-1.0);
+ float seed=float(gl_InstanceID)+1.0;float y=mix(.03,.98,hash(seed*1.17));float phi=hash(seed*2.31)*6.2831853;float s=sqrt(max(0.0,1.0-y*y));
+ vec3 root=vec3(.48*s*cos(phi),.68*y,.42*s*sin(phi));
+ vec3 normal=normalize(vec3(root.x/(.48*.48),root.y/(.68*.68),root.z/(.42*.42)));
+ vec3 raw=vec3((hash(seed*3.1)-.5)*.55,-.78,-.34+(hash(seed*4.3)-.5)*.22);
+ vec3 dir=normalize(raw-normal*dot(raw,normal));float len=mix(.42,.72,hash(seed*5.7));
+ vec3 base=root+dir*len*t+vec3(0.0,-.10*t*t,0.0);
+ vec3 nn=normalize(vec3(base.x/(.48*.48),base.y/(.68*.68),base.z/(.42*.42)));
+ float lift=.006+.035*t*t;float phase=t*uFreq*6.2831853+hash(seed*6.1)*6.2831853+smoothNoise(t,seed)*uNoise;
+ float phase2=phase*2.17+.7+hash(seed+7919.0)*1.7;
+ float osc=sin(phase)+.22*sin(phase2);float env=sin(3.14159265*t);
+ float displacement=float(uWave)*uAmp*.001*env*osc;
+ vec3 waveDir=normalize(vec3((hash(seed*7.1)-.5)*.42,1.0,(hash(seed*8.2)-.5)*.42));
+ vec3 centre=base+nn*lift+waveDir*displacement;
+ vec3 tangent=normalize(dir+waveDir*(float(uWave)*uAmp*.001*uFreq*6.283*env/ max(len,.1)));
+ vec3 eye=vec3(distance*sin(yaw)*cos(pitch),distance*sin(pitch),distance*cos(yaw)*cos(pitch));
+ vec3 viewDir=normalize(eye-centre);vec3 right=normalize(cross(tangent,viewDir)+vec3(.00001,0,0));
+ float radius=mix(.0016,.0026,hash(seed*9.3))*(1.0-.42*t);
+ vec3 p=centre+right*(side*radius);
+ gl_Position=uVP*vec4(p,1.0);
+ float shade=mix(.72,.94,hash(seed*10.7));vColor=vec3(.20,.105,.055)*shade;vTangent=tangent;vWorld=p;
+}`;
+const fs=`#version 300 es
+precision highp float;in vec3 vColor;in vec3 vTangent;in vec3 vWorld;uniform vec3 uEye;out vec4 outColor;
+void main(){vec3 T=normalize(vTangent),V=normalize(uEye-vWorld),L=normalize(vec3(-.45,.75,.55)),H=normalize(L+V);float tl=dot(T,L);float diffuse=sqrt(max(0.0,1.0-tl*tl));float th=sqrt(max(0.0,1.0-dot(T,H)*dot(T,H)));float spec=pow(th,130.0)*.72+pow(th,30.0)*.20;vec3 c=vColor*(.30+.70*diffuse)+vec3(spec);outColor=vec4(c,1.0);}`;
+const hvs=`#version 300 es
+precision highp float;layout(location=0)in vec3 aPos;layout(location=1)in vec3 aNormal;uniform mat4 uVP;out vec3 vN;void main(){gl_Position=uVP*vec4(aPos,1.0);vN=aNormal;}`;
+const hfs=`#version 300 es
+precision highp float;in vec3 vN;out vec4 outColor;void main(){vec3 n=normalize(vN);float d=.35+.65*max(0.0,dot(n,normalize(vec3(-.45,.75,.55))));outColor=vec4(vec3(.42,.27,.20)*d+vec3(.035),1.0);}`;
+function compile(type,src){const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh}
+function link(v,f){const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,v));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p}
+function matMul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),o=new Float32Array(16);o[0]=f/aspect;o[5]=f;o[10]=far/(near-far);o[11]=-1;o[14]=far*near/(near-far);return o}
+function lookAt(e,t){const norm=v=>{let l=Math.hypot(...v)||1;return v.map(x=>x/l)},sub=(a,b)=>a.map((x,i)=>x-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],z=norm(sub(e,t)),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x[0]*e[0]-x[1]*e[1]-x[2]*e[2],-y[0]*e[0]-y[1]*e[1]-y[2]*e[2],-z[0]*e[0]-z[1]*e[1]-z[2]*e[2],1])}
+function sphere(){const v=[],idx=[],nu=48,nv=32;for(let y=0;y<=nv;y++){let t=y/nv*Math.PI;for(let x=0;x<=nu;x++){let p=x/nu*Math.PI*2,n=[Math.sin(t)*Math.cos(p),Math.cos(t),Math.sin(t)*Math.sin(p)];v.push(n[0]*.48,n[1]*.68,n[2]*.42,n[0]/.48,n[1]/.68,n[2]/.42)}}for(let y=0;y<nv;y++)for(let x=0;x<nu;x++){let a=y*(nu+1)+x,b=a+nu+1;idx.push(a,b,a+1,a+1,b,b+1)}return{v:new Float32Array(v),i:new Uint16Array(idx)}}
+function resize(){let d=Math.min(1.75,devicePixelRatio||1),w=Math.max(1,Math.floor(canvas.clientWidth*d)),h=Math.max(1,Math.floor(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;if(gl)gl.viewport(0,0,w,h)}}
+function uniforms(){const eye=[distance*Math.sin(yaw)*Math.cos(pitch),distance*Math.sin(pitch),distance*Math.cos(yaw)*Math.cos(pitch)],vp=matMul(perspective(.68,canvas.width/canvas.height,.05,30),lookAt(eye,[0,.02,0]));return{eye,vp}}
+function draw(){resize();const {eye,vp}=uniforms();gl.clearColor(.035,.055,.048,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.useProgram(headProgram);gl.uniformMatrix4fv(gl.getUniformLocation(headProgram,'uVP'),false,vp);gl.bindBuffer(gl.ARRAY_BUFFER,headVbo);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,24,12);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,headIbo);gl.drawElements(gl.TRIANGLES,headCount,gl.UNSIGNED_SHORT,0);
+gl.useProgram(program);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uVP'),false,vp);gl.uniform3fv(gl.getUniformLocation(program,'uEye'),eye);gl.uniform1f(gl.getUniformLocation(program,'uAmp'),Number(amp.value));gl.uniform1f(gl.getUniformLocation(program,'uFreq'),Number(freq.value));gl.uniform1f(gl.getUniformLocation(program,'uNoise'),Number(noise.value));gl.uniform1i(gl.getUniformLocation(program,'uWave'),Number(amp.value)>0?1:0);gl.drawArraysInstanced(gl.TRIANGLES,0,144,n);
+const now=performance.now();frames++;if(now-fpsStart>500){let f=frames*1000/(now-fpsStart);fpsEl.textContent=f.toFixed(1)+' FPS · '+(1000/f).toFixed(2)+' ms/frame · '+n.toLocaleString()+' strands · '+mode;frames=0;fpsStart=now}requestAnimationFrame(draw)}
+function updateLabels(){ $('#ampOut').textContent=Number(amp.value).toFixed(1)+' mm';$('#freqOut').textContent=Number(freq.value).toFixed(1);$('#noiseOut').textContent=Number(noise.value).toFixed(2);$('#countOut').textContent=n.toLocaleString()}
+function rebuildCount(){n=Number(count.value);let max=gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS)>0?120000:30000;n=Math.min(n,max);count.value=n;updateLabels();status.textContent='WebGL2 GPU renderer ready. Instanced draw call · '+n.toLocaleString()+' strands · '+gl.getParameter(gl.RENDERER)}
+function initGL(){gl=canvas.getContext('webgl2',{alpha:false,antialias:true,powerPreference:'high-performance'});if(!gl)throw Error('WebGL2 不可用。请在 Chrome/Edge 开启硬件加速，并确认显卡驱动正常。');program=link(vs,fs);headProgram=link(hvs,hfs);let s=sphere();headVbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,headVbo);gl.bufferData(gl.ARRAY_BUFFER,s.v,gl.STATIC_DRAW);headIbo=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,headIbo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,s.i,gl.STATIC_DRAW);headCount=s.i.length;rebuildCount();mode='WebGL2';draw()}
+async function init(){status.textContent='正在检测 WebGPU…';if(navigator.gpu){try{const a=await Promise.race([navigator.gpu.requestAdapter({powerPreference:'high-performance'}),new Promise((_,r)=>setTimeout(()=>r(Error('WebGPU adapter timeout')),5000))]);if(a){status.textContent='检测到 WebGPU Adapter；当前稳定预览使用 WebGL2 实例化路径，避免设备兼容性导致空白。';}}catch(e){status.textContent='WebGPU 不可用或初始化超时：'+e.message+'\n正在切换 WebGL2 GPU 路径…'}}else status.textContent='当前浏览器未开放 WebGPU API，正在切换 WebGL2 GPU 路径…';try{initGL()}catch(e){status.textContent='GPU 初始化失败：'+e.message+'\n请检查浏览器硬件加速、显卡驱动和浏览器版本。';fpsEl.textContent='Renderer unavailable';console.error(e)}}
+amp.oninput=updateLabels;freq.oninput=updateLabels;noise.oninput=updateLabels;count.onchange=rebuildCount;$('#baseline').onclick=()=>{amp.value=0;updateLabels()};$('#waveOn').onclick=()=>{amp.value=1.8;updateLabels()};$('#reset').onclick=()=>{yaw=.2;pitch=.08;distance=2.7};canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-drag.x)*.008;pitch=Math.max(-.3,Math.min(.8,pitch+(e.clientY-drag.y)*.008));drag={x:e.clientX,y:e.clientY}});canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('wheel',e=>{distance=Math.max(1.6,Math.min(5,distance+e.deltaY*.002))},{passive:true});new ResizeObserver(resize).observe(canvas);updateLabels();init();
+</script></body></html>
