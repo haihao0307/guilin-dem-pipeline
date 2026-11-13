@@ -1,0 +1,56 @@
+{
+  "caseId": "COMPONENT-SCOPE-ACCEPTANCE-OFFICIAL-BRAND-ASSET-001",
+  "status": "CANDIDATE",
+  "scope": "Equipment/Vehicle Mother local trial",
+  "sourceFeedback": {
+    "summary": "User accepted the excavator large-boom configuration but required the Hitachi logo to use an official SVG/vector asset and forbade self-drawing.",
+    "exactArtifactIdentity": "UNKNOWN_NOT_IN_REPOSITORY",
+    "sourceTime": "UNKNOWN_CONVERSATION_BEFORE_N282"
+  },
+  "currentBestView": {
+    "covered": [
+      "REJECTED_CREATIVE_SUBSTITUTE",
+      "SOURCE_ENTRY_REQUIRED",
+      "user ACCEPT/REJECT"
+    ],
+    "novelty": "Preserve accepted component scopes while holding artifact-level USER-ACCEPTED until every required scope closes."
+  },
+  "receiptFields": {
+    "artifactUserAccepted": "boolean",
+    "acceptedScopes": [
+      "scopeId",
+      "status",
+      "evidence"
+    ],
+    "openScopes": [
+      "scopeId",
+      "status",
+      "requiredSourceClass",
+      "provenanceBound",
+      "rightsChecked",
+      "selfDrawnForbidden"
+    ],
+    "verifiedScopes": [
+      "scopeId",
+      "sourceClass",
+      "sourceLocator",
+      "assetDigest",
+      "rightsChecked",
+      "renderedSubject"
+    ]
+  },
+  "gate": [
+    "accepted geometry scope must remain recorded",
+    "required official brand mark remains SOURCE_ENTRY_REQUIRED until exact provenance and rights are bound",
+    "artifactUserAccepted must be false while any required scope is open",
+    "SELF_DRAWN or REJECTED_CREATIVE_SUBSTITUTE fails",
+    "official asset discovery enables exact-artifact verification but does not auto-set USER-ACCEPTED"
+  ],
+  "replay": {
+    "passed": 5,
+    "total": 5,
+    "result": "PASS"
+  },
+  "adoption": "NOT_ADOPTED",
+  "rollback": "Remove candidate fields and file; no production/global baseline modified."
+}
