@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><canvas id="old"></canvas><canvas id="new"></canvas><script type="module">
+import {WholeRenderer as Old} from '../whole-building-interaction-r01/renderer.mjs';
+import {WholeRenderer as New} from '../whole-building-mobile-r01/renderer.mjs';
+import {controllerFor} from '../whole-building-r02/mother-system.mjs';
+import {deriveMeasuredCase} from '../r07/cases.mjs';
+import {profileFor} from '../r07/profiles.mjs';
+
+const official=await(await fetch('../r07/sources/official-footprints.json')).json();
+window.probe={ready:true,async setup(id){const profile=profileFor(id),url=new URL(profile.scoreUrl,new URL('../r07/profiles.mjs',import.meta.url)),measured=deriveMeasuredCase(await(await fetch(url)).json()),c=controllerFor(id),m=c.derive(measured,official),v=c.liftVisuals(m,c.createLiftState(m));this.model={...m,archetypes:[...m.archetypes,...v.archetypes],instances:[...m.instances,...v.instances]};this.measured=measured;const b={min:m.bounds.min.map((x,i)=>Math.min(x,measured.bounds.min[i])),max:m.bounds.max.map((x,i)=>Math.max(x,measured.bounds.max[i]))},t=b.min.map((x,i)=>(x+b.max[i])/2),s=Math.max(...b.max.map((x,i)=>x-b.min[i]));this.camera={target:t,eye:[t[0]+s*.92*.96,t[1]+s*.55*.96,t[2]-s*1.12*.96]};this.old=new Old(document.getElementById('old'));this.optimized=new New(document.getElementById('new'));for(const r of [this.old,this.optimized]){r.setModel(this.model,measured);Object.assign(r.options,this.camera);}return{old:this.old.compileStats,optimized:this.optimized.compileStats,source:profile.scoreSha256};},async render(which,width,cullTiles=true,tileSize=96,profileStages=false){const r=this[which],stats=await r.render({width,height:Math.floor(width*.85),presentWidth:width,presentHeight:Math.floor(width*.85),tileSize,cullTiles,profileStages}),bytes=r.readPixels(),sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(x=>x.toString(16).padStart(2,'0')).join('');return{stats,sha,glError:r.gl.getError()};}};
+</script>
