@@ -1,5 +1,5 @@
 {
-  "schema": "kaopu.regression-refinement-candidate/1.4",
+  "schema": "kaopu.regression-refinement-candidate/1.5",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
   "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
@@ -13,7 +13,9 @@
     "treating a carried pass log from another environment as a fresh clean-room replay",
     "collapsing a bounded target replay pass into whole-target or source-fidelity acceptance",
     "treating zero positional port gap as proof of welded or semantically correct assembly topology",
-    "blindly welding source-separated layers because their coordinates are close"
+    "blindly welding source-separated layers because their coordinates are close",
+    "generalizing a topology pass from one named interface set to another",
+    "rejecting a legitimate source-backed branch junction by hard-coding every shared edge to exactly two incident faces"
   ],
   "methodAnchor": {
     "approvedMethodExemplar": [
@@ -96,7 +98,11 @@
       "duplicateSeamVertexCount",
       "tJunctionCount",
       "gapOrClearanceGate",
-      "verifier"
+      "verifier",
+      "interfaceSetId",
+      "sourceExpectedIncidentFaces",
+      "observedIncidentFaces",
+      "scopeTransferDisposition"
     ]
   },
   "auditRules": [
@@ -111,8 +117,10 @@
     "record functional-mother replay and source-fidelity replay as separate gates; a pass in one never substitutes for the other",
     "a zero-distance parent port proves only sampled positional continuity; it never proves shared indexed topology, welded adjacency, contact semantics or intentional separation",
     "each bounded interface must declare exactly one source-backed connectionType: WELDED_SHARED_EDGE, CONTACT_ONLY, SEPARATE_LAYERS or INTENTIONAL_GAP",
-    "WELDED_SHARED_EDGE must share boundary ownership and pass indexed edge-incidence plus duplicate-seam and T-junction checks after assembly; SEPARATE_LAYERS must remain distinct and cite source evidence",
-    "do not globally weld coincident vertices: the source may contain separate front/rear layers or intentional gaps"
+    "do not globally weld coincident vertices: the source may contain separate front/rear layers or intentional gaps",
+    "a topology pass is valid only for its named interfaceSetId and may not be transferred to another interface family without a fresh assembly probe",
+    "WELDED_SHARED_EDGE must share boundary ownership and pass indexed edge-incidence plus duplicate-seam and T-junction checks after assembly; required incident-face count must match source topology, ordinarily 2 for a simple sheet seam but 3 or more for a source-backed branch junction",
+    "a source-backed non-manifold branch is not a defect merely because incident-face count is not 2; the receipt must record expected and observed incidence and the source evidence"
   ],
   "initialExactSubject": {
     "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
@@ -225,7 +233,7 @@
       "decision": "HOLD_TARGET_PROGRESS_OBSERVED_BUT_METHOD_BINDING_MISSING"
     }
   },
-  "decision": "HOLD_POSITIONAL_PORT_CONTINUITY_NOT_TOPOLOGICAL_CONNECTION",
+  "decision": "PROBATION_SCOPED_TOPOLOGY_PASS_HOLD_ORIGINAL_N287_SCOPE_AND_SOURCE_REPLAY",
   "adoption": "NOT_ADOPTED",
   "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed.",
   "n286FreshObservation": {
@@ -378,5 +386,92 @@
       "rollback": "remove this local Candidate refinement; no production branch or OS changed"
     },
     "decision": "HOLD_POSITIONAL_PORT_CONTINUITY_NOT_TOPOLOGICAL_CONNECTION"
+  },
+  "n288FreshObservation": {
+    "observedAt": "2026-11-14T15:37:00+08:00",
+    "targetArtifact": {
+      "filename": "train-recovery-notes-r318-20261113.zip",
+      "libraryFileId": "libfile_ef5d5fb7f88c81919bcf6359f7acc96a",
+      "versionId": "39",
+      "sizeBytes": 16543226,
+      "modifiedAt": "2026-11-14T15:36:22+08:00",
+      "sha256": "9726761aa0c40e0087d5c08f4e8b5883dae83761714f2ff56db1a56be0aee97e",
+      "extractedFileCount": 643
+    },
+    "boundedQuestion": "Does the v39 package prove that N287's hard-coded incident-face count of 2 is over-broad, while also showing why a pass for one interface family must not be transferred to the original front-step-apron scope?",
+    "lowerLipMiddleInterfaceReplay": {
+      "interfaceSetId": "lip-middle-union-common",
+      "functions": {
+        "checks": 23814,
+        "maxAbsoluteDerivativeError": 3.229613696476008e-7,
+        "maxRelativeDerivativeError": 1.6238359312817367e-7,
+        "samples": 7938,
+        "result": "PASS"
+      },
+      "topology": {
+        "interfaces": 18,
+        "componentPorts": 19,
+        "sharedCurveSamples": 5038,
+        "maxGap": 1.776573666601473e-15,
+        "expectedSharedEdges": 458,
+        "observedSharedEdges": 458,
+        "observedIncidentFacesPerSharedEdge": 2,
+        "remainingUnresolved": 0,
+        "result": "PASS"
+      },
+      "scopeLimit": "completeAssembly=false; pass applies only to the named former middle-event interface set"
+    },
+    "sourceBranchCounterexample": {
+      "centerComponent": {
+        "parts": 3,
+        "triangles": 42,
+        "sourceJunctionIncidentFaces": 3,
+        "manifold": false,
+        "result": "PASS_SOURCE_BACKED_BRANCH"
+      },
+      "centerParent": {
+        "parts": 7,
+        "triangles": 163,
+        "coreRailSharedEdges": 30,
+        "sourceBranchIncidentFaces": 3,
+        "sharedResidual": 8.899114524108741e-16,
+        "manifold": false,
+        "result": "PASS_SOURCE_BACKED_BRANCH"
+      },
+      "consequence": "edge incidence must be checked against source-backed expected topology; a blanket exactly-two rule would falsely reject the reference's legitimate branch junction"
+    },
+    "originalN287ScopeReplay": {
+      "interfaceSetId": "front-step-apron",
+      "combinedVertices": 3078,
+      "crossPartDuplicateVertexCoordinates": 228,
+      "duplicateCoordinatesByInterface": {
+        "front<->step": 114,
+        "step<->apron": 114
+      },
+      "topologicalBoundaryEdges": 1428,
+      "geometricCoincidentButIndexUnweldedEdges": 616,
+      "result": "FAIL_UNCHANGED_FROM_N287"
+    },
+    "sourceFidelityReplay": {
+      "entrypoints": [
+        "check-union-common-source-3d.py",
+        "check-union-common-reverse-3d.py",
+        "check-center-component-source.py",
+        "check-center-parent-source.py"
+      ],
+      "result": "FAIL",
+      "exitCode": 1,
+      "failure": "FileNotFoundError",
+      "staleAbsolutePath": "/workspace/scratch/2f609cc83d31/train-reference-recovery-2240/A4-original-reference-recovered-20261020.zip",
+      "interpretation": "delivered source-free topology tests replay, but exact source-fidelity checks are not portable in the package"
+    },
+    "falsifiableSingleMotherTrial": {
+      "scope": "Train only; named interface sets lip-middle-union-common, center branch junction and front-step-apron",
+      "hypothesis": "binding each topology receipt to an interfaceSetId and source-expected incidence prevents both false global passes and false rejection of legitimate source branches",
+      "passIf": "each named set records source-backed expected incidence, observed incidence, duplicate seam/T-junction results and explicit scope-transfer disposition",
+      "failIf": "a pass from lip-middle-union-common is used to accept front-step-apron, or every connected edge is forced to incidence 2 despite a source-backed branch",
+      "rollback": "remove the N288 local Candidate refinement; no production branch or OS changed"
+    },
+    "decision": "PROBATION_SCOPED_TOPOLOGY_PASS_HOLD_ORIGINAL_N287_SCOPE_AND_SOURCE_REPLAY"
   }
 }
