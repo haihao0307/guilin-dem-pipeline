@@ -1,0 +1,134 @@
+{
+  "schema": "kaopu.regression-refinement-candidate/1.0",
+  "candidateId": "WHOLE-MACHINE-NOT-PARTIAL-DELIVERY-001-N289-ASSEMBLY-OWNERSHIP",
+  "refines": [
+    "WHOLE-MACHINE-NOT-PARTIAL-DELIVERY-001",
+    "MOTHER-NO-METHOD-INVENTION-001"
+  ],
+  "status": "CANDIDATE_SINGLE_MOTHER_TRIAL_ONLY",
+  "realFeedback": "User corrected the ZX85 production model: the cabin is the parent physical assembly; roof, side walls, door, floor, operator console and seat are cabin children; joysticks, pedals, instruments, throttle and hydraulic lock are console children; engine and hydraulics remain separate whole-machine systems connected by typed control relations.",
+  "failurePrevented": [
+    "flattening a parent assembly into an unowned list of individually impressive parts",
+    "claiming the cabin complete because a door, window, seat or control subassembly passed independently",
+    "attaching a child to the whole machine while bypassing its user-defined parent assembly",
+    "inventing control relationships or treating a placeholder relation as implemented simulation",
+    "using object, triangle, document or screenshot counts as proof of assembly progress"
+  ],
+  "assemblyOwnershipReceipt": [
+    "objectId",
+    "parentObjectId",
+    "assemblyRole",
+    "coordinateFrame",
+    "installationParent",
+    "requiredChildren",
+    "optionalChildren",
+    "childStatuses",
+    "sourceEvidence",
+    "implementationStatus",
+    "integrationBinding",
+    "typedRelations",
+    "parentAcceptanceState",
+    "verifier"
+  ],
+  "auditRules": [
+    "every user-named physical system must have one stable objectId, one explicit parentObjectId and one installation coordinate frame",
+    "a child PASS never promotes its parent assembly; the parent remains incomplete while any required child, mounting relation or integration binding is missing",
+    "physical ownership and functional control relations are separate graphs and must not be collapsed",
+    "cross-system control relations must name source, target, semantics and implementation state; placeholders remain UNKNOWN or UNIMPLEMENTED",
+    "a child may be independently auditioned, but production replacement is forbidden until it is bound through the declared parent assembly",
+    "object, triangle, file, branch, document and screenshot counts are inventory only, never acceptance evidence",
+    "a whole-machine graph must consume the same assembly ownership contract; a standalone JSON tree without current integration binding is POSTED or GATE-RUN evidence, not IMPLEMENTED production structure"
+  ],
+  "n289FreshObservation": {
+    "observedAt": "2026-11-14T19:39:00+08:00",
+    "targetArtifact": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "68",
+      "modifiedAt": "2026-11-14T19:28:44+08:00",
+      "sizeBytes": 22864455,
+      "sha256": "8dedbab710a96c0cbabd53037e39589361b2e6c829fbae2602ac45e69849b6dd",
+      "extractedFileCount": 2139
+    },
+    "boundedQuestion": "Did v68 convert the user's cabin-as-parent-system correction into an enforceable ownership contract rather than another descriptive note or flat part list?",
+    "deliveredOwnershipContract": {
+      "path": "zx5a-cab-source-r25/cabin-complete/CABIN_OBJECT_TREE.json",
+      "sha256": "0d53206cfeabddabccea0bb47f0769b0d15b6c201e703acaa9ab8dd76238a19a",
+      "schema": "kaopu-physical-object-tree-v1",
+      "generatedAt": "2026-11-14T19:23:38+08:00",
+      "objects": 26,
+      "typedControlRelations": 4,
+      "requiredParentBindingsChecked": 15,
+      "cycles": 0,
+      "completeCabin": false,
+      "productionReplacementAllowed": false,
+      "result": "PASS_TREE_CONTRACT"
+    },
+    "ownershipHighlights": {
+      "cabinParent": "ZX85-CAB -> ZX85",
+      "directCabinChildren": [
+        "ROOF",
+        "SIDES",
+        "FLOOR",
+        "DOOR",
+        "WINDOWS",
+        "CONSOLE",
+        "SEAT"
+      ],
+      "consoleChildren": [
+        "JOYSTICKS",
+        "PEDALS",
+        "INSTRUMENTS",
+        "THROTTLE",
+        "HYDRAULIC-LOCK"
+      ],
+      "separateWholeSystems": [
+        "ZX85-ENGINE",
+        "ZX85-HYDRAULICS"
+      ],
+      "typedButUnimplementedRelations": 4
+    },
+    "exactCurrentWholeIntegrationProbe": {
+      "searchedRoots": [
+        "zx5a-whole-integration-r54",
+        "zx5a-whole-viewer-r06",
+        "zx5a-machine-object-r24",
+        "zx5a-whole-reference-r16",
+        "zx5a-upper-seat261-snapshot"
+      ],
+      "bindingNeedles": [
+        "CABIN_OBJECT_TREE",
+        "ZX85-CAB-CONSOLE",
+        "ZX85-CAB-SEAT"
+      ],
+      "matches": 0,
+      "result": "HOLD_NOT_BOUND_TO_CURRENT_WHOLE"
+    },
+    "currentImplementedChildEvidence": {
+      "cabinStructure": "partial native; 2458 display faces, 58 shared physical edges, still 278 intentionally open edges",
+      "door": "partial independent; glazing and seal only; metal frame, hinge leaves/pin, latch and whole mount missing",
+      "controls": "source-recognized or unbuilt/unmapped",
+      "seat": "source-recognized unbuilt; requested reuse term not silently interpreted"
+    },
+    "falsifiableSingleMotherTrial": {
+      "scope": "ZX85 Cabin Mother only",
+      "hypothesis": "binding current whole integration to the same validated ownership tree prevents independent child progress from being misreported as parent-system completion",
+      "passIf": "the current whole builder resolves ZX85-CAB as one installation parent, consumes required child IDs, exposes child statuses, and keeps completeCabin=false until all required mounts and relationships pass",
+      "failIf": "children attach directly to ZX85, the tree is only documentation, missing children are hidden, or object counts promote parent acceptance",
+      "rollback": "delete this local Candidate and N289 evidence branch; no production Mother, main or R2 OS changed"
+    },
+    "decision": "PROBATION_TREE_CONTRACT_PASS_HOLD_WHOLE_INTEGRATION"
+  },
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_CANDIDATE": true,
+    "GATE_RUN": true,
+    "IMPLEMENTED_PRODUCTION": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "decision": "PROBATION_TREE_CONTRACT_PASS_HOLD_WHOLE_INTEGRATION",
+  "adoption": "NOT_ADOPTED",
+  "rollback": "Remove the N289 local Candidate and log; no production branch, R2 baseline or global gate changed."
+}
