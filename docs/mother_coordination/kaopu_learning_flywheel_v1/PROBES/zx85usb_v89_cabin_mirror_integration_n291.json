@@ -1,0 +1,115 @@
+{
+  "schema": "kaopu.mother-coordination-probe/1.0",
+  "meetingId": "N291",
+  "observedAt": "2026-11-15T02:32:36+08:00",
+  "taskAnchor": {
+    "taskId": "N291-ZX85USB-V89-CABIN-MIRROR-INTEGRATION-GATE",
+    "targetObject": ["ZX85-CAB", "ZX85-CAB-MIRROR-LEFT", "ZX85-CAB-MIRROR-RIGHT", "CURRENT-WHOLE-BUILDER"],
+    "targetDefect": "The cabin parent tree and user-required mirror reuse are not replayable or bound into the current whole machine.",
+    "acceptedBaseline": "No user-accepted ZX85 whole-machine replacement baseline was found; protocol baseline remains repository main.",
+    "baseSha": "8aec1b1dca9619c0b59fc8fa480f65f226be7145",
+    "replicationMode": "REPLICATION_LOCKED",
+    "creativeAuthorization": false,
+    "referenceSet": [
+      "#91 N289 cabin assembly ownership correction and gate",
+      "#91 N290 physical symmetry replay gate",
+      "Library zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip version 89",
+      "zx5a-cab-source-r25/cabin-complete/CABIN_OBJECT_TREE.json",
+      "zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+      "Sites project version 229 access/provenance metadata"
+    ],
+    "unknowns": [
+      "OEM rear-view mirror geometry and mounting dimensions",
+      "user-accepted current whole-machine replacement baseline",
+      "v89-to-Site-version provenance binding"
+    ],
+    "forbiddenRoutes": [
+      "generic or invented mirror hardware",
+      "mirroring the asymmetric whole cabin housing",
+      "mirroring the left door into the right fixed-window assembly",
+      "promoting a stored PASS JSON without a fresh clean-extraction replay",
+      "attaching cabin children directly to ZX85 while bypassing ZX85-CAB",
+      "using an older or unbound Site version as v89 delivery proof"
+    ]
+  },
+  "freshArtifact": {
+    "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+    "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+    "versionId": "89",
+    "modifiedAt": "2026-11-15T02:24:03+08:00",
+    "sizeBytes": 31252070,
+    "sha256": "52729ec4b3d83dd2296450b19172ad1132818606b13e3bba25d1d74c3695fe5c",
+    "archiveEntries": 2546,
+    "checksumEntries": 2545,
+    "checksumMissing": 0,
+    "checksumMismatch": 0,
+    "relativeImports": 2333,
+    "missingRelativeImports": 638,
+    "taskAnchorFiles": 0,
+    "deliveryReceiptFiles": 0,
+    "publicationProofFiles": 0
+  },
+  "freshHeadDelta": {
+    "packageIsNewBytes": true,
+    "readmeLatestScope": "v89 cabin R26 corrects pedal material identification and floor intersection evidence; it does not claim mirror or whole-cabin integration closure.",
+    "cabinObjectTreeSha256": "fc0ad07e63fa0f2b39bcbd1d0486a15dc8a78bce74e5aa52c74df7f8a2c2ee22",
+    "currentWholeBindingMatches": {
+      "CABIN_OBJECT_TREE": 0,
+      "ZX85-CAB": 0,
+      "ZX85-CAB-CONSOLE": 0,
+      "ZX85-CAB-SEAT": 0,
+      "symmetryPairId": 0
+    },
+    "concreteRearviewMirrorIdentifiers": 0,
+    "parameterMirrorReceiptSha256": "a47eb46021ba0c45faaff1345eaaae1edd5e7d8eded1b810bf17ad1a6e2af535",
+    "parameterMirrorReceiptUnchangedFromV81": true,
+    "parameterMirrorReceiptClaimsRealPartsMirrored": 0
+  },
+  "regressionCases": [
+    {
+      "id": "WHOLE-MACHINE-NOT-PARTIAL-DELIVERY-001-N289-ASSEMBLY-OWNERSHIP",
+      "executed": true,
+      "result": "FAIL_CURRENT_WHOLE_BINDING_ZERO"
+    },
+    {
+      "id": "PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE",
+      "executed": true,
+      "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+      "exitCode": 1,
+      "error": "ERR_MODULE_NOT_FOUND",
+      "missingDependency": "front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js",
+      "storedReceiptReproduced": false
+    }
+  ],
+  "gates": {
+    "contract": "FAIL_NO_TASK_ANCHOR_OR_DELIVERY_RECEIPT",
+    "freshness": "FAIL_TARGET_RECEIPT_UNCHANGED_AND_NOT_REPLAYABLE",
+    "referenceFidelity": "BLOCKED_NO_CONCRETE_REARVIEW_PAIR_AND_OEM_MOUNT_UNKNOWN",
+    "machine": "FAIL_638_MISSING_RELATIVE_IMPORTS_AND_ZERO_WHOLE_TREE_BINDINGS",
+    "browser": "FAIL_SITE_V229_CUSTOM_OWNER_ONLY_EXTERNAL_VISITORS_0_AND_NO_V89_PROVENANCE_BINDING",
+    "desktopCurrentHeadEvidence": false,
+    "mobile390x844CurrentHeadEvidence": false
+  },
+  "rootCauseReview": {
+    "triggered": true,
+    "sharedBlocker": "The package lacks self-contained runtime dependency closure and exact artifact-to-whole-to-Site provenance; stored receipts therefore cannot prove the displayed whole consumes the current contract.",
+    "boundedMethod": [
+      "Make the mirror replay self-contained in the checkpoint or replace the Three dependency with audited local vector math.",
+      "Create concrete left/right mirror object IDs with symmetry eligibility, deviation set, cabin parent binding, and no duplicate independently authored geometry.",
+      "Make the current whole builder consume CABIN_OBJECT_TREE and fail closed on missing required children.",
+      "Bind a fresh gate run and desktop plus 390x844 evidence to the exact archive SHA, whole commit, and Site version."
+    ]
+  },
+  "decision": "HOLD_GATE_FAIL_ROOT_CAUSE_REVIEW",
+  "delivery": "UNFINISHED",
+  "status": "HOLD_GATE_FAIL",
+  "lifecycle": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_COORDINATION_RECORD": true,
+    "IMPLEMENTED_PRODUCTION": false,
+    "GATE_RUN": true,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
