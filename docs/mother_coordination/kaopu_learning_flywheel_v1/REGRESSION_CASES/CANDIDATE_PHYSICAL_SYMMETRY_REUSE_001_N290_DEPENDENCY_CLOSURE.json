@@ -1,0 +1,131 @@
+{
+  "schema": "kaopu.regression-refinement-candidate/1.0",
+  "candidateId": "PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE",
+  "status": "CANDIDATE_SINGLE_MOTHER_TRIAL_ONLY",
+  "refines": [
+    "MOTHER-NO-METHOD-INVENTION-001"
+  ],
+  "refinesPolicies": [
+    "REFERENCE_REPLICATION_NO_CREATIVE_SUBSTITUTE_GATE",
+    "TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE"
+  ],
+  "realFeedback": "User explicitly required reusable left/right physical parts to be authored once and reproduced by controlled mirror/parameter transforms instead of re-drawing both sides, while preserving real asymmetry.",
+  "boundedQuestion": "Does ZX85 checkpoint v81 make that correction independently replayable from the delivered artifact, while preventing false mirroring of asymmetric cabin assemblies?",
+  "failurePrevented": [
+    "remeasuring or independently redrawing an actually symmetric mate and introducing drift",
+    "mirroring a visually similar but physically asymmetric assembly",
+    "treating a stored PASS JSON as a current gate run when its test dependency is absent",
+    "claiming a user-named mirror pair implemented when only a generic helper exists"
+  ],
+  "taskAnchorFields": [
+    "symmetryPairId",
+    "sourceObjectId",
+    "targetObjectId",
+    "eligibilityEvidence",
+    "mirrorAxis",
+    "mirrorPlane",
+    "parityRule",
+    "sharedParameterSet",
+    "explicitDeviationSet",
+    "packageDependencyClosure",
+    "freshReplayCommand",
+    "freshReplayExitCode",
+    "parentIntegrationBinding",
+    "acceptanceState",
+    "verifier"
+  ],
+  "auditRules": [
+    "mirror or parameter reuse requires explicit source and target object IDs plus physical symmetry evidence; category labels or visual similarity alone are insufficient",
+    "the reusable common base and every evidenced asymmetric deviation must be represented separately",
+    "reflection must reverse triangle winding and transform axial joint vectors with determinant parity; a geometry-only reflection cannot infer ownership or motion semantics",
+    "left door and right fixed window remain distinct ZX85 assemblies and must not be mirrored into each other",
+    "a stored regression result is not a fresh GATE-RUN receipt unless the exact delivered package contains every dependency needed to reproduce it from clean extraction",
+    "a generic helper does not implement a user-named rearview-mirror pair; concrete object IDs, parent bindings and whole integration evidence are required",
+    "production replacement remains forbidden until the current whole builder consumes the mirrored child through the declared parent assembly and the verifier confirms no independent duplicate geometry"
+  ],
+  "n290FreshObservation": {
+    "observedAt": "2026-11-14T23:38:43+08:00",
+    "targetArtifact": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "81",
+      "modifiedAt": "2026-11-14T23:26:08+08:00",
+      "sizeBytes": 29506056,
+      "sha256": "333dcefaf54cf4e9c7ea2ed0b6c2a77d4af398674c31f2011d11918d544c025e",
+      "archiveFileCount": 2456
+    },
+    "storedMethodReceipt": {
+      "parameterMirrorCheckSha256": "a47eb46021ba0c45faaff1345eaaae1edd5e7d8eded1b810bf17ad1a6e2af535",
+      "claims": {
+        "axesTested": 3,
+        "roundtripExact": true,
+        "orientedVolumePreserved": true,
+        "maxKinematicError": 1.7763568394002505e-15,
+        "evidenceRequired": true,
+        "realPartsMirrored": 0
+      }
+    },
+    "sourceBackedPairEvidence": {
+      "sourceObjects": [
+        "PlasticSemi13789",
+        "PlasticSemi15356"
+      ],
+      "mirrorPlaneY": -552.8712,
+      "topControlVertices": 5001,
+      "matchedUnder0001": 4982,
+      "unresolvedExceptions": 19,
+      "topMaxNearestResidual": 0.9765470001309428,
+      "leftHousingMaxX": 221.483847,
+      "rightHousingMaxX": 104.483834,
+      "wholeHousingMirrorAllowed": false
+    },
+    "cleanExtractionReplay": {
+      "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+      "exitCode": 1,
+      "error": "ERR_MODULE_NOT_FOUND",
+      "missingDependency": "front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js",
+      "archiveContainsDependency": false,
+      "storedReceiptReproduced": false
+    },
+    "partialCounterevidence": {
+      "consoleJoystickCheckExitCode": 0,
+      "commonFunctionSectionCount": 97,
+      "sharedModes": 4,
+      "nativeValues": 1647,
+      "measuredCoordinateValues": 13968,
+      "maxVertexError": 1.9630933050917325,
+      "completeConsole": false,
+      "accepted": false
+    },
+    "scopeBoundary": {
+      "leftDoorAndRightFixedWindowAreDifferentAssemblies": true,
+      "wholeCabinSideMirrorEligible": false,
+      "rearviewMirrorHardwareMatches": 0,
+      "specificRearviewMirrorPairImplemented": false
+    },
+    "decision": "HOLD_MIRROR_GATE_DEPENDENCY_CLOSURE_MISSING",
+    "routingReceipt": {
+      "target": "#91",
+      "state": "NOT_POSTED",
+      "acknowledged": false
+    }
+  },
+  "falsifiableSingleMotherTrial": {
+    "scope": "ZX85 Cabin/Console Mother only",
+    "hypothesis": "a self-contained clean-extraction replay plus explicit symmetry eligibility prevents both duplicate-redraw drift and false mirroring",
+    "passIf": "the exact checkpoint runs the mirror geometry and joint parity test with exit 0 without undeclared external files, preserves the 19 evidenced console deviations, leaves asymmetric housings/door-window separate, and binds any actual mirrored pair into the current whole",
+    "failIf": "a stored PASS cannot be reproduced, a whole asymmetric assembly is mirrored, exceptions disappear, or a generic helper is reported as implemented rearview-mirror hardware",
+    "rollback": "remove this N290 Candidate and learning log; no production Mother, main, R2 OS or global gate changed"
+  },
+  "decision": "HOLD_MIRROR_GATE_DEPENDENCY_CLOSURE_MISSING",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_CANDIDATE": true,
+    "GATE_RUN": true,
+    "IMPLEMENTED_PRODUCTION": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "adoption": "NOT_ADOPTED"
+}
