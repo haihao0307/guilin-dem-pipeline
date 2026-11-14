@@ -1,5 +1,5 @@
 {
-  "schema": "kaopu.regression-refinement-candidate/1.3",
+  "schema": "kaopu.regression-refinement-candidate/1.4",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
   "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
@@ -11,7 +11,9 @@
     "treating method approval as target visual/production/user acceptance",
     "silently following a mutable exemplar by filename after its content revision changes",
     "treating a carried pass log from another environment as a fresh clean-room replay",
-    "collapsing a bounded target replay pass into whole-target or source-fidelity acceptance"
+    "collapsing a bounded target replay pass into whole-target or source-fidelity acceptance",
+    "treating zero positional port gap as proof of welded or semantically correct assembly topology",
+    "blindly welding source-separated layers because their coordinates are close"
   ],
   "methodAnchor": {
     "approvedMethodExemplar": [
@@ -82,6 +84,19 @@
       "fatalErrors",
       "testCounts",
       "verifier"
+    ],
+    "connectionTopologyReceipt": [
+      "connectionId",
+      "interfaceA",
+      "interfaceB",
+      "connectionType",
+      "sourceEvidence",
+      "sharedBoundaryOwner",
+      "topologicalEdgeIncidence",
+      "duplicateSeamVertexCount",
+      "tJunctionCount",
+      "gapOrClearanceGate",
+      "verifier"
     ]
   },
   "auditRules": [
@@ -93,7 +108,11 @@
     "same filename or libraryFileId never proves same exemplar revision",
     "a changed versionId, size or modifiedAt invalidates the exemplar binding until the new bytes are re-audited and pinned by digest",
     "embedded TEST_RESULT text is Observation only until the current digest passes a clean-room replay with dependency resolution and exit code",
-    "record functional-mother replay and source-fidelity replay as separate gates; a pass in one never substitutes for the other"
+    "record functional-mother replay and source-fidelity replay as separate gates; a pass in one never substitutes for the other",
+    "a zero-distance parent port proves only sampled positional continuity; it never proves shared indexed topology, welded adjacency, contact semantics or intentional separation",
+    "each bounded interface must declare exactly one source-backed connectionType: WELDED_SHARED_EDGE, CONTACT_ONLY, SEPARATE_LAYERS or INTENTIONAL_GAP",
+    "WELDED_SHARED_EDGE must share boundary ownership and pass indexed edge-incidence plus duplicate-seam and T-junction checks after assembly; SEPARATE_LAYERS must remain distinct and cite source evidence",
+    "do not globally weld coincident vertices: the source may contain separate front/rear layers or intentional gaps"
   ],
   "initialExactSubject": {
     "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
@@ -206,7 +225,7 @@
       "decision": "HOLD_TARGET_PROGRESS_OBSERVED_BUT_METHOD_BINDING_MISSING"
     }
   },
-  "decision": "PROBATION_BOUNDED_FUNCTION_MOTHERS_HOLD_REFERENCE_REPLAY_AND_METHOD_BINDING",
+  "decision": "HOLD_POSITIONAL_PORT_CONTINUITY_NOT_TOPOLOGICAL_CONNECTION",
   "adoption": "NOT_ADOPTED",
   "rollback": "Remove the local Method Anchor refinement; no production or global baseline changed.",
   "n286FreshObservation": {
@@ -281,5 +300,83 @@
       "independentVerifierReceipt": "MISSING"
     },
     "decision": "PROBATION_BOUNDED_FUNCTION_MOTHERS_HOLD_REFERENCE_REPLAY_AND_METHOD_BINDING"
+  },
+  "n287FreshObservation": {
+    "observedAt": "2026-11-14T11:58:00+08:00",
+    "targetArtifact": {
+      "filename": "train-recovery-notes-r318-20261113.zip",
+      "libraryFileId": "libfile_ef5d5fb7f88c81919bcf6359f7acc96a",
+      "versionId": "22",
+      "sizeBytes": 6727823,
+      "modifiedAt": "2026-11-14T11:40:22+08:00",
+      "sha256": "441ded79fa1193e7467cfad39026c5b31f0754c2c3b44fdb9aa0197cf5330c62",
+      "extractedFileCount": 305
+    },
+    "boundedQuestion": "Do the current Train middle interfaces encode real connection topology, rather than only coincident sampled positions?",
+    "existingPortChecks": {
+      "centralStep": {
+        "derivativeChecks": 7548,
+        "parentPorts": 74,
+        "maxParentPositionGap": 0,
+        "result": "PASS"
+      },
+      "centralFront": {
+        "derivativeChecks": 5032,
+        "parentPorts": 74,
+        "maxParentPositionGap": 0,
+        "result": "PASS"
+      },
+      "centerJoin": {
+        "sharedBoundarySamples": 1188,
+        "maxGap": 0,
+        "result": "PASS"
+      },
+      "nearCenterJoin": {
+        "sharedBoundarySamples": 1188,
+        "maxGap": 0,
+        "result": "PASS"
+      }
+    },
+    "exactAssemblyTopologyProbe": {
+      "subject": "current front + central step + apron meshes assembled by the delivered pack pattern",
+      "partVertices": {
+        "front": 456,
+        "step": 684,
+        "apron": 1938
+      },
+      "partTriangles": {
+        "front": 448,
+        "step": 672,
+        "apron": 3584
+      },
+      "combinedVertices": 3078,
+      "crossPartDuplicateVertexCoordinates": 228,
+      "duplicateCoordinatesByInterface": {
+        "front<->step": 114,
+        "step<->apron": 114
+      },
+      "topologicalBoundaryEdges": 1428,
+      "geometricCoincidentButIndexUnweldedEdges": 616,
+      "packBehavior": "each part keeps independent vertices and indices; assembly concatenates with per-part index offsets",
+      "result": "FAIL_WELDED_TOPOLOGY_NOT_PROVEN"
+    },
+    "sourceFidelityReplay": {
+      "entrypoints": [
+        "check-central-step-source.py",
+        "check-central-front-source.py"
+      ],
+      "result": "FAIL",
+      "exitCode": 1,
+      "failure": "FileNotFoundError",
+      "staleAbsolutePath": "/workspace/scratch/2f609cc83d31/train-reference-recovery-2240/A4-original-reference-recovered-20261020.zip"
+    },
+    "falsifiableSingleMotherTrial": {
+      "scope": "central front <-> step <-> apron only",
+      "hypothesis": "a source-classified connection contract plus shared boundary ownership distinguishes welded adjacency from contact, separate layers and intentional gaps",
+      "passIf": "each interface has source-backed connectionType; any WELDED_SHARED_EDGE has shared indices or equivalent post-assembly edge incidence 2, zero duplicate seam vertices and zero T-junctions; source-separated layers remain distinct",
+      "failIf": "only sampled position gaps are checked, or global vertex welding collapses source-separated layers",
+      "rollback": "remove this local Candidate refinement; no production branch or OS changed"
+    },
+    "decision": "HOLD_POSITIONAL_PORT_CONTINUITY_NOT_TOPOLOGICAL_CONNECTION"
   }
 }
