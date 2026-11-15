@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAOPU · Fab Fashion Showcase R01</title>
+<style>
+:root{color-scheme:dark;--bg:#101216;--panel:#191d23;--line:#303640;--muted:#929ba8;--text:#edf0f4;--cyan:#73c6d4}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:14px/1.45 Inter,"Segoe UI",sans-serif}
+#app{display:grid;grid-template-columns:minmax(0,1fr) 320px;height:100%}#view{position:relative;min-width:0;background:#15181d}canvas{display:block;width:100%;height:100%}
+#top{position:absolute;left:22px;top:18px;z-index:2;pointer-events:none}#top small{color:var(--cyan);letter-spacing:.18em;font-size:10px}#top h1{font-size:20px;font-weight:500;margin:5px 0}#top p{margin:0;color:#9da6b1;font-size:12px}
+#hint{position:absolute;bottom:18px;left:22px;color:#aab2bc;font-size:11px;pointer-events:none}
+#side{background:var(--panel);border-left:1px solid var(--line);padding:22px 18px;overflow:auto}
+.brand{font-size:10px;letter-spacing:.2em;color:var(--cyan)}h2{font-size:18px;font-weight:500;margin:7px 0 4px}.sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.section{border-top:1px solid var(--line);padding:16px 0}.section h3{font-size:11px;color:#aeb7c2;font-weight:600;letter-spacing:.08em;margin:0 0 12px}
+button{background:#252b33;color:#e9edf1;border:1px solid #3a424d;border-radius:6px;padding:9px 11px;font-size:12px;cursor:pointer}button.active{background:#d9e7e8;color:#12171b;border-color:#d9e7e8}button:hover{border-color:#8db9c2}.buttons{display:flex;gap:7px;flex-wrap:wrap}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;color:#c4cbd3;font-size:12px}
+input[type=range]{width:130px;accent-color:#8acbd4}select{background:#252b33;color:#e9edf1;border:1px solid #3a424d;padding:7px;border-radius:5px}
+.metric{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric div{background:#20252c;border:1px solid #2e3540;padding:10px;border-radius:6px}.metric strong{font-size:20px;font-weight:500;display:block;font-variant-numeric:tabular-nums}.metric span{font-size:10px;color:#929ba8}
+.note{font-size:11px;line-height:1.6;color:#a3adb8}.warning{border-left:2px solid #c99b5c;padding-left:10px;color:#d4c0a0}
+a{color:#8ecbd6;text-decoration:none}a:hover{text-decoration:underline}
+#loading{position:absolute;inset:0;display:grid;place-items:center;background:#11151a;z-index:5;color:#b9c7cc;font-size:13px}
+@media(max-width:760px){#app{grid-template-columns:1fr;grid-template-rows:minmax(420px,65vh) 1fr;overflow:auto}#side{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div id="loading">正在构建展示场景…</div>
+<div id="app">
+ <main id="view">
+  <div id="top"><small>KAOPU / HUMAN PRESENTATION LAB</small><h1>服装展示场景对比</h1><p>同一人物代理 · 同一服装代理 · 两套灯光与空间</p></div>
+  <div id="hint">拖动旋转 · 滚轮缩放 · 切换场景时保持同一人物与服装</div>
+ </main>
+ <aside id="side">
+  <div class="brand">ENVIRONMENT STUDY / R01</div><h2>时装展示场景</h2><div class="sub">Fab 参考结构的独立重建验证</div>
+  <div class="section"><h3>场景对照</h3><div class="buttons"><button id="original" class="active">原工作室场景</button><button id="fab">环形秀场场景</button></div><p class="note" id="sceneDesc">中性灰背景、柔和主光与简单地台，用于观察人物基础材质。</p></div>
+  <div class="section"><h3>灯光控制</h3>
+   <div class="row"><label for="key">主光强度</label><input id="key" type="range" min=".3" max="5" step=".1" value="2.2"></div>
+   <div class="row"><label for="fill">补光强度</label><input id="fill" type="range" min="0" max="3" step=".1" value="1.1"></div>
+   <div class="row"><label for="rim">轮廓光</label><input id="rim" type="range" min="0" max="5" step=".1" value="2.4"></div>
+   <div class="row"><label for="exposure">曝光</label><input id="exposure" type="range" min=".6" max="1.8" step=".05" value="1"></div>
+  </div>
+  <div class="section"><h3>人物与显示</h3>
+   <div class="buttons"><button id="rotate" class="active">自动转台</button><button id="wire">线框检查</button><button id="shadows" class="active">阴影</button></div>
+   <div class="row"><label>画质档位</label><select id="quality"><option value="1">标准</option><option value="1.5">精细</option><option value="2">高精细</option></select></div>
+  </div>
+  <div class="section"><h3>实时性能观测</h3><div class="metric">
+   <div><strong id="fps">—</strong><span>FPS · 近似帧率</span></div><div><strong id="frame">—</strong><span>CPU 帧间隔 ms</span></div>
+   <div><strong id="calls">—</strong><span>Draw calls</span></div><div><strong id="tris">—</strong><span>Triangles</span></div>
+   <div><strong id="geos">—</strong><span>Geometry 数量</span></div><div><strong id="tex">—</strong><span>Texture 数量</span></div>
+  </div><p class="note">这些指标由浏览器渲染器统计。GPU 时间、显存占用和系统级功耗需要真实设备性能工具测量，本页面不把 CPU 帧间隔冒充 GPU 时间。</p></div>
+  <div class="section"><h3>当前资产状态</h3>
+   <p class="note warning">本页 R01 使用程序化人体代理和服装代理验证场景构图，不是 Humanoid Rig Lab Next 的真实人物，也不是裁缝铺正式成衣。Fab 原始工程文件尚未取得；环形背景、地台和灯光为自主重建。</p>
+   <p class="note">人物代码：<a href="https://github.com/haihao0307/Humanoid-Rig-Lab-Next" target="_blank">Humanoid Rig Lab Next</a><br>服装代码：<a href="https://github.com/haihao0307/Human-Clothing-Workbench" target="_blank">Human Clothing Workbench</a><br>布料代码：<a href="https://github.com/haihao0307/Human-Fabric-Workbench" target="_blank">Human Fabric Workbench</a></p>
+  </div>
+ </aside>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+const host=document.querySelector('#view'),scene=new THREE.Scene();scene.background=new THREE.Color('#171b20');
+const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(4.5,2.45,6.8);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;renderer.outputColorSpace=THREE.SRGBColorSpace;host.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.05,0);controls.enableDamping=true;controls.minDistance=3.1;controls.maxDistance=10;
+const hemi=new THREE.HemisphereLight(0xcbd8e6,0x17191e,1.1);scene.add(hemi);
+const key=new THREE.SpotLight(0xffe6cb,2.2,18,Math.PI/5,.45,1.5);key.position.set(-3.2,5.7,3.2);key.target.position.set(0,1,0);key.castShadow=true;key.shadow.mapSize.set(1024,1024);scene.add(key,key.target);
+const fill=new THREE.PointLight(0x8bb7db,1.1,12);fill.position.set(3,2.5,3);scene.add(fill);
+const rim=new THREE.SpotLight(0xd2e8ff,2.4,16,Math.PI/4,.55,1.3);rim.position.set(0,4,-3.4);rim.target.position.set(0,1.2,0);scene.add(rim,rim.target);
+const mat=(color,roughness=.55,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+const floorMat=mat('#242a30',.42,.18),navy=mat('#101e2b',.35,.12),navy2=mat('#1a2c3c',.42,.08),skin=mat('#b98166',.48),hair=mat('#211b19',.36),gold=mat('#c39a55',.26,.72),shoe=mat('#14181d',.34,.2),white=mat('#d8d4c9',.7);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),floorMat);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;floor.receiveShadow=true;scene.add(floor);
+const avatar=new THREE.Group();scene.add(avatar);
+function mesh(g,m,x,y,z,rx=0,ry=0,rz=0){const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.rotation.set(rx,ry,rz);o.castShadow=true;o.receiveShadow=true;avatar.add(o);return o}
+function capsule(a,b,r1,r2,m){const d=new THREE.Vector3().subVectors(b,a),g=new THREE.CylinderGeometry(r2,r1,d.length(),18,1,true);const o=new THREE.Mesh(g,m);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());o.castShadow=true;o.receiveShadow=true;avatar.add(o);return o}
+function ell(x,y,z,sx,sy,sz,m){const o=mesh(new THREE.SphereGeometry(1,24,16),m,x,y,z);o.scale.set(sx,sy,sz);return o}
+// proxy body
+ell(0,1.03,0,.205,.255,.135,skin);ell(0,1.36,0,.245,.32,.145,skin);capsule(new THREE.Vector3(0,1.55,0),new THREE.Vector3(0,1.67,0),.065,.065,skin);
+ell(0,1.79,.005,.115,.145,.12,skin);ell(0,1.88,-.005,.119,.075,.125,hair);ell(-.11,1.81,-.012,.026,.085,.105,hair);ell(.11,1.81,-.012,.026,.085,.105,hair);
+for(const s of [-1,1]){ell(s*.047,1.81,.112,.012,.009,.006,mat('#241d1a'));ell(s*.13,1.55,0,.095,.13,.09,navy);capsule(new THREE.Vector3(s*.15,1.51,0),new THREE.Vector3(s*.18,1.16,.01),.061,.047,navy);capsule(new THREE.Vector3(s*.18,1.16,.01),new THREE.Vector3(s*.185,.99,.045),.047,.034,skin);ell(s*.185,.97,.05,.035,.045,.025,skin);capsule(new THREE.Vector3(s*.11,.79,0),new THREE.Vector3(s*.12,.43,.015),.082,.058,skin);capsule(new THREE.Vector3(s*.12,.43,.015),new THREE.Vector3(s*.12,.12,.03),.058,.038,skin);ell(s*.12,.075,.09,.055,.045,.12,shoe)}
+// blazer silhouette and shirt
+const torso=mesh(new THREE.CylinderGeometry(.215,.17,.62,32,1,true),navy,0,1.34,0);torso.scale.z=.72;
+ell(0,1.61,.015,.24,.13,.15,navy);
+const shirt=mesh(new THREE.CylinderGeometry(.105,.09,.42,24,1,true),white,0,1.40,.086);shirt.scale.z=.45;
+for(const s of [-1,1]){const lap=mesh(new THREE.BoxGeometry(.105,.36,.028),navy2,s*.065,1.46,.117,0,0,s*-.12);lap.scale.x=1.1;for(let i=0;i<3;i++)ell(s*.075,1.48-i*.105,.14,.018,.018,.009,gold)}
+// shorts waistband and two legs
+mesh(new THREE.CylinderGeometry(.211,.19,.09,32,1,true),navy2,0,1.00,0).scale.z=.72;
+for(const s of [-1,1]){const leg=mesh(new THREE.CylinderGeometry(.105,.115,.32,24,1,true),navy,s*.105,.79,0);leg.scale.z=.75;ell(s*.105,.625,0,.105,.055,.105,navy2)}
+// display mannequin proportions as deliberately neutral proxy
+const original=new THREE.Group(),fab=new THREE.Group();scene.add(original,fab);
+function platform(group,r,h,color){const p=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,80),mat(color,.32,.3));p.position.y=h/2-.015;p.receiveShadow=true;p.castShadow=true;group.add(p);const ring=new THREE.Mesh(new THREE.TorusGeometry(r*.94,.012,8,100),mat('#b7a17a',.3,.75));ring.rotation.x=Math.PI/2;ring.position.y=h-.005;group.add(ring)}
+platform(original,1.05,.12,'#454a50');platform(fab,1.12,.18,'#282b30');
+const wall1=new THREE.Mesh(new THREE.CircleGeometry(2.8,96),mat('#323940',.8));wall1.position.set(0,2.0,-1.7);original.add(wall1);
+const wall2=new THREE.Mesh(new THREE.CircleGeometry(3.25,96),mat('#1e252b',.78));wall2.position.set(0,2.15,-2.25);fab.add(wall2);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(2.05,.16,24,128),mat('#333c43',.3,.35));ring.position.set(0,2.05,-1.8);fab.add(ring);
+const ring2=new THREE.Mesh(new THREE.TorusGeometry(2.55,.055,12,128),mat('#89939a',.34,.55));ring2.position.set(0,2.05,-2.02);fab.add(ring2);
+const sidePanels=new THREE.Group();fab.add(sidePanels);
+for(const x of [-2.75,2.75]){const p=new THREE.Mesh(new THREE.BoxGeometry(.16,4.5,.28),mat('#4d5960',.4,.35));p.position.set(x,2,-1.7);sidePanels.add(p)}
+const originalLight=new THREE.Group(),fabLight=new THREE.Group();scene.add(originalLight,fabLight);
+const ringLight=new THREE.PointLight(0x7ba9d1,1.8,7);ringLight.position.set(-1.8,2.4,-1.4);fabLight.add(ringLight);
+const warm=new THREE.SpotLight(0xffd9b0,3.6,14,Math.PI/7,.4,1.4);warm.position.set(0,5.4,1.7);warm.target.position.set(0,1,0);fabLight.add(warm,warm.target);
+const cool=new THREE.SpotLight(0x8abce4,2.2,12,Math.PI/5,.5,1.4);cool.position.set(3.4,3.6,-1);cool.target.position.set(0,1.2,0);fabLight.add(cool,cool.target);
+const front=new THREE.SpotLight(0xe3e9f1,1.4,10,Math.PI/6,.55,1.4);front.position.set(-3,2.8,3.2);front.target.position.set(0,1,0);fabLight.add(front,front.target);
+function useScene(which){const isFab=which==='fab';original.visible=!isFab;fab.visible=isFab;originalLight.visible=!isFab;fabLight.visible=isFab;document.querySelector('#original').classList.toggle('active',!isFab);document.querySelector('#fab').classList.toggle('active',isFab);document.querySelector('#sceneDesc').textContent=isFab?'环形背景、侧向建筑构件、暖色主光与冷色轮廓光，强调剪影和服装轮廓。':'中性灰背景、柔和主光与简单地台，用于观察人物基础材质。';}
+useScene('original');
+document.querySelector('#original').onclick=()=>useScene('original');document.querySelector('#fab').onclick=()=>useScene('fab');
+document.querySelector('#rotate').onclick=e=>{auto=!auto;e.target.classList.toggle('active',auto)};
+document.querySelector('#wire').onclick=e=>{wire=!wire;avatar.traverse(o=>{if(o.isMesh)o.material.wireframe=wire});e.target.classList.toggle('active',wire)};
+document.querySelector('#shadows').onclick=e=>{renderer.shadowMap.enabled=!renderer.shadowMap.enabled;key.castShadow=renderer.shadowMap.enabled;e.target.classList.toggle('active',renderer.shadowMap.enabled)};
+for(const [id,obj,prop] of [['key',key,'intensity'],['fill',fill,'intensity'],['rim',rim,'intensity']])document.querySelector('#'+id).oninput=e=>obj[prop]=+e.target.value;
+document.querySelector('#exposure').oninput=e=>renderer.toneMappingExposure=+e.target.value;
+document.querySelector('#quality').onchange=e=>{renderer.setPixelRatio(Math.min(devicePixelRatio*+e.target.value,2));resize()};
+let auto=true,wire=false,last=performance.now(),frames=0,fps=0,frameMs=0;
+function resize(){const w=host.clientWidth,h=host.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false)}
+new ResizeObserver(resize).observe(host);resize();
+function tick(now){requestAnimationFrame(tick);const dt=Math.min(.05,(now-last)/1000);frameMs=now-last;last=now;frames++;if(auto)avatar.rotation.y+=dt*.22;controls.update();renderer.render(scene,camera);if(now%500<20){fps=Math.round(1/Math.max(dt,.001));document.querySelector('#fps').textContent=fps;document.querySelector('#frame').textContent=frameMs.toFixed(1);const i=renderer.info;document.querySelector('#calls').textContent=i.render.calls;document.querySelector('#tris').textContent=i.render.triangles.toLocaleString();document.querySelector('#geos').textContent=i.memory.geometries;document.querySelector('#tex').textContent=i.memory.textures;}}
+requestAnimationFrame(tick);document.querySelector('#loading').remove();
+</script>
+</body></html>
