@@ -1,0 +1,84 @@
+{
+  "schema": "kaopu.learning-probe/1.0",
+  "probeId": "ZX85-V121-DEPENDENCY-PATH-MANIFEST-N292",
+  "candidateId": "PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE",
+  "observedAt": "2026-11-15T11:46:54+08:00",
+  "boundedQuestion": "Does v121's newly vendored, licensed Three.js copy close the N290 clean-extraction mirror replay; if not, is the hidden development-path import the sole replay blocker, and can that copy count as package closure while CHECKSUMS.json omits it?",
+  "subject": {
+    "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+    "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+    "versionId": "121",
+    "modifiedAt": "2026-11-15T11:24:59+08:00",
+    "sizeBytes": 76140687,
+    "sha256": "39600bdd2b44940b34ec77affb701312c4d44fbf7660818e34bff02e695893b4",
+    "archiveEntryCount": 3036
+  },
+  "originalReplay": {
+    "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+    "exitCode": 1,
+    "error": "ERR_MODULE_NOT_FOUND",
+    "hardcodedMissingPath": "../../front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js",
+    "archiveContainsDotSitesCheckout": false,
+    "storedReceiptReproduced": false
+  },
+  "alternateDependency": {
+    "path": "door-pull-r45-package/vendor/three.module.js",
+    "corePath": "door-pull-r45-package/vendor/three.core.js",
+    "licensePath": "door-pull-r45-package/vendor/THREE-LICENSE.txt",
+    "presentInArchive": true,
+    "coveredByChecksumsManifest": false,
+    "declaredAsMirrorGateDependency": false
+  },
+  "counterfactual": {
+    "productionArtifactModified": false,
+    "temporaryCopyOnly": true,
+    "onlyChange": "replace the hidden .sites-checkout import with the existing package-relative Three.js copy",
+    "exitCode": 0,
+    "claims": {
+      "axesTested": 3,
+      "roundtripExact": true,
+      "orientedVolumePreserved": true,
+      "maxKinematicError": 1.7763568394002505e-15,
+      "evidenceRequired": true,
+      "realPartsMirrored": 0
+    },
+    "inference": "the hidden import path is the sole blocker for the generic mirror-math replay in v121; this does not validate package integrity, concrete mirrors or whole binding"
+  },
+  "manifestAudit": {
+    "archiveFilesExcludingManifest": 3035,
+    "manifestEntries": 2598,
+    "unmanifestedArchiveFiles": 437,
+    "missingManifestTargets": 0,
+    "digestMismatches": 11,
+    "mismatchedPaths": [
+      "zx5a-cab-source-r25/cabin-complete/CABIN_NATIVE_ASSEMBLY_CHECK.json",
+      "zx5a-cab-source-r25/cabin-complete/CABIN_NATIVE_ASSEMBLY_GENERATED.json",
+      "zx5a-cab-source-r25/cabin-complete/cabin-native-assembly-check.mjs",
+      "zx5a-cab-source-r25/cabin-complete/CAB_STRUCTURE_CHECK.json",
+      "zx5a-cab-source-r25/cabin-complete/ROOF_EXTERIOR_NETWORK_CHECK.json",
+      "zx5a-cab-source-r25/cabin-complete/HANDOFF.md",
+      "zx5a-cab-source-r25/cabin-complete/roof-exterior-network-check.mjs",
+      "zx5a-cab-source-r25/cabin-complete/rear-roof-exterior.mjs",
+      "zx5a-cab-source-r25/cabin-complete/CAB_STRUCTURE_GENERATED.json",
+      "zx5a-cab-source-r25/cabin-complete/cabin-structure-check.mjs",
+      "zx5a-cab-source-r25/cabin-complete/CABIN_NATIVE_ASSEMBLY_OPEN_R28.json"
+    ]
+  },
+  "integrationBoundary": {
+    "specificRearviewMirrorPairImplemented": false,
+    "symmetryPairIdReferences": 0,
+    "wholeCabinBindingFound": false,
+    "realPartsMirroredByGenericGate": 0,
+    "readmeStillClaimsLatestV96": true
+  },
+  "decision": "PROBATION_COUNTERFACTUAL_PATH_FIX_PASS_HOLD_EXACT_PACKAGE_MANIFEST_AND_CONCRETE_MIRROR_INTEGRATION",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_CANDIDATE": true,
+    "GATE-RUN": true,
+    "IMPLEMENTED_PRODUCTION": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
