@@ -2,7 +2,7 @@
 
 - observedAt: `2026-11-16T03:43:41+08:00`
 - candidateId: `PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE`
-- lifecycle: `POSTED_PENDING / GATE-RUN`
+- lifecycle: `POSTED / GATE-RUN`
 - production Mother changed: `false`
 - main / R2 / Site / asset changed: `false`
 
@@ -58,3 +58,10 @@ Current trial state: `NOT_RUN_NO_CONCRETE_PAIR`.
 `HOLD_NO_CONCRETE_MIRROR_PAIR_ADD_SOURCE_BACKED_VISIBILITY_GATE_CANDIDATE`
 
 No production Mother, main, R2, Site or asset was modified.
+
+## Routing receipt
+
+- target: `#91`
+- commentId: `6900215394`
+- state: `POSTED`
+- acknowledged: `false`
