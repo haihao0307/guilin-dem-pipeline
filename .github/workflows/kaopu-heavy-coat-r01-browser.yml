@@ -38,13 +38,13 @@ jobs:
             for(const [label,url] of [['local',local],['public',publicUrl]]){
               const ctx=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
               const p=await ctx.newPage();
-              p.on('pageerror',e=>report.errors.push(label+': '+e.message));
+              p.on('pageerror',e=>report.errors.push(label+': '+e.message));p.on('console',m=>{if(m.type()==='error')console.log(label+' CONSOLE_ERROR '+m.text());});
               let ready=false;
               for(let attempt=0;attempt<2&&!ready;attempt++){
                 try{
                   await p.goto(url+(label==='public'?'?qa='+Date.now():''),{waitUntil:'domcontentloaded',timeout:20000});
                   await p.waitForTimeout(2500);
-                  const debug=await p.evaluate(()=>({title:document.title,hasShop:!!window.HRLTailorShop,hasCoatUI:!!document.querySelector('#coat-lab'),hasLab:!!window.KAOPUHeavyCoat,backend:document.querySelector('#backend')?.textContent,webgl:!!window.HRLTailorShop?.viewer?.gl,clothStatus:document.querySelector('#coat-metrics')?.textContent,errorMessage:document.querySelector('#error')?.textContent,bodyTail:document.body.innerText.slice(-320)}));
+                  const debug=await p.evaluate(()=>({title:document.title,hasShop:!!window.HRLTailorShop,hasCoatUI:!!document.querySelector('#coat-lab'),hasLab:!!window.KAOPUHeavyCoat,state:window.KAOPUHeavyCoat?.state,source:window.KAOPUHeavyCoat?.source?.slice(0,5),backend:document.querySelector('#backend')?.textContent,webgl:!!window.HRLTailorShop?.viewer?.gl,clothStatus:document.querySelector('#coat-metrics')?.textContent,errorMessage:document.querySelector('#error')?.textContent,bodyTail:document.body.innerText.slice(-320)}));
                   console.log(label+' DEBUG '+JSON.stringify(debug));
                   if(!debug.hasShop||!debug.webgl||!debug.hasCoatUI||!debug.hasLab)throw new Error(label+' missing startup dependency: '+JSON.stringify(debug));
                   await p.waitForFunction(()=>window.KAOPUHeavyCoat?.state?.frame>2,null,{timeout:12000});
