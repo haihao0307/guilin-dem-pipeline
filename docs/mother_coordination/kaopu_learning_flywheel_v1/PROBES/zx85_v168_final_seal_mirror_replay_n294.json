@@ -1,0 +1,94 @@
+{
+  "schema": "kaopu.learning-probe/1.0",
+  "probeId": "ZX85-V168-FINAL-SEAL-MIRROR-REPLAY-N294",
+  "candidateId": "PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE",
+  "observedAt": "2026-11-15T19:44:04+08:00",
+  "boundedQuestion": "Does v168 close N293 by sealing the final archive and materializing the exact mirror-gate dependency, without falsely promoting one entrypoint replay to whole external-runtime closure?",
+  "subject": {
+    "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+    "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+    "versionId": "168",
+    "modifiedAt": "2026-11-15T19:39:15+08:00",
+    "sizeBytes": 153676069,
+    "sha256": "ffcb305c9d23c8e778c98cc32db76edf2d8ac7d2280f2975b8743add752d174b",
+    "archiveEntryCount": 3589,
+    "archiveFilesExcludingManifest": 3588
+  },
+  "comparisonToV139": {
+    "sizeBytesDelta": 20531041,
+    "archiveFilesExcludingManifestDelta": 296,
+    "manifestEntriesV139": 2598,
+    "manifestEntriesV168": 3588,
+    "manifestEntriesDelta": 990,
+    "unmanifestedFilesV139": 694,
+    "unmanifestedFilesV168": 0,
+    "digestMismatchesV139": 11,
+    "digestMismatchesV168": 0,
+    "inference": "v168 rebuilt the integrity manifest over the final archive instead of preserving the stale v139 seal; the exact subject has full key-set coverage and zero digest mismatch"
+  },
+  "exactFinalSealAudit": {
+    "actualFilesExcludingManifest": 3588,
+    "manifestEntries": 3588,
+    "missingManifestTargets": 0,
+    "unmanifestedArchiveFiles": 0,
+    "digestMismatches": 0,
+    "buildScriptSha256": "b0b69022a2579eb5cf9cfd99d0e59aa73b4918b8d49ba321e0eb5d3b3f4901fd",
+    "sealSequence": "all content mutations -> rebuild CHECKSUMS.json -> write .next.zip -> reopen and verify every digest -> atomic os.replace",
+    "recoveryReceipt": "RECOVERY_1100_INTEGRITY.json",
+    "recoveryReceiptSha256": "3bc6534dd4e5d016c2b1e076e0c5a87e5850c135d01bbc13bb3c8c9e7861e0aa",
+    "reportedPreexistingStaleEntries": 11,
+    "postSealMutationDetected": false
+  },
+  "restoreRuntimeClosure": {
+    "path": "RESTORE_RUNTIME_CLOSURE.json",
+    "sha256": "367c9af9cfabebf23fc16991d88469c0b0a8b456ac92de64c3e1c2cd575d0b40",
+    "ownFilesDeclared": 150,
+    "ownFilesPresent": 150,
+    "ownDigestMismatches": 0,
+    "externalFilesDeclared": 18,
+    "externalFilesPresent": 1,
+    "externalFilesAbsent": 17,
+    "presentExternalPath": "front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js",
+    "externalPerFileDigestsProvided": false,
+    "externalLicenseProvided": false,
+    "immutableSourceLocatorProvided": false,
+    "materializationCommandProvided": false,
+    "materializationReceiptProvided": false,
+    "broaderExternalRuntimeClosure": "HOLD"
+  },
+  "cleanExtractionMirrorReplay": {
+    "methodUnchangedFromV81": true,
+    "parameterMirrorSha256": "a53c5e778e8111bc6506b1d19fe29c18a31e19d47436116c85df39dacc841a07",
+    "parameterMirrorCheckSha256": "5e137ccf8ec865330018b1f6746364993a6e03f6b75bbe65781214cfa86b609e",
+    "storedReceiptSha256": "a47eb46021ba0c45faaff1345eaaae1edd5e7d8eded1b810bf17ad1a6e2af535",
+    "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+    "exitCode": 0,
+    "axesTested": 3,
+    "roundtripExact": true,
+    "orientedVolumePreserved": true,
+    "maxKinematicError": 1.7763568394002505e-15,
+    "evidenceRequired": true,
+    "realPartsMirrored": 0,
+    "entrypointDependencyClosure": "PASS_FOR_THIS_GENERIC_MIRROR_GATE"
+  },
+  "integrationBoundary": {
+    "specificRearviewMirrorPairImplemented": false,
+    "symmetryPairIdReferences": 0,
+    "wholeBindingForConcreteMirrorPair": false,
+    "realPartsMirroredByGenericReceipt": 0,
+    "falseGlobalClosurePromotionForbidden": true
+  },
+  "gateStates": {
+    "postSealMutationGate": "PASS_V168_EXACT_SUBJECT",
+    "genericMirrorEntrypointReplay": "PASS_V168_CLEAN_EXTRACTION",
+    "broaderExternalRuntimeClosure": "HOLD_17_OF_18_ABSENT_AND_UNPINNED",
+    "concreteMirrorPairIntegration": "HOLD_ZERO_REAL_PARTS_AND_ZERO_WHOLE_BINDING"
+  },
+  "decision": "PARTIAL_PASS_FINAL_SEAL_AND_MIRROR_REPLAY_HOLD_EXTERNAL_RUNTIME_AND_CONCRETE_BINDING",
+  "routingReceipt": {
+    "target": "#91",
+    "commentId": null,
+    "state": "NOT_POSTED",
+    "acknowledged": false
+  }
+}
