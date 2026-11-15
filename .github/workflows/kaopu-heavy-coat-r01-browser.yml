@@ -1,0 +1,82 @@
+name: KAOPU Heavy Coat R01 browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/kaopu-heavy-coat-r01-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Verify local and public page
+        shell: bash
+        run: |
+          cat > /tmp/heavy-coat-check.mjs <<'JS'
+          import path from 'node:path';
+          import fs from 'node:fs';
+          import { pathToFileURL } from 'node:url';
+          import { chromium } from 'file:///home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/node_modules/playwright/index.mjs';
+          const local=pathToFileURL(path.resolve('kaopu-clothing/heavy-coat-mother-r01/index.html')).href;
+          const publicUrl='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-clothing/heavy-coat-mother-r01/';
+          const browser=await chromium.launch({headless:true,args:['--enable-webgl','--enable-unsafe-swiftshader','--use-gl=angle']});
+          const report={version:'heavy-coat-r01',checkedAtUtc:new Date().toISOString(),screens:[],errors:[],passed:false};
+          try{
+            for(const [label,url] of [['local',local],['public',publicUrl]]){
+              const ctx=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1});
+              const p=await ctx.newPage();
+              p.on('pageerror',e=>report.errors.push(label+': '+e.message));
+              let ready=false;
+              for(let attempt=0;attempt<7&&!ready;attempt++){
+                try{
+                  await p.goto(url+(label==='public'?'?qa='+Date.now():''),{waitUntil:'domcontentloaded',timeout:20000});
+                  await p.waitForFunction(()=>window.KAOPUHeavyCoat?.state?.frame>2,null,{timeout:15000});
+                  ready=true;
+                }catch(e){if(attempt===6)throw new Error(label+' startup: '+e.message);await p.waitForTimeout(3500);}
+              }
+              const before=await p.evaluate(()=>({title:document.title,
+                frames:window.KAOPUHeavyCoat.state.frame,
+                source:window.KAOPUHeavyCoat.source,
+                canvas:document.querySelector('#scene')?.width,
+                metrics:document.querySelector('#coat-metrics')?.textContent}));
+              if(!before.source?.length||!before.canvas||before.frames<2)throw new Error(label+' missing cloth geometry');
+              await p.selectOption('#coat-m','wool');
+              await p.selectOption('#coat-p','raise');
+              await p.$eval('#coat-a',el=>{el.value='0.8';el.dispatchEvent(new Event('input',{bubbles:true}));});
+              await p.waitForTimeout(700);
+              const after=await p.evaluate(()=>({state:window.KAOPUHeavyCoat.state,metrics:document.querySelector('#coat-metrics')?.textContent}));
+              if(after.state.mat!=='wool'||after.state.pose!=='raise'||after.state.amp<.7)throw new Error(label+' control binding failed');
+              report.screens.push({label,ready,before,after});
+              await p.screenshot({path:'/tmp/kaopu-heavy-coat-'+label+'.png'});
+              await ctx.close();
+            }
+            if(report.errors.length)throw new Error('Page errors: '+report.errors.join('; '));
+            report.passed=true;
+          }catch(e){report.errors.push(e.message)}
+          finally{await browser.close()}
+          console.log(JSON.stringify(report,null,2));
+          fs.writeFileSync('heavy-coat-qa-report.json',JSON.stringify(report,null,2));
+          if(!report.passed)process.exit(1);
+          JS
+          node /tmp/heavy-coat-check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kaopu-heavy-coat-r01-browser-qa
+          path: |
+            heavy-coat-qa-report.json
+            /tmp/kaopu-heavy-coat-local.png
+            /tmp/kaopu-heavy-coat-public.png
