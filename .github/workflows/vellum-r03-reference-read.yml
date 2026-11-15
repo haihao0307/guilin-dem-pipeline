@@ -1,0 +1,27 @@
+name: Vellum R03 exact reference read
+on:
+  push:
+    branches: [codex/vellum-fabrics-r03-20261115]
+    paths: [.github/workflows/vellum-r03-reference-read.yml]
+permissions:
+  contents: read
+jobs:
+  reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Read exact public reference, not a substitute
+        run: |
+          mkdir -p reference/frames
+          curl --fail --location --retry 2 --max-time 90 'https://www.sidefx.com/docs/houdini/videos/vellum_fabrics_small.webm' -o reference/vellum_fabrics_small.webm
+          sha256sum reference/vellum_fabrics_small.webm > reference/source.sha256
+          printf '%s\n' 'Source: https://www.sidefx.com/docs/houdini/videos/vellum_fabrics_small.webm' 'Task: study visible fabric motion before implementation; no claim of exact proprietary solver parameters.' > reference/README.txt
+          if ! command -v ffmpeg; then sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg; fi
+          ffprobe -v quiet -show_format -show_streams -of json reference/vellum_fabrics_small.webm > reference/probe.json
+          ffmpeg -v error -i reference/vellum_fabrics_small.webm -vf 'fps=1,scale=960:-2' -q:v 2 reference/frames/frame-%03d.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vellum-r03-exact-reference
+          path: reference/
+          retention-days: 1
+          if-no-files-found: error
