@@ -41,7 +41,10 @@
     "left door and right fixed window remain distinct ZX85 assemblies and must not be mirrored into each other",
     "a stored regression result is not a fresh GATE-RUN receipt unless the exact delivered package contains every dependency needed to reproduce it from clean extraction",
     "a generic helper does not implement a user-named rearview-mirror pair; concrete object IDs, parent bindings and whole integration evidence are required",
-    "production replacement remains forbidden until the current whole builder consumes the mirrored child through the declared parent assembly and the verifier confirms no independent duplicate geometry"
+    "production replacement remains forbidden until the current whole builder consumes the mirrored child through the declared parent assembly and the verifier confirms no independent duplicate geometry",
+    "dependency closure requires a canonical package-relative locator plus content digest, license/provenance and owning package; a mutable developer checkout path cannot satisfy closure",
+    "every gate executable and every dependency used by it must be covered by the delivered package manifest; an unmanifested file cannot satisfy dependency closure even when present in the ZIP",
+    "manifest coverage gaps or digest mismatches fail subject integrity before a stored receipt or counterfactual gate result can be promoted to production evidence"
   ],
   "n290FreshObservation": {
     "observedAt": "2026-11-14T23:38:43+08:00",
@@ -118,7 +121,7 @@
     "failIf": "a stored PASS cannot be reproduced, a whole asymmetric assembly is mirrored, exceptions disappear, or a generic helper is reported as implemented rearview-mirror hardware",
     "rollback": "remove this N290 Candidate and learning log; no production Mother, main, R2 OS or global gate changed"
   },
-  "decision": "HOLD_MIRROR_GATE_DEPENDENCY_CLOSURE_MISSING",
+  "decision": "PROBATION_COUNTERFACTUAL_PATH_FIX_PASS_HOLD_EXACT_PACKAGE_MANIFEST_AND_CONCRETE_MIRROR_INTEGRATION",
   "lifecycle": {
     "POSTED": true,
     "ACKNOWLEDGED": false,
@@ -128,5 +131,93 @@
     "ADOPTED": false,
     "USER_ACCEPTED": false
   },
-  "adoption": "NOT_ADOPTED"
+  "adoption": "NOT_ADOPTED",
+  "currentBoundedQuestion": "Does v121's newly vendored, licensed Three.js copy close the N290 clean-extraction mirror replay; if not, is the hidden development-path import the sole replay blocker, and can that copy count as package closure while CHECKSUMS.json omits it?",
+  "n292V121Observation": {
+    "observedAt": "2026-11-15T11:46:54+08:00",
+    "targetArtifact": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "121",
+      "modifiedAt": "2026-11-15T11:24:59+08:00",
+      "sizeBytes": 76140687,
+      "sha256": "39600bdd2b44940b34ec77affb701312c4d44fbf7660818e34bff02e695893b4",
+      "archiveEntryCount": 3036
+    },
+    "methodIdentity": {
+      "parameterMirrorSha256": "a53c5e778e8111bc6506b1d19fe29c18a31e19d47436116c85df39dacc841a07",
+      "parameterMirrorCheckSha256": "5e137ccf8ec865330018b1f6746364993a6e03f6b75bbe65781214cfa86b609e",
+      "storedReceiptSha256": "a47eb46021ba0c45faaff1345eaaae1edd5e7d8eded1b810bf17ad1a6e2af535",
+      "changedSinceV81": false
+    },
+    "cleanExtractionReplay": {
+      "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+      "exitCode": 1,
+      "error": "ERR_MODULE_NOT_FOUND",
+      "hardcodedMissingPath": "../../front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js",
+      "archiveContainsDotSitesCheckout": false,
+      "storedReceiptReproduced": false
+    },
+    "packagedAlternateDependency": {
+      "path": "door-pull-r45-package/vendor/three.module.js",
+      "corePath": "door-pull-r45-package/vendor/three.core.js",
+      "licensePath": "door-pull-r45-package/vendor/THREE-LICENSE.txt",
+      "presentInArchive": true,
+      "coveredByChecksumsManifest": false,
+      "declaredAsMirrorGateDependency": false
+    },
+    "singleChangeCounterfactual": {
+      "productionArtifactModified": false,
+      "temporaryCopyOnly": true,
+      "onlyChange": "replace the hidden .sites-checkout import with the existing package-relative Three.js copy",
+      "exitCode": 0,
+      "claims": {
+        "axesTested": 3,
+        "roundtripExact": true,
+        "orientedVolumePreserved": true,
+        "maxKinematicError": 1.7763568394002505e-15,
+        "evidenceRequired": true,
+        "realPartsMirrored": 0
+      },
+      "inference": "the hidden import path is the sole blocker for the generic mirror-math replay in v121; this does not validate package integrity, concrete mirrors or whole binding"
+    },
+    "checksumManifestAudit": {
+      "archiveFilesExcludingManifest": 3035,
+      "manifestEntries": 2598,
+      "unmanifestedArchiveFiles": 437,
+      "missingManifestTargets": 0,
+      "digestMismatches": 11,
+      "mismatchedPaths": [
+        "zx5a-cab-source-r25/cabin-complete/CABIN_NATIVE_ASSEMBLY_CHECK.json",
+        "zx5a-cab-source-r25/cabin-complete/CABIN_NATIVE_ASSEMBLY_GENERATED.json",
+        "zx5a-cab-source-r25/cabin-complete/cabin-native-assembly-check.mjs",
+        "zx5a-cab-source-r25/cabin-complete/CAB_STRUCTURE_CHECK.json",
+        "zx5a-cab-source-r25/cabin-complete/ROOF_EXTERIOR_NETWORK_CHECK.json",
+        "zx5a-cab-source-r25/cabin-complete/HANDOFF.md",
+        "zx5a-cab-source-r25/cabin-complete/roof-exterior-network-check.mjs",
+        "zx5a-cab-source-r25/cabin-complete/rear-roof-exterior.mjs",
+        "zx5a-cab-source-r25/cabin-complete/CAB_STRUCTURE_GENERATED.json",
+        "zx5a-cab-source-r25/cabin-complete/cabin-structure-check.mjs",
+        "zx5a-cab-source-r25/cabin-complete/CABIN_NATIVE_ASSEMBLY_OPEN_R28.json"
+      ]
+    },
+    "integrationBoundary": {
+      "specificRearviewMirrorPairImplemented": false,
+      "symmetryPairIdReferences": 0,
+      "wholeCabinBindingFound": false,
+      "realPartsMirroredByGenericGate": 0,
+      "readmeStillClaimsLatestV96": true
+    },
+    "falsifiableInference": {
+      "hypothesis": "if only the hidden development-path import blocks the generic test, replacing that import with the existing packaged Three.js copy will make the clean replay pass without changing mirror math",
+      "result": "SUPPORTED_IN_TEMPORARY_COUNTERFACTUAL_ONLY",
+      "adoptionBoundary": "cannot be promoted until the dependency is canonically owned and manifest-covered, CHECKSUMS.json is complete and correct, and a concrete eligible mirror pair is bound into the current whole"
+    },
+    "decision": "PROBATION_COUNTERFACTUAL_PATH_FIX_PASS_HOLD_EXACT_PACKAGE_MANIFEST_AND_CONCRETE_MIRROR_INTEGRATION",
+    "routingReceipt": {
+      "target": "#91",
+      "state": "NOT_POSTED_AT_AUTHORING",
+      "acknowledged": false
+    }
+  }
 }
