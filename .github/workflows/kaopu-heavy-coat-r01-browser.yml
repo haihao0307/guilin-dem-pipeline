@@ -32,7 +32,7 @@ jobs:
           import { chromium } from 'file:///home/runner/work/guilin-dem-pipeline/guilin-dem-pipeline/node_modules/playwright/index.mjs';
           const local=pathToFileURL(path.resolve('kaopu-clothing/heavy-coat-mother-r01/index.html')).href;
           const publicUrl='https://haihao0307.github.io/guilin-dem-pipeline/kaopu-clothing/heavy-coat-mother-r01/';
-          const browser=await chromium.launch({headless:true,args:['--enable-webgl','--enable-unsafe-swiftshader','--use-gl=angle']});
+          const browser=await chromium.launch({headless:true,args:['--enable-webgl','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader','--disable-gpu-sandbox']});
           const report={version:'heavy-coat-r01',checkedAtUtc:new Date().toISOString(),screens:[],errors:[],passed:false};
           try{
             for(const [label,url] of [['local',local],['public',publicUrl]]){
@@ -40,12 +40,16 @@ jobs:
               const p=await ctx.newPage();
               p.on('pageerror',e=>report.errors.push(label+': '+e.message));
               let ready=false;
-              for(let attempt=0;attempt<7&&!ready;attempt++){
+              for(let attempt=0;attempt<2&&!ready;attempt++){
                 try{
                   await p.goto(url+(label==='public'?'?qa='+Date.now():''),{waitUntil:'domcontentloaded',timeout:20000});
-                  await p.waitForFunction(()=>window.KAOPUHeavyCoat?.state?.frame>2,null,{timeout:15000});
+                  await p.waitForTimeout(2500);
+                  const debug=await p.evaluate(()=>({title:document.title,hasShop:!!window.HRLTailorShop,hasCoatUI:!!document.querySelector('#coat-lab'),hasLab:!!window.KAOPUHeavyCoat,backend:document.querySelector('#backend')?.textContent,webgl:!!window.HRLTailorShop?.viewer?.gl,clothStatus:document.querySelector('#coat-metrics')?.textContent,errorMessage:document.querySelector('#error')?.textContent,bodyTail:document.body.innerText.slice(-320)}));
+                  console.log(label+' DEBUG '+JSON.stringify(debug));
+                  if(!debug.hasShop||!debug.webgl||!debug.hasCoatUI||!debug.hasLab)throw new Error(label+' missing startup dependency: '+JSON.stringify(debug));
+                  await p.waitForFunction(()=>window.KAOPUHeavyCoat?.state?.frame>2,null,{timeout:12000});
                   ready=true;
-                }catch(e){if(attempt===6)throw new Error(label+' startup: '+e.message);await p.waitForTimeout(3500);}
+                }catch(e){if(attempt===1)throw new Error(label+' startup: '+e.message);await p.waitForTimeout(3500);}
               }
               const before=await p.evaluate(()=>({title:document.title,
                 frames:window.KAOPUHeavyCoat.state.frame,
