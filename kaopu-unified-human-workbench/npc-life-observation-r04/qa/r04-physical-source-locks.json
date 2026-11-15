@@ -1,0 +1,54 @@
+{
+  "schema": "kaopu/r04-physical-source-locks@1",
+  "baselineSourceHead": "1ba2b58eb3fdd6efe60b993240e988980547c93e",
+  "baselineVersion": "NPC-LIFE-OBSERVATION-R03",
+  "encoding": "UTF-8; no newline normalization",
+  "scope": "Exact preservation locks for the existing fixed-station dimensions, construction, drive/state/physics flow and window algorithms. Boundary task metadata, immutable snapshots and synchronous review invalidation are separately covered by state-boundary.mjs; native GPU/browser evidence remains independently required.",
+  "locks": [
+    {
+      "id": "life-dimensions-and-math",
+      "file": "LifeWorld.mjs",
+      "startAnchor": "export const DIM = Object.freeze(",
+      "endAnchor": "\n/** Shared authoritative rigid-body world.",
+      "includeEndAnchor": false,
+      "expectedBytes": 751,
+      "sha256": "c96e5df347088de74ababcdef94c6a8492e4e4882c5a20db199dfd20ad8ee5eb"
+    },
+    {
+      "id": "life-rigid-world-construction",
+      "file": "LifeWorld.mjs",
+      "startAnchor": "    this.world=new CANNON.World(",
+      "endAnchor": "    this.agents=new Map(",
+      "includeEndAnchor": false,
+      "expectedBytes": 1000,
+      "sha256": "15622e5a58b51af50f31d7eed8bfb4bf5584fdf3750838e9e6aa87b28739a195"
+    },
+    {
+      "id": "life-drive-task-physics-flow",
+      "file": "LifeWorld.mjs",
+      "startAnchor": "  drive(a,target,grip){",
+      "endAnchor": "    this.window?.postStep(dt);\n",
+      "includeEndAnchor": true,
+      "expectedBytes": 4811,
+      "sha256": "1503dc651c8c37ba53a257a48aad1c4d6023abb78264fbf36eb838c6b3cc9fb0"
+    },
+    {
+      "id": "window-dimensions-construction-contact-and-recovery",
+      "file": "WindowInteraction.mjs",
+      "startAnchor": "const arr=v=>",
+      "endAnchor": "  cancel(id",
+      "includeEndAnchor": false,
+      "expectedBytes": 22169,
+      "sha256": "ced61fd58288bbeb721ed4c75e36df94a2d01b8bca8259c2e43f1527c7cadab2"
+    },
+    {
+      "id": "window-cancel-physical-cleanup-and-full-step",
+      "file": "WindowInteraction.mjs",
+      "startAnchor": "    const task=a.task,from=a.phase;this.release(a,'cancelled',true);a.generation++;",
+      "endAnchor": "  snapshot(",
+      "includeEndAnchor": false,
+      "expectedBytes": 7945,
+      "sha256": "a45dee63127053df5c5f5d4542a3ed0b754e94cbc5c1493e5c3b05cc5377c47b"
+    }
+  ]
+}

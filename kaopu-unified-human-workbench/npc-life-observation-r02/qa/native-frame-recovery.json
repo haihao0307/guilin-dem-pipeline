@@ -1,0 +1,3998 @@
+{
+  "schema": "npc-native-frame-recovery-qa/2",
+  "passed": true,
+  "rigBaselineHead": "85718686d88585a449c3add050a089c45eee1207",
+  "sourceUnderTest": {
+    "directory": "npc-life-observation-r02",
+    "sourceHashes": {
+      "ActorAdapter.mjs": "f7c1604782811d7742c85820c42dcb383b21bb8dea215f7d289b24a9e10ea39d",
+      "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+      "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1"
+    },
+    "startedAt": "2026-10-20T06:27:44.337Z",
+    "completedAt": "2026-10-20T06:27:55.080Z"
+  },
+  "fixture": "Accepted R07 native body triangles, full 104-bone rig and all CSR influence rest points; unrendered height sentinels only",
+  "actualProductionFunctions": true,
+  "fullHeadAndGPUVerified": false,
+  "rigidWorldVerified": false,
+  "limits": "The current WINDOW_DIM real box parts, frame, stops, blocker and DIM table are geometrically checked at prescribed yaw samples; actual dynamic contacts, moving-leaf release and full R07 rendering still require current Chromium acceptance.",
+  "geometrySourceHashes": {
+    "WindowInteraction.mjs": "97284a3cefc521cdfc2a7d8bae1e263f7328e5a14dcf3cde0ef582e415b84ce7",
+    "LifeWorld.mjs": "ce3489e4539787010aac078ca128b5cd7e11ac24e75bd3360808bfc40d82386b"
+  },
+  "sourceActors": [
+    {
+      "id": "A",
+      "heightM": 1.9273384809494019,
+      "bodyVertices": 9253,
+      "influences": 28658
+    },
+    {
+      "id": "B",
+      "heightM": 1.6332803964614868,
+      "bodyVertices": 9253,
+      "influences": 28658
+    },
+    {
+      "id": "C",
+      "heightM": 1.8001427054405212,
+      "bodyVertices": 9253,
+      "influences": 28658
+    }
+  ],
+  "rotatedSamples": 160,
+  "maxHandErrorM": 6.379964213648124e-8,
+  "maxBottlePenetrationM": 0.0009999934788185033,
+  "maxLeafPenetrationM": 0,
+  "minReachMarginM": 0.08084316722365614,
+  "maxBoneErrorM": 4.440892098500626e-16,
+  "maxFootJointErrorM": 5.551115123125783e-17,
+  "maxFootErrorM": 2.6586991880867813e-8,
+  "maxFootWorldYM": 2.6182882861824908e-8,
+  "defaultFrameUnchanged": true,
+  "otherActorsRemainIndependent": true,
+  "solidNegativeControlPassed": true,
+  "recoverySolidClearancePassed": true,
+  "framedSolidClearancePassed": true,
+  "withdrawalDistanceM": 0.12,
+  "withdrawalUpM": -0.1,
+  "withdrawalTableMarginM": 0.15,
+  "recoverySolidLimitM": 0.003,
+  "recoveries": [
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "steps": 78,
+      "startErrorRad": 2.0039787558010813,
+      "endErrorRad": 0,
+      "restPalmErrorM": 2.7401992126251197e-8,
+      "withdrawalPlan": {
+        "distanceM": 0.12,
+        "rearZ": 0.29000000000000004,
+        "safePalmZ": 0.14000000000000004,
+        "to": [
+          0.4216586063939278,
+          1.0999999999999999,
+          0.0772727680383134
+        ]
+      },
+      "maxWithdrawalSolidPenetrationM": 0,
+      "maxRestSolidPenetrationM": 0,
+      "deepestRestWitness": null,
+      "complete": true
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "steps": 78,
+      "startErrorRad": 2.0974878272386692,
+      "endErrorRad": 0,
+      "restPalmErrorM": 2.4615178463140208e-8,
+      "withdrawalPlan": {
+        "distanceM": 0.12,
+        "rearZ": 0.29000000000000004,
+        "safePalmZ": 0.14000000000000004,
+        "to": [
+          0.4216586063939278,
+          1.0999999999999999,
+          0.0772727680383134
+        ]
+      },
+      "maxWithdrawalSolidPenetrationM": 0,
+      "maxRestSolidPenetrationM": 0,
+      "deepestRestWitness": null,
+      "complete": true
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "steps": 78,
+      "startErrorRad": 2.2201244559930196,
+      "endErrorRad": 0,
+      "restPalmErrorM": 1.0135396241827671e-8,
+      "withdrawalPlan": {
+        "distanceM": 0.12,
+        "rearZ": 0.29000000000000004,
+        "safePalmZ": 0.14000000000000004,
+        "to": [
+          0.4216586063939278,
+          1.0999999999999999,
+          0.0772727680383134
+        ]
+      },
+      "maxWithdrawalSolidPenetrationM": 0,
+      "maxRestSolidPenetrationM": 0,
+      "deepestRestWitness": null,
+      "complete": true
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "steps": 78,
+      "startErrorRad": 2.749085212770813,
+      "endErrorRad": 0,
+      "restPalmErrorM": 2.461517846701526e-8,
+      "withdrawalPlan": {
+        "distanceM": 0.12,
+        "rearZ": 0.29000000000000004,
+        "safePalmZ": 0.14000000000000004,
+        "to": [
+          0.4216586063939278,
+          1.0999999999999999,
+          0.0772727680383134
+        ]
+      },
+      "maxWithdrawalSolidPenetrationM": 0,
+      "maxRestSolidPenetrationM": 0,
+      "deepestRestWitness": null,
+      "complete": true
+    }
+  ],
+  "rows": [
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0,
+      "handErrorM": 4.368317646784918e-8,
+      "reachMarginM": 0.1265618301792945,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.16367939089236094,
+          1.2521063624582098,
+          0.4121151304603229
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.1449174941446927e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.25,
+      "handErrorM": 4.368317646784918e-8,
+      "reachMarginM": 0.1265618301792945,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.16355094408930865,
+          1.2516132791402685,
+          0.4124970647303249
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.0531133177191805e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.5,
+      "handErrorM": 4.368317646784918e-8,
+      "reachMarginM": 0.1265618301792945,
+      "bottlePenetrationM": 0.00005904931313002737,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23987759414001575,
+          1.1713525532457025,
+          0.4352934478565844
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.75,
+      "handErrorM": 4.368317646784918e-8,
+      "reachMarginM": 0.1265618301792945,
+      "bottlePenetrationM": 0.0004376645594352524,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24051018723685502,
+          1.265640329565489,
+          0.46072488665028677
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.42861286636753e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 1,
+      "handErrorM": 4.368317646784918e-8,
+      "reachMarginM": 0.1265618301792945,
+      "bottlePenetrationM": 0.0009998980839586655,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2163701334248656,
+          1.2349660678863328,
+          0.461859716633622
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.122502256758253e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0,
+      "handErrorM": 3.808246974002229e-8,
+      "reachMarginM": 0.15533728941808767,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.17750940584558428,
+          1.2521063624582098,
+          0.3711257555679047
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.255140518769849e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.25,
+      "handErrorM": 3.808246974002229e-8,
+      "reachMarginM": 0.15533728941808767,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.17734816073103582,
+          1.2516132791402685,
+          0.3714950404919487
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.5,
+      "handErrorM": 3.808246974002229e-8,
+      "reachMarginM": 0.15533728941808767,
+      "bottlePenetrationM": 0.000059065036725515496,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.25139749354258445,
+          1.1713525532457025,
+          0.4008569908782228
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.75,
+      "handErrorM": 3.808246974002229e-8,
+      "reachMarginM": 0.15533728941808767,
+      "bottlePenetrationM": 0.00043766677166944684,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24981120020024072,
+          1.265640329565489,
+          0.4262467717037438
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.914335439641036e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 1,
+      "handErrorM": 3.808246974002229e-8,
+      "reachMarginM": 0.15533728941808767,
+      "bottlePenetrationM": 0.0009999151224088752,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2256640998047621,
+          1.2349660678863328,
+          0.4252733346444777
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.2612801348363973e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0,
+      "handErrorM": 3.896717224483232e-8,
+      "reachMarginM": 0.17878112157075404,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.19485924052432663,
+          1.2521063624582098,
+          0.33149772964548974
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.498001805406602e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.25,
+      "handErrorM": 3.896717224483232e-8,
+      "reachMarginM": 0.17878112157075404,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1946664244441489,
+          1.2516132791402685,
+          0.3318515464665429
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.498001805406602e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.5,
+      "handErrorM": 3.896717224483232e-8,
+      "reachMarginM": 0.17878112157075404,
+      "bottlePenetrationM": 0.000059071649419539796,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2658749313033768,
+          1.1713525532457025,
+          0.36755556756749697
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.75,
+      "handErrorM": 3.896717224483232e-8,
+      "reachMarginM": 0.17878112157075404,
+      "bottlePenetrationM": 0.00043768291971915674,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2620818093639522,
+          1.265640329565489,
+          0.3927105114438806
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.8449465006019636e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 1,
+      "handErrorM": 3.896717224483232e-8,
+      "reachMarginM": 0.17878112157075404,
+      "bottlePenetrationM": 0.0009999250779274757,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2381114208776557,
+          1.2349660678863328,
+          0.38963622083291927
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0,
+      "handErrorM": 4.090184461262384e-8,
+      "reachMarginM": 0.19571624322175452,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21559685989198385,
+          1.2521063624582098,
+          0.29353261022270827
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.25,
+      "handErrorM": 4.090184461262384e-8,
+      "reachMarginM": 0.19571624322175452,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2153739369349823,
+          1.2516132791402685,
+          0.2938682827920883
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.5,
+      "handErrorM": 4.090184461262384e-8,
+      "reachMarginM": 0.19571624322175452,
+      "bottlePenetrationM": 0.00005905812586614462,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2831996497006444,
+          1.1713525532457025,
+          0.3356426828848533
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.75,
+      "handErrorM": 4.090184461262384e-8,
+      "reachMarginM": 0.19571624322175452,
+      "bottlePenetrationM": 0.0004376687999886192,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2772285821920041,
+          1.265640329565489,
+          0.3603712962843456
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 1,
+      "handErrorM": 4.090184461262384e-8,
+      "reachMarginM": 0.19571624322175452,
+      "bottlePenetrationM": 0.0009999102320697312,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2536173615282262,
+          1.2349660678863328,
+          0.3552195707495215
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.122502256758253e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0,
+      "handErrorM": 4.087265500153983e-8,
+      "reachMarginM": 0.20511699618938917,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23956443725979293,
+          1.2521063624582098,
+          0.2575193726296976
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.8449465006019636e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.25,
+      "handErrorM": 4.087265500153983e-8,
+      "reachMarginM": 0.20511699618938917,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23931310983510917,
+          1.2516132791402685,
+          0.2578343341403234
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.5,
+      "handErrorM": 4.087265500153983e-8,
+      "reachMarginM": 0.20511699618938917,
+      "bottlePenetrationM": 0.000059048596919561436,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.303239862673902,
+          1.1713525532457025,
+          0.30536118240083443
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.75,
+      "handErrorM": 4.087265500153983e-8,
+      "reachMarginM": 0.20511699618938917,
+      "bottlePenetrationM": 0.0004376648496956653,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2951362453215981,
+          1.265640329565489,
+          0.3294752580540695
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 1,
+      "handErrorM": 4.087265500153983e-8,
+      "reachMarginM": 0.20511699618938917,
+      "bottlePenetrationM": 0.0009999063253690252,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2720638799120452,
+          1.2349660678863328,
+          0.32228528736447337
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0,
+      "handErrorM": 4.509153485813386e-8,
+      "reachMarginM": 0.20633689003631145,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26657957771363494,
+          1.2521063624582098,
+          0.2237320810937416
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.463307335887066e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.25,
+      "handErrorM": 4.509153485813386e-8,
+      "reachMarginM": 0.20633689003631145,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26630175620124297,
+          1.2516132791402685,
+          0.22402394718996949
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.6653345369377348e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.5,
+      "handErrorM": 4.509153485813386e-8,
+      "reachMarginM": 0.20633689003631145,
+      "bottlePenetrationM": 0.00005904020048120434,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3258430028030542,
+          1.1713525532457025,
+          0.2769415265247689
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.6653345369377348e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.75,
+      "handErrorM": 4.509153485813386e-8,
+      "reachMarginM": 0.20633689003631145,
+      "bottlePenetrationM": 0.00043766229249389554,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.31566856780887165,
+          1.265640329565489,
+          0.3002575615702575
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 1,
+      "handErrorM": 4.509153485813386e-8,
+      "reachMarginM": 0.20633689003631145,
+      "bottlePenetrationM": 0.000999914355952862,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2933106284710876,
+          1.2349660678863328,
+          0.29108405886244937
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 4.3021142204224816e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0,
+      "handErrorM": 3.246168509296006e-8,
+      "reachMarginM": 0.19928752653424875,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2964366722367582,
+          1.2521063624582098,
+          0.1924279040399193
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.25,
+      "handErrorM": 3.246168509296006e-8,
+      "reachMarginM": 0.19928752653424875,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.29613446790714204,
+          1.2516132791402685,
+          0.1926944429921766
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.5,
+      "handErrorM": 3.246168509296006e-8,
+      "reachMarginM": 0.19928752653424875,
+      "bottlePenetrationM": 0.0000590528882780314,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.35083709267641117,
+          1.1713525532457025,
+          0.2506000058486929
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.75,
+      "handErrorM": 3.246168509296006e-8,
+      "reachMarginM": 0.19928752653424875,
+      "bottlePenetrationM": 0.00043767100214439636,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.33866922985189263,
+          1.265640329565489,
+          0.27294059550359717
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 1,
+      "handErrorM": 3.246168509296006e-8,
+      "reachMarginM": 0.19928752653424875,
+      "bottlePenetrationM": 0.0009999129559048955,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.31719588606324517,
+          1.2349660678863328,
+          0.26185334801521387
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 4.371503159461554e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0,
+      "handErrorM": 3.6989938907149935e-8,
+      "reachMarginM": 0.18446523097743528,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.32890851121554054,
+          1.2521063624582098,
+          0.16384508241772955
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.25,
+      "handErrorM": 3.6989938907149935e-8,
+      "reachMarginM": 0.18446523097743528,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3285842270525231,
+          1.2516132791402685,
+          0.1640842697043707
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.5,
+      "handErrorM": 3.6989938907149935e-8,
+      "reachMarginM": 0.18446523097743528,
+      "bottlePenetrationM": 0.00005906793647510178,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3780318736823568,
+          1.1713525532457025,
+          0.2265371121392998
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.8102520310824275e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.75,
+      "handErrorM": 3.6989938907149935e-8,
+      "reachMarginM": 0.18446523097743528,
+      "bottlePenetrationM": 0.0004376849028598362,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3639632137808252,
+          1.265640329565489,
+          0.24773218725182336
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "A",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 1,
+      "handErrorM": 3.6989938907149935e-8,
+      "reachMarginM": 0.18446523097743528,
+      "bottlePenetrationM": 0.0009999286176513335,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.34353789450209476,
+          1.2349660678863328,
+          0.23481560351657252
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8388068845354155e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0,
+      "handErrorM": 1.9193581020057113e-8,
+      "reachMarginM": 0.10789196040623145,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.16767552614055575,
+          1.2445068213594852,
+          0.410882723010468
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.25,
+      "handErrorM": 1.9193581020057113e-8,
+      "reachMarginM": 0.10789196040623145,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1675243676012902,
+          1.2438974225218753,
+          0.4113244505059422
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.9081958235744878e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.5,
+      "handErrorM": 1.9193581020057113e-8,
+      "reachMarginM": 0.10789196040623145,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2355378072194737,
+          1.1750443451484622,
+          0.42888256478443615
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.469446951953614e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.75,
+      "handErrorM": 1.9193581020057113e-8,
+      "reachMarginM": 0.10789196040623145,
+      "bottlePenetrationM": 0.0003910587485984676,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23893826537196639,
+          1.257304913210234,
+          0.45217410866224944
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 1,
+      "handErrorM": 1.9193581020057113e-8,
+      "reachMarginM": 0.10789196040623145,
+      "bottlePenetrationM": 0.000999935523685068,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2213036444238241,
+          1.2349451020256295,
+          0.4537045390642506
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.2898349882893854e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0,
+      "handErrorM": 2.354517769428466e-9,
+      "reachMarginM": 0.14832758047442013,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.18159772727839274,
+          1.2445068213594852,
+          0.3702463395137314
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.2898349882893854e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.25,
+      "handErrorM": 2.354517769428466e-9,
+      "reachMarginM": 0.14832758047442013,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1814086481344065,
+          1.2438974225218753,
+          0.37067319806594745
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.5,
+      "handErrorM": 2.354517769428466e-9,
+      "reachMarginM": 0.14832758047442013,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24763303222308242,
+          1.1750443451484622,
+          0.39409224460420295
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.75,
+      "handErrorM": 2.354517769428466e-9,
+      "reachMarginM": 0.14832758047442013,
+      "bottlePenetrationM": 0.00039107184378877474,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24899051583828247,
+          1.257304913210234,
+          0.41759152964273766
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.6653345369377348e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 1,
+      "handErrorM": 2.354517769428466e-9,
+      "reachMarginM": 0.14832758047442013,
+      "bottlePenetrationM": 0.000999948966939463,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23128959458694254,
+          1.2349451020256295,
+          0.41757918924337317
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5265566588595902e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0,
+      "handErrorM": 6.2745148926466894e-9,
+      "reachMarginM": 0.18391257793401977,
+      "bottlePenetrationM": 5.873837229108947e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.19900864725118517,
+          1.2445068213594852,
+          0.33097796516388267
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3245294578089215e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.25,
+      "handErrorM": 6.2745148926466894e-9,
+      "reachMarginM": 0.18391257793401977,
+      "bottlePenetrationM": 5.873837229108947e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.19878308059814143,
+          1.2438974225218753,
+          0.33138672445487116
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.249000902703301e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.5,
+      "handErrorM": 6.2745148926466894e-9,
+      "reachMarginM": 0.18391257793401977,
+      "bottlePenetrationM": 5.873837229108947e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26271435398983556,
+          1.1750443451484622,
+          0.3604884691668239
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3245294578089215e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.75,
+      "handErrorM": 6.2745148926466894e-9,
+      "reachMarginM": 0.18391257793401977,
+      "bottlePenetrationM": 0.00039107452212243377,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26201856356306596,
+          1.257304913210234,
+          0.3840166610335018
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.214306433183765e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 1,
+      "handErrorM": 6.2745148926466894e-9,
+      "reachMarginM": 0.18391257793401977,
+      "bottlePenetrationM": 0.000999955878323501,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2443861017969431,
+          1.2349451020256295,
+          0.3824616240143523
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0,
+      "handErrorM": 4.621927978084642e-9,
+      "reachMarginM": 0.21242955714568051,
+      "bottlePenetrationM": 4.217622383284603e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2197757795359726,
+          1.2445068213594852,
+          0.29337648496205676
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1163626406917047e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.25,
+      "handErrorM": 4.621927978084642e-9,
+      "reachMarginM": 0.21242955714568051,
+      "bottlePenetrationM": 4.217622383284603e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21951544868157236,
+          1.2438974225218753,
+          0.29376402839248
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.5,
+      "handErrorM": 4.621927978084642e-9,
+      "reachMarginM": 0.21242955714568051,
+      "bottlePenetrationM": 4.217622383284603e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.28066705939813497,
+          1.1750443451484622,
+          0.32832702808789777
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.75,
+      "handErrorM": 4.621927978084642e-9,
+      "reachMarginM": 0.21242955714568051,
+      "bottlePenetrationM": 0.0003910804595613701,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.27792331625872735,
+          1.257304913210234,
+          0.35170502806103626
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 1,
+      "handErrorM": 4.621927978084642e-9,
+      "reachMarginM": 0.21242955714568051,
+      "bottlePenetrationM": 0.0009999595045009635,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26049345580484995,
+          1.2349451020256295,
+          0.34861914578994274
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.3877787807814457e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0,
+      "handErrorM": 8.555938509133365e-9,
+      "reachMarginM": 0.23124761904093938,
+      "bottlePenetrationM": 1.9497620878938804e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24374107968977043,
+          1.2445068213594852,
+          0.2577280664257387
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.9081958235744878e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.25,
+      "handErrorM": 8.555938509133365e-9,
+      "reachMarginM": 0.23124761904093938,
+      "bottlePenetrationM": 1.9497620878938804e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24344796068636315,
+          1.2438974225218753,
+          0.25809144224577213
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.942890293094024e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.5,
+      "handErrorM": 8.555938509133365e-9,
+      "reachMarginM": 0.23124761904093938,
+      "bottlePenetrationM": 1.9497620878938804e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.30135449501614997,
+          1.1750443451484622,
+          0.2978526169612605
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.3877787807814457e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.75,
+      "handErrorM": 8.555938509133365e-9,
+      "reachMarginM": 0.23124761904093938,
+      "bottlePenetrationM": 0.00039107698662613904,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.29658365407910925,
+          1.257304913210234,
+          0.3209025421549569
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 1,
+      "handErrorM": 8.555938509133365e-9,
+      "reachMarginM": 0.23124761904093938,
+      "bottlePenetrationM": 0.000999955793473388,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.27948909656256293,
+          1.2349451020256295,
+          0.31630926961763833
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.6306400674181987e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0,
+      "handErrorM": 1.0924242922444497e-8,
+      "reachMarginM": 0.23799648045350033,
+      "bottlePenetrationM": 3.3951712691271396e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2707221438678558,
+          1.2445068213594852,
+          0.22430401041346448
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.25,
+      "handErrorM": 1.0924242922444497e-8,
+      "reachMarginM": 0.23799648045350033,
+      "bottlePenetrationM": 3.3951712691271396e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.27039847135828377,
+          1.2438974225218753,
+          0.22464045977352476
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.5,
+      "handErrorM": 1.0924242922444497e-8,
+      "reachMarginM": 0.23799648045350033,
+      "bottlePenetrationM": 3.3951712691271396e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3246192320851483,
+          1.1750443451484622,
+          0.26929720819735675
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.75,
+      "handErrorM": 1.0924242922444497e-8,
+      "reachMarginM": 0.23799648045350033,
+      "bottlePenetrationM": 0.0003910757042999771,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3178576343455478,
+          1.257304913210234,
+          0.2918436253893006
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 1,
+      "handErrorM": 1.0924242922444497e-8,
+      "reachMarginM": 0.23799648045350033,
+      "bottlePenetrationM": 0.0009999569996557295,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3012284321657428,
+          1.2349451020256295,
+          0.2857779667839318
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.214306433183765e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0,
+      "handErrorM": 2.0118008439226828e-8,
+      "reachMarginM": 0.23166317504489636,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3005136303258655,
+          1.2445068213594852,
+          0.19335867164923504
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.2898349882893854e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.25,
+      "handErrorM": 2.0118008439226828e-8,
+      "reachMarginM": 0.23166317504489636,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.30016186853721083,
+          1.2438974225218753,
+          0.19366563357737188
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.5,
+      "handErrorM": 2.0118008439226828e-8,
+      "reachMarginM": 0.23166317504489636,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.35028420453918374,
+          1.1750443451484622,
+          0.24287811993855185
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.498001805406602e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.75,
+      "handErrorM": 2.0118008439226828e-8,
+      "reachMarginM": 0.23166317504489636,
+      "bottlePenetrationM": 0.0003910596866101984,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.34158327995626536,
+          1.257304913210234,
+          0.2647494220592776
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.3877787807814457e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 1,
+      "handErrorM": 2.0118008439226828e-8,
+      "reachMarginM": 0.23166317504489636,
+      "bottlePenetrationM": 0.0009999409113070137,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.32554602480326633,
+          1.2349451020256295,
+          0.25725751888713894
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.3877787807814457e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0,
+      "handErrorM": 3.876690869194523e-9,
+      "reachMarginM": 0.21320104564135706,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.33288881702439005,
+          1.2445068213594852,
+          0.165127627746761
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.983724378680108e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.25,
+      "handErrorM": 3.876690869194523e-9,
+      "reachMarginM": 0.21320104564135706,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.33251163707168535,
+          1.2438974225218753,
+          0.16540276386761615
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.5,
+      "handErrorM": 3.876690869194523e-9,
+      "reachMarginM": 0.21320104564135706,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.37815410211309397,
+          1.1750443451484622,
+          0.21879642354931877
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0816681711721685e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.75,
+      "handErrorM": 3.876690869194523e-9,
+      "reachMarginM": 0.21320104564135706,
+      "bottlePenetrationM": 0.0003910731160162162,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.36758006599550186,
+          1.257304913210234,
+          0.23982614181661716
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 1,
+      "handErrorM": 3.876690869194523e-9,
+      "reachMarginM": 0.21320104564135706,
+      "bottlePenetrationM": 0.000999953803234789,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3522568302681993,
+          1.2349451020256295,
+          0.23096502055698837
+        ],
+        "vertex": 5523,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.457167719820518e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0,
+      "handErrorM": 5.091884599290323e-8,
+      "reachMarginM": 0.16651794584593843,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1650929095682077,
+          1.2494322605286754,
+          0.41197834287307333
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.25,
+      "handErrorM": 5.091884599290323e-8,
+      "reachMarginM": 0.16651794584593843,
+      "bottlePenetrationM": 0.000024168219913953126,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.16497237427281403,
+          1.248966189170301,
+          0.4123376456661021
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.5,
+      "handErrorM": 5.091884599290323e-8,
+      "reachMarginM": 0.16651794584593843,
+      "bottlePenetrationM": 0.0001393113070178656,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2382381359339052,
+          1.172501955483607,
+          0.43321609333172745
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 0.75,
+      "handErrorM": 5.091884599290323e-8,
+      "reachMarginM": 0.16651794584593843,
+      "bottlePenetrationM": 0.0004690057789009591,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23994502415652197,
+          1.2626570742143581,
+          0.4579266621984836
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.8449465006019636e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": 0,
+      "grip": 1,
+      "handErrorM": 5.091884599290323e-8,
+      "reachMarginM": 0.16651794584593843,
+      "bottlePenetrationM": 0.0009999634029611744,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21766346674524228,
+          1.233033245649012,
+          0.4597431183574005
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0,
+      "handErrorM": 5.155945814672837e-8,
+      "reachMarginM": 0.2016624178738451,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1789294576210259,
+          1.2494322605286754,
+          0.3711126779090168
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.2898349882893854e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.25,
+      "handErrorM": 5.155945814672837e-8,
+      "reachMarginM": 0.2016624178738451,
+      "bottlePenetrationM": 0.000024168086076081785,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.17877806618034403,
+          1.248966189170301,
+          0.3714601081264825
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.5,
+      "handErrorM": 5.155945814672837e-8,
+      "reachMarginM": 0.2016624178738451,
+      "bottlePenetrationM": 0.00013931136236950553,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24994536357409702,
+          1.172501955483607,
+          0.39864461203481
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 0.75,
+      "handErrorM": 5.155945814672837e-8,
+      "reachMarginM": 0.2016624178738451,
+      "bottlePenetrationM": 0.00046900849560922026,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24949205727287682,
+          1.2626570742143581,
+          0.4234099455844948
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.706168622523819e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -5,
+      "grip": 1,
+      "handErrorM": 5.155945814672837e-8,
+      "reachMarginM": 0.2016624178738451,
+      "bottlePenetrationM": 0.0009999583765196753,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.22713699178114743,
+          1.233033245649012,
+          0.42327751181204026
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.463307335887066e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0,
+      "handErrorM": 6.379964213648124e-8,
+      "reachMarginM": 0.23130495588691202,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1962750135770433,
+          1.2494322605286754,
+          0.331608438617684
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.25,
+      "handErrorM": 6.379964213648124e-8,
+      "reachMarginM": 0.23130495588691202,
+      "bottlePenetrationM": 0.000024149768964365492,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.19609391678574611,
+          1.248966189170301,
+          0.3319413515836464
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.5,
+      "handErrorM": 6.379964213648124e-8,
+      "reachMarginM": 0.23130495588691202,
+      "bottlePenetrationM": 0.00013929279888411777,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2646211039377242,
+          1.172501955483607,
+          0.3652250588836465
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3592239273284576e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 0.75,
+      "handErrorM": 6.379964213648124e-8,
+      "reachMarginM": 0.23130495588691202,
+      "bottlePenetrationM": 0.00046899767945583065,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26201113284010724,
+          1.2626570742143581,
+          0.38985664474593146
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0469737016526324e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -10,
+      "grip": 1,
+      "handErrorM": 6.379964213648124e-8,
+      "reachMarginM": 0.23130495588691202,
+      "bottlePenetrationM": 0.0009999460027904465,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.23975264135445246,
+          1.233033245649012,
+          0.3877763741665839
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0,
+      "handErrorM": 4.193998219031949e-8,
+      "reachMarginM": 0.25347754924429033,
+      "bottlePenetrationM": 4.120939194052209e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21699761499978742,
+          1.2494322605286754,
+          0.29376635192742895
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.8449465006019636e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.25,
+      "handErrorM": 4.193998219031949e-8,
+      "reachMarginM": 0.25347754924429033,
+      "bottlePenetrationM": 0.00002420142463767372,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21678819375903902,
+          1.248966189170301,
+          0.29408221225540976
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3592239273284576e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.5,
+      "handErrorM": 4.193998219031949e-8,
+      "reachMarginM": 0.25347754924429033,
+      "bottlePenetrationM": 0.0001393444585178344,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.28215372827295704,
+          1.172501955483607,
+          0.3332117481307572
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.942890293094024e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 0.75,
+      "handErrorM": 4.193998219031949e-8,
+      "reachMarginM": 0.25347754924429033,
+      "bottlePenetrationM": 0.00046904159317948113,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.27740690616972785,
+          1.2626570742143581,
+          0.3575221374701972
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -15,
+      "grip": 1,
+      "handErrorM": 4.193998219031949e-8,
+      "reachMarginM": 0.25347754924429033,
+      "bottlePenetrationM": 0.0009999934788185033,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2554144379834827,
+          1.233033245649012,
+          0.35350981618232996
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.942890293094024e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0,
+      "handErrorM": 3.907437809908055e-8,
+      "reachMarginM": 0.26617606188338155,
+      "bottlePenetrationM": 7.20537171594593e-10,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24093948259928794,
+          1.2494322605286754,
+          0.25787430136787026
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.25,
+      "handErrorM": 3.907437809908055e-8,
+      "reachMarginM": 0.26617606188338155,
+      "bottlePenetrationM": 0.000024190510522097142,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24070332703266245,
+          1.248966189170301,
+          0.25817070713498946
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.5,
+      "handErrorM": 3.907437809908055e-8,
+      "reachMarginM": 0.26617606188338155,
+      "bottlePenetrationM": 0.00013933440902921118,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3024098091646443,
+          1.172501955483607,
+          0.30284834652623766
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.7694179454963432e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 0.75,
+      "handErrorM": 3.907437809908055e-8,
+      "reachMarginM": 0.26617606188338155,
+      "bottlePenetrationM": 0.0004690349007222469,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2955622201704785,
+          1.2626570742143581,
+          0.3266524969249696
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -20,
+      "grip": 1,
+      "handErrorM": 3.907437809908055e-8,
+      "reachMarginM": 0.26617606188338155,
+      "bottlePenetrationM": 0.0009999870229033675,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2740031394606869,
+          1.233033245649012,
+          0.32073869634841096
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0,
+      "handErrorM": 4.9824760550931584e-8,
+      "reachMarginM": 0.2679713175480801,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26791846212907805,
+          1.2494322605286754,
+          0.2242054926375492
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.9081958235744878e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.25,
+      "handErrorM": 4.9824760550931584e-8,
+      "reachMarginM": 0.2679713175480801,
+      "bottlePenetrationM": 0.000024163420947839742,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2676573750109897,
+          1.248966189170301,
+          0.2244801896575111
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.5,
+      "handErrorM": 4.9824760550931584e-8,
+      "reachMarginM": 0.2679713175480801,
+      "bottlePenetrationM": 0.00013930712498167602,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3252351162298406,
+          1.172501955483607,
+          0.2743659100380999
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 0.75,
+      "handErrorM": 4.9824760550931584e-8,
+      "reachMarginM": 0.2679713175480801,
+      "bottlePenetrationM": 0.0004690148678280423,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3163389315057413,
+          1.2626570742143581,
+          0.29748265720327777
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.636779683484747e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -25,
+      "grip": 1,
+      "handErrorM": 4.9824760550931584e-8,
+      "reachMarginM": 0.2679713175480801,
+      "bottlePenetrationM": 0.0009999694752579787,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.29537733282296663,
+          1.233033245649012,
+          0.2897123650528229
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0,
+      "handErrorM": 4.291357034562541e-8,
+      "reachMarginM": 0.25864139914718226,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.29772921125420176,
+          1.2494322605286754,
+          0.1930162051495845
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.25,
+      "handErrorM": 4.291357034562541e-8,
+      "reachMarginM": 0.25864139914718226,
+      "bottlePenetrationM": 0.000024170313654842124,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2974451751352248,
+          1.248966189170301,
+          0.19326710084289972
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.5,
+      "handErrorM": 4.291357034562541e-8,
+      "reachMarginM": 0.25864139914718226,
+      "bottlePenetrationM": 0.00013931372117922947,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.35045597712752585,
+          1.172501955483607,
+          0.24798120330208123
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3592239273284576e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 0.75,
+      "handErrorM": 4.291357034562541e-8,
+      "reachMarginM": 0.25864139914718226,
+      "bottlePenetrationM": 0.0004690242513064949,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.33957888187929697,
+          1.2626570742143581,
+          0.27023465538863195
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.498001805406602e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -30,
+      "grip": 1,
+      "handErrorM": 4.291357034562541e-8,
+      "reachMarginM": 0.25864139914718226,
+      "bottlePenetrationM": 0.000999972483554202,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3193742579993974,
+          1.233033245649012,
+          0.2606670041126125
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3592239273284576e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0,
+      "handErrorM": 4.194573703072688e-8,
+      "reachMarginM": 0.2392845167190013,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.33014483766172253,
+          1.2494322605286754,
+          0.16454377238250445
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1510571102112408e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.25,
+      "handErrorM": 4.194573703072688e-8,
+      "reachMarginM": 0.2392845167190013,
+      "bottlePenetrationM": 0.000024170568428495687,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.32984001433573806,
+          1.248966189170301,
+          0.16476895800962804
+        ],
+        "vertex": 6938,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.498001805406602e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.5,
+      "handErrorM": 4.194573703072688e-8,
+      "reachMarginM": 0.2392845167190013,
+      "bottlePenetrationM": 0.00013931467557870558,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3778804758207843,
+          1.172501955483607,
+          0.22389505700496443
+        ],
+        "vertex": 5922,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.942890293094024e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 0.75,
+      "handErrorM": 4.194573703072688e-8,
+      "reachMarginM": 0.2392845167190013,
+      "bottlePenetrationM": 0.0004690251917288668,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3651052415340005,
+          1.2626570742143581,
+          0.24511581948918088
+        ],
+        "vertex": 5244,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "C",
+      "side": "L",
+      "pair": false,
+      "degrees": -35,
+      "grip": 1,
+      "handErrorM": 4.194573703072688e-8,
+      "reachMarginM": 0.2392845167190013,
+      "bottlePenetrationM": 0.0009999770859010458,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.34581140851093095,
+          1.233033245649012,
+          0.23382360077271352
+        ],
+        "vertex": 5436,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.5388358909926865e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": 0,
+      "grip": 0,
+      "handErrorM": 1.8958543245793494e-8,
+      "reachMarginM": 0.08084316722365614,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2123244755240669,
+          1.2445068213594852,
+          0.410882723010468
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.122502256758253e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": 0,
+      "grip": 0.25,
+      "handErrorM": 1.8958543245793494e-8,
+      "reachMarginM": 0.08084316722365614,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21247563562869937,
+          1.2438974225218753,
+          0.4113244505059422
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": 0,
+      "grip": 0.5,
+      "handErrorM": 1.8958543245793494e-8,
+      "reachMarginM": 0.08084316722365614,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.14446218756511986,
+          1.1750443451484622,
+          0.42888256478443615
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8388068845354155e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": 0,
+      "grip": 0.75,
+      "handErrorM": 1.8958543245793494e-8,
+      "reachMarginM": 0.08084316722365614,
+      "bottlePenetrationM": 0.00039105863406237173,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.14106173313791748,
+          1.257304913210234,
+          0.45217410866224944
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.122502256758253e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": 0,
+      "grip": 1,
+      "handErrorM": 1.8958543245793494e-8,
+      "reachMarginM": 0.08084316722365614,
+      "bottlePenetrationM": 0.0009999354609723406,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.15869635781135005,
+          1.2349451020256295,
+          0.4537045390642506
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.0122792321330962e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -5,
+      "grip": 0,
+      "handErrorM": 9.839448704340813e-9,
+      "reachMarginM": 0.11639682210398927,
+      "bottlePenetrationM": 9.0693029614064e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.22607678483515703,
+          1.2445068213594852,
+          0.3741377545661024
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.3592239273284576e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -5,
+      "grip": 0.25,
+      "handErrorM": 9.839448704340813e-9,
+      "reachMarginM": 0.11639682210398927,
+      "bottlePenetrationM": 9.0693029614064e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.22618886779624797,
+          1.2438974225218753,
+          0.374590969069962
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.457167719820518e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -5,
+      "grip": 0.5,
+      "handErrorM": 9.839448704340813e-9,
+      "reachMarginM": 0.11639682210398927,
+      "bottlePenetrationM": 9.0693029614064e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.15690392722829832,
+          1.1750443451484622,
+          0.3861544887199511
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.457167719820518e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -5,
+      "grip": 0.75,
+      "handErrorM": 9.839448704340813e-9,
+      "reachMarginM": 0.11639682210398927,
+      "bottlePenetrationM": 0.0003910746115205199,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.15148643873052448,
+          1.257304913210234,
+          0.409061032501492
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.983724378680108e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -5,
+      "grip": 1,
+      "handErrorM": 9.839448704340813e-9,
+      "reachMarginM": 0.11639682210398927,
+      "bottlePenetrationM": 0.0009999541162989643,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1689205830975311,
+          1.2349451020256295,
+          0.4121226200410949
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.249000902703301e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -10,
+      "grip": 0,
+      "handErrorM": 1.1414021207546475e-8,
+      "reachMarginM": 0.15145891069161027,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24297929723389372,
+          1.2445068213594852,
+          0.33873117555406534
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.2612801348363973e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -10,
+      "grip": 0.25,
+      "handErrorM": 1.1414021207546475e-8,
+      "reachMarginM": 0.15145891069161027,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24305145486428148,
+          1.2438974225218753,
+          0.3391924343118438
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -10,
+      "grip": 0.5,
+      "handErrorM": 1.1414021207546475e-8,
+      "reachMarginM": 0.15145891069161027,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.17302230777129568,
+          1.1750443451484622,
+          0.34467333846277143
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -10,
+      "grip": 0.75,
+      "handErrorM": 1.1414021207546475e-8,
+      "reachMarginM": 0.15145891069161027,
+      "bottlePenetrationM": 0.00039107132617997864,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.1656290151670724,
+          1.257304913210234,
+          0.36702057591471976
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -10,
+      "grip": 1,
+      "handErrorM": 1.1414021207546475e-8,
+      "reachMarginM": 0.15145891069161027,
+      "bottlePenetrationM": 0.0009999482499674812,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.18272998559629938,
+          1.2349451020256295,
+          0.3715899918581546
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.220446049250313e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -15,
+      "grip": 0,
+      "handErrorM": 2.902726315571732e-8,
+      "reachMarginM": 0.18554437685198472,
+      "bottlePenetrationM": 2.5953775753539965e-8,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2629033669073357,
+          1.2445068213594852,
+          0.30493250357514884
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -15,
+      "grip": 0.25,
+      "handErrorM": 2.902726315571732e-8,
+      "reachMarginM": 0.18554437685198472,
+      "bottlePenetrationM": 2.5953775753539965e-8,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.26293505086274954,
+          1.2438974225218753,
+          0.30539828553371323
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.457167719820518e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -15,
+      "grip": 0.5,
+      "handErrorM": 2.902726315571732e-8,
+      "reachMarginM": 0.18554437685198472,
+      "bottlePenetrationM": 2.5953775753539965e-8,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.19269471547541772,
+          1.1750443451484622,
+          0.30475489284049606
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 3.0531133177191805e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -15,
+      "grip": 0.75,
+      "handErrorM": 2.902726315571732e-8,
+      "reachMarginM": 0.18554437685198472,
+      "bottlePenetrationM": 0.00039108966859833366,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.18338186669898915,
+          1.257304913210234,
+          0.32637272342141727
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.2898349882893854e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -15,
+      "grip": 1,
+      "handErrorM": 2.902726315571732e-8,
+      "reachMarginM": 0.18554437685198472,
+      "bottlePenetrationM": 0.0009999758871448092,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.20001947460197778,
+          1.2349451020256295,
+          0.33241518943731635
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.97758476261356e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -20,
+      "grip": 0,
+      "handErrorM": 2.6739516091788068e-8,
+      "reachMarginM": 0.2179727140803484,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2856973758699371,
+          1.2445068213594852,
+          0.27299887501057607
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.7755575615628914e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -20,
+      "grip": 0.25,
+      "handErrorM": 2.6739516091788068e-8,
+      "reachMarginM": 0.2179727140803484,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.28568833937559,
+          1.2438974225218753,
+          0.27346565125732075
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.3877787807814457e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -20,
+      "grip": 0.5,
+      "handErrorM": 2.6739516091788068e-8,
+      "reachMarginM": 0.2179727140803484,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.21577137340974423,
+          1.1750443451484622,
+          0.26670292845705196
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.6020852139652106e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -20,
+      "grip": 0.75,
+      "handErrorM": 2.6739516091788068e-8,
+      "reachMarginM": 0.2179727140803484,
+      "bottlePenetrationM": 0.00039105055003996886,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2046098093104639,
+          1.257304913210234,
+          0.2874267999908284
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8041124150158794e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -20,
+      "grip": 1,
+      "handErrorM": 2.6739516091788068e-8,
+      "reachMarginM": 0.2179727140803484,
+      "bottlePenetrationM": 0.0009999292058920535,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.22065749245096744,
+          1.2349451020256295,
+          0.2948963235485012
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.5959455978986625e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -25,
+      "grip": 0,
+      "handErrorM": 7.661913200976644e-9,
+      "reachMarginM": 0.24777122619412434,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.31118784429559815,
+          1.2445068213594852,
+          0.24317346716908783
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.1163626406917047e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -25,
+      "grip": 0.25,
+      "handErrorM": 7.661913200976644e-9,
+      "reachMarginM": 0.24777122619412434,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3111381606926316,
+          1.2438974225218753,
+          0.24363767588924973
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.457167719820518e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -25,
+      "grip": 0.5,
+      "handErrorM": 7.661913200976644e-9,
+      "reachMarginM": 0.24777122619412434,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24207665797797012,
+          1.1750443451484622,
+          0.2308069979563881
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.734723475976807e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -25,
+      "grip": 0.75,
+      "handErrorM": 7.661913200976644e-9,
+      "reachMarginM": 0.24777122619412434,
+      "bottlePenetrationM": 0.0003910758259863534,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.22915140036098458,
+          1.257304913210234,
+          0.25047919610245656
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.185751579730777e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -25,
+      "grip": 1,
+      "handErrorM": 7.661913200976644e-9,
+      "reachMarginM": 0.24777122619412434,
+      "bottlePenetrationM": 0.0009999466803805312,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.24448696756248345,
+          1.2349451020256295,
+          0.25931896915786984
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.249000902703301e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -30,
+      "grip": 0,
+      "handErrorM": 1.1422699460683638e-8,
+      "reachMarginM": 0.27355941845515214,
+      "bottlePenetrationM": 1.564194163083954e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.3391807658703785,
+          1.2445068213594852,
+          0.21568317011815769
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.8449465006019636e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -30,
+      "grip": 0.25,
+      "handErrorM": 1.1422699460683638e-8,
+      "reachMarginM": 0.27355941845515214,
+      "bottlePenetrationM": 1.564194163083954e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.33909081460923796,
+          1.2438974225218753,
+          0.2161412849105535
+        ],
+        "vertex": 2346,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.6306400674181987e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -30,
+      "grip": 0.5,
+      "handErrorM": 1.1422699460683638e-8,
+      "reachMarginM": 0.27355941845515214,
+      "bottlePenetrationM": 1.564194163083954e-9,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.27141037398641443,
+          1.1750443451484622,
+          0.1973403112132724
+        ],
+        "vertex": 1330,
+        "part": "hand",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.734723475976807e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -30,
+      "grip": 0.75,
+      "handErrorM": 1.1422699460683638e-8,
+      "reachMarginM": 0.27355941845515214,
+      "bottlePenetrationM": 0.00039107671790571813,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.256819753765262,
+          1.257304913210234,
+          0.2158111548385861
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.6653345369377348e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -30,
+      "grip": 1,
+      "handErrorM": 1.1422699460683638e-8,
+      "reachMarginM": 0.27355941845515214,
+      "bottlePenetrationM": 0.0009999502491875416,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.2713265443952815,
+          1.2349451020256295,
+          0.22595387276762796
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.185751579730777e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -35,
+      "grip": 0,
+      "handErrorM": 1.0831289575245546e-8,
+      "reachMarginM": 0.2934883989893693,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.32573873972891787,
+          1.1800549692020041,
+          0.17526054895458765
+        ],
+        "vertex": 2172,
+        "part": "forearm",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.8735013540549517e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -35,
+      "grip": 0.25,
+      "handErrorM": 1.0831289575245546e-8,
+      "reachMarginM": 0.2934883989893693,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.32573873972891787,
+          1.1800549692020041,
+          0.17526054895458765
+        ],
+        "vertex": 2172,
+        "part": "forearm",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.255140518769849e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -35,
+      "grip": 0.5,
+      "handErrorM": 1.0831289575245546e-8,
+      "reachMarginM": 0.2934883989893693,
+      "bottlePenetrationM": 0,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.32573873972891787,
+          1.1800549692020041,
+          0.17526054895458765
+        ],
+        "vertex": 2172,
+        "part": "forearm",
+        "objectId": "handle-lower-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.491862189340054e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -35,
+      "grip": 0.75,
+      "handErrorM": 1.0831289575245546e-8,
+      "reachMarginM": 0.2934883989893693,
+      "bottlePenetrationM": 0.0003910702860017226,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.287404319605883,
+          1.257304913210234,
+          0.18368649706796986
+        ],
+        "vertex": 652,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 2.2898349882893854e-16
+    },
+    {
+      "actor": "B",
+      "side": "R",
+      "pair": true,
+      "degrees": -35,
+      "grip": 1,
+      "handErrorM": 1.0831289575245546e-8,
+      "reachMarginM": 0.2934883989893693,
+      "bottlePenetrationM": 0.0009999470217500056,
+      "solidPenetrationM": 0,
+      "solidDeepest": {
+        "pointWorld": [
+          0.300971936135609,
+          1.2349451020256295,
+          0.19505496544302575
+        ],
+        "vertex": 931,
+        "part": "hand",
+        "objectId": "handle-upper-mount"
+      },
+      "handSamples": 1685,
+      "forearmSamples": 256,
+      "boneErrorM": 1.214306433183765e-16
+    }
+  ]
+}

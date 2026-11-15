@@ -1,0 +1,86 @@
+{
+  "schema": "kaopu/npc-r02-verifier-contract-audit@1",
+  "createdAt": "2026-10-20T06:02:43.231Z",
+  "scope": "Pure object-contract verifier checked against previously measured real Cannon states and deliberately invalid states; not native geometry or browser acceptance",
+  "verifierSHA256": "706e97eadb868481245ade071aa51a4a4830c6f4c0c98aa477fcc214111a7b2b",
+  "physicalReportSHA256": "d9c99b5b8ef9f4e1d379f487fa1d48e9a442eec07d4ed9ba09b26e0125dc410e",
+  "dynamicBrowserExecuted": false,
+  "syntaxCheck": "Separate node --check invocation",
+  "productionFilesChanged": false,
+  "positivePhysicalStates": 5,
+  "negativeControls": 6,
+  "passed": true,
+  "tests": [
+    {
+      "name": "report.tests.0.measurements.object",
+      "passed": true,
+      "angleDeg": -9.40533021399895e-15,
+      "quaternionAngleDeg": -9.405330213998953e-15,
+      "operation": null
+    },
+    {
+      "name": "report.tests.4.measurements.before",
+      "passed": true,
+      "angleDeg": -8.039275292275486,
+      "quaternionAngleDeg": -8.039275292275486,
+      "operation": null
+    },
+    {
+      "name": "report.tests.4.measurements.immediate",
+      "passed": true,
+      "angleDeg": -8.039275292275486,
+      "quaternionAngleDeg": -8.039275292275486,
+      "operation": null
+    },
+    {
+      "name": "report.tests.4.measurements.after",
+      "passed": true,
+      "angleDeg": -17.101967346734316,
+      "quaternionAngleDeg": -17.101967346734305,
+      "operation": null
+    },
+    {
+      "name": "report.tests.6.measurements.immediate",
+      "passed": true,
+      "angleDeg": -8.039275292275486,
+      "quaternionAngleDeg": -8.039275292275486,
+      "operation": null
+    },
+    {
+      "name": "negative control: angle disagrees with quaternion",
+      "passed": true,
+      "rejected": true,
+      "error": "Reported angle agrees with the live rigid-body quaternion: angle disagrees with quaternion"
+    },
+    {
+      "name": "negative control: missing permanent hinge",
+      "passed": true,
+      "rejected": true,
+      "error": "The permanent hinge exists: missing permanent hinge\n\n0 !== 1\n"
+    },
+    {
+      "name": "negative control: two temporary grips",
+      "passed": true,
+      "rejected": true,
+      "error": "There is at most one temporary window hand constraint: two temporary grips"
+    },
+    {
+      "name": "negative control: force exceeds 24 N",
+      "passed": true,
+      "rejected": true,
+      "error": "Actual solver forces are finite and remain within the hand-force bound: force exceeds 24 N"
+    },
+    {
+      "name": "negative control: invalid quaternion",
+      "passed": true,
+      "rejected": true,
+      "error": "Window quaternion is normalized: invalid quaternion"
+    },
+    {
+      "name": "negative control: holder and owner differ",
+      "passed": true,
+      "rejected": true,
+      "error": "The holder owns the same window resource: holder and owner differ\n\n'B' !== 'A'\n"
+    }
+  ]
+}

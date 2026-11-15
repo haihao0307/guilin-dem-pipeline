@@ -1,0 +1,712 @@
+{
+  "schema": "kaopu/npc-r03-browser-failure-review@1",
+  "status": "FAILED_THIRD_CANDIDATE_RCA_AND_PAIR_CAMERA_FIX_NOT_REVERIFIED",
+  "sourceHead": "7b83d5c53f083d52e1aaacc3b2bcebdf4f885594",
+  "workflowRun": 39537843261,
+  "workflowJob": 119018517972,
+  "runURL": "https://github.com/haihao0307/guilin-dem-pipeline/actions/runs/39537843261",
+  "artifact": {
+    "id": 12319571069,
+    "name": "npc-native-interaction-r03-7b83d5c53f083d52e1aaacc3b2bcebdf4f885594",
+    "bytes": 40470796,
+    "sha256": "97a68710c3d5f0bf5b3a12a371df9dd6609437b4332c1b5c68fe31f1f07fc013"
+  },
+  "failedPreview": {
+    "bytes": 66603749,
+    "sha256": "4c3c2018f1738f1eda6592e333640a91f35940465e9b93b188cb8115f267b4c1"
+  },
+  "evidenceFiles": {
+    "failure.json": {
+      "bytes": 26749739,
+      "sha256": "5595689a573e210370360939e17bb0c8ccbc7954c333bfadee83840290e8bfe0"
+    },
+    "failure.png": {
+      "bytes": 395364,
+      "sha256": "2301156b9e543da1b702e900ad90c35d5dfe3a777ef8bb33ea280516b30d8347"
+    },
+    "native-rigs.json": {
+      "bytes": 17302501,
+      "sha256": "de332814c819c1b474d51ca97ba31f6f2c05ed09a08ba9c22f8b43b7f6a89342"
+    },
+    "identity-start-frame.json": {
+      "bytes": 6677,
+      "sha256": "1e9ad54925e79cc9160a98d52af1a43c53192d7ecb5af24b1403ed9c6207f139"
+    },
+    "qa.json": {
+      "bytes": 64546091,
+      "sha256": "5cd56cc7522a71d0c775995b0836d076d256802fffd469407a17f967c8577caf"
+    },
+    "initial.json": {
+      "bytes": 17993646,
+      "sha256": "69d972583575949de18295581481ec4eefa1bba69105b8971152aad8062c9acf"
+    },
+    "continuous-ui.json": {
+      "bytes": 6984422,
+      "sha256": "68e903ed6655aae833ba0bb1e7a49ae2e059a0bfb15d632f8e00cdcf4fc9963a"
+    }
+  },
+  "officialCompletedJobLog": {
+    "bytes": 296773,
+    "sha256": "55e75527c4fb8d303d2529c2e64c3bc78dde6e9c9e06dde96b3967f669c5a0ae"
+  },
+  "firstFailure": {
+    "stage": "identity-task UI, independent review invalidation and actual JSON export",
+    "error": "page.waitForFunction: Timeout 170507ms exceeded.",
+    "source": "verify-browser.cjs:1438, identityInteraction at 1418, main at 1722",
+    "unchangedWholeActionDeadlineMS": 180000,
+    "remainingWaitMS": 170507,
+    "condition": "A completed and recovered; B already-sorted and recovered; C review.checked",
+    "elapsedWholeCaseMS": 183387,
+    "deadlineMeaning": "The 170507 ms wait was the remainder of the same original 180000 ms action budget after clicking the real UI and reading its first completed camera frame; it was not a shorter replacement task limit.",
+    "lateDiagnosticsAreNotPass": true
+  },
+  "observed": {
+    "startupPassed": true,
+    "coldReadyMS": 79599,
+    "nativeRendererCalls": 6,
+    "nativeMaxInFlight": 1,
+    "passedBeforeFailure": [
+      "candidate response and freshness",
+      "complete original R07 and all three actors ready",
+      "real linked WebGL programs and visible framebuffer",
+      "three uninterrupted real-UI actions and completed-frame contracts",
+      "A real native pick/place UI",
+      "B real native pick/place UI",
+      "C real native pick/place UI",
+      "built-in R02 suite with all six original R01 cases"
+    ],
+    "continuousThreeActionGatePassed": true,
+    "manualNativeActorsPassed": [
+      "A",
+      "B",
+      "C"
+    ],
+    "builtInNumericalTestsPassed": 12,
+    "appErrors": [],
+    "identityFirstCompletedFrame": {
+      "serial": 625,
+      "submittedAtMS": 1337067,
+      "completedAtMS": 1339837.5999999999,
+      "durationMS": 2770.5999999998603,
+      "simulationTime": 182.28333333333188,
+      "A": {
+        "id": "A",
+        "phase": "waiting",
+        "recovery": null,
+        "taskStarted": 182.28333333333188
+      }
+    },
+    "identityEpochTrace": {
+      "epoch": 21,
+      "count": 76,
+      "firstSerial": 625,
+      "lastSerial": 700,
+      "allSerialsConsecutive": true,
+      "phaseCounts": {
+        "waiting:null": 1,
+        "approach:null": 13,
+        "close:null": 6,
+        "lift:null": 13,
+        "transfer:null": 14,
+        "lower:null": 13,
+        "verify:null": 9,
+        "done:rest": 6,
+        "done:null": 1
+      },
+      "firstSimulationTime": 182.28333333333188,
+      "lastSimulationTime": 190.43333333332447,
+      "advanceSeconds": 8.149999999992588,
+      "medianMS": 2322.20000000007,
+      "meanMS": 2345.81710526315,
+      "minMS": 2163.399999999907,
+      "maxMS": 3073.2000000001863,
+      "sumMS": 178282.0999999994
+    },
+    "deadlineTail": {
+      "lastCompletedAtTimeout": {
+        "serial": 698,
+        "submittedAtMS": 1508622.7999999998,
+        "completedAtMS": 1510997.5,
+        "durationMS": 2374.7000000001863,
+        "simulationTime": 190.2499999999913,
+        "A": {
+          "id": "A",
+          "phase": "done",
+          "recovery": "rest",
+          "taskStarted": 182.28333333333188
+        }
+      },
+      "nextFrameStillRecovering": {
+        "serial": 699,
+        "submittedAtMS": 1511024,
+        "completedAtMS": 1513647.4,
+        "durationMS": 2623.399999999907,
+        "simulationTime": 190.36666666665786,
+        "A": {
+          "id": "A",
+          "phase": "done",
+          "recovery": "rest",
+          "taskStarted": 182.28333333333188
+        }
+      },
+      "firstCompletedRecoveryFinished": {
+        "serial": 700,
+        "submittedAtMS": 1513677.2999999998,
+        "completedAtMS": 1516750.5,
+        "durationMS": 3073.2000000001863,
+        "simulationTime": 190.43333333332447,
+        "A": {
+          "id": "A",
+          "phase": "done",
+          "recovery": null,
+          "taskStarted": 182.28333333333188
+        }
+      },
+      "interpretation": "The last completed deadline frame was 698 (A done/rest). Frame 699 was still a rest pose; only 700 showed recovery null. Later diagnostics reached the desired physical state, but the recorded browser case remained FAILED.",
+      "completedFrameGap": 2,
+      "physicalAdvanceAfter698To700Seconds": 0.1833333333331666,
+      "clockAlignment": {
+        "method": "Intersect driver start/end intervals minus page performance.now captured within each short actual action-start evaluate.",
+        "anchors": [
+          {
+            "label": "A-continuous-pick-place",
+            "driverStartedUTC": "2026-10-21T03:21:12.322Z",
+            "driverElapsedMS": 9,
+            "pagePerformanceMS": 120851.19999999998,
+            "inferredTimeOriginEpochMS": [
+              1792552751470.8,
+              1792552751479.8
+            ]
+          },
+          {
+            "label": "A-continuous-window-open",
+            "driverStartedUTC": "2026-10-21T03:23:43.218Z",
+            "driverElapsedMS": 5,
+            "pagePerformanceMS": 271744,
+            "inferredTimeOriginEpochMS": [
+              1792552751474.0,
+              1792552751479.0
+            ]
+          },
+          {
+            "label": "A-continuous-window-close",
+            "driverStartedUTC": "2026-10-21T03:26:03.133Z",
+            "driverElapsedMS": 8,
+            "pagePerformanceMS": 411662.80000000005,
+            "inferredTimeOriginEpochMS": [
+              1792552751470.2,
+              1792552751478.2
+            ]
+          }
+        ],
+        "inferredTimeOriginEpochMS": [
+          1792552751474.0,
+          1792552751478.2
+        ],
+        "inferredTimeOriginUTC": [
+          "2026-10-21T03:19:11.474000+00:00",
+          "2026-10-21T03:19:11.478200+00:00"
+        ],
+        "identityWaitDriver": {
+          "id": "129",
+          "label": "A sorts, B observes ownership and C confirms the result",
+          "startedAt": "2026-10-21T03:41:32.059Z",
+          "budgetMS": 175507,
+          "elapsedMS": 171143,
+          "outcome": "error",
+          "error": "page.waitForFunction: Timeout 170507ms exceeded."
+        },
+        "originalRemainingPlaywrightTimeoutMS": 170507,
+        "nominalTimeoutPerformanceMS": [
+          1511087.8000488281,
+          1511092.0
+        ],
+        "driverErrorReturnPerformanceMS": [
+          1511723.8000488281,
+          1511728.0
+        ],
+        "lastCompletedAtBothBounds": 698,
+        "inFlightAtBothBounds": 699,
+        "firstRecoveryFinishedCompletedSerial": 700,
+        "lastRecoveryCompletionAfterNominalDeadlineMS": [
+          5658.5,
+          5662.699951171875
+        ],
+        "limits": "Inferred alignment, not a recorded timeOrigin. Assumes no system wall-clock jump during the sampled run. Rounded driver milliseconds bound the result; no exact sub-millisecond equality is claimed."
+      }
+    },
+    "lateWorldSnapshot": {
+      "time": 190.55,
+      "A": {
+        "result": "completed",
+        "recovery": null
+      },
+      "B": {
+        "result": "already-sorted",
+        "recovery": null
+      },
+      "CReviewChecked": true
+    },
+    "visualReview": "failure.png has a real, nonblank contact image, but two nearby torsos fill the paired view. The stable bottle and recovered people shown are late failure diagnostics, not deadline acceptance.",
+    "fullSuitePassed": false,
+    "windowUIAndExportReached": false,
+    "publicPublished": false
+  },
+  "rootCause": {
+    "notDeadlocked": "The 76 consecutive GPU completions span waiting, approach, close, lift, transfer, lower, verify and native rest recovery. No application error or renderer deadlock was recorded.",
+    "observedMechanism": "The original single-person contact viewpoint was also applied to the two-person station. Nearby native bodies dominate this framing. A completed frame took a median 2322.2 ms and the unchanged frame-acknowledged clock exhausted the action budget before final recovery.",
+    "performanceInference": "Reducing the close torso framing without admitting extra head fragments may reduce native fragment work. Projection alone cannot prove this GPU mechanism or a timing improvement; the next actual Chromium run must decide.",
+    "notAFix": "Increasing the timeout, accelerating beyond 0.12 s per completed frame, reducing native meshes/materials/shaders, changing physics or counting late diagnostics as a pass is not used."
+  },
+  "targetedFix": {
+    "file": "Workbench.mjs",
+    "beforeSHA256": "ccf459c074375146ea53847a7ed37c94e6cf56f053910cacdb1326e32773328a",
+    "afterSHA256": "5c7dcae0097462f2670e0e285194be2beefc4c5460480f2b7f7702c13bda8c40",
+    "scope": "Only mode==='contact' with pair===true selects the new coordinates.",
+    "position": [
+      -0.65,
+      1.8,
+      1.45
+    ],
+    "target": [
+      0.025,
+      1.1,
+      0.4
+    ],
+    "reason": "A more frontal left view increases separation from the nearest torso while keeping the actual bottle/hand sample region inside the frame and on the open left side of the closed window frame.",
+    "preserved": [
+      "single-person contact camera",
+      "window camera",
+      "side camera",
+      "panorama camera",
+      "FOV and pixel ratio",
+      "all complete native people",
+      "all native geometry, bones and CSR weights",
+      "all original material and shader chains",
+      "all physical skill modules",
+      "fixed 1/120 s physics",
+      "0.12 s maximum advancement per completed frame",
+      "180 s action limit and all other timeouts"
+    ]
+  },
+  "projectionStudy": {
+    "status": "READ_ONLY_GEOMETRIC_DESIGN_NOT_BROWSER_OR_GPU_ACCEPTANCE",
+    "scriptFile": "pair-camera-projection.py",
+    "scriptSHA256": "aa31930721fcd233fc3e8832eb102c47553fd1f24db7265f5ab2a4f7833e6d7a",
+    "resultFile": "pair-camera-projection.json",
+    "resultSHA256": "8ecae72d261359bca0dd11c4c50309ae29a93825845deb4e9b8de1ba4404accb",
+    "sourceInputs": {
+      "canonicalR07": {
+        "bytes": 5449139,
+        "sha256": "d1bd7940b885cb872143bc0e68ce85fd2f663c81be36a18e58fc6086781cf31a"
+      },
+      "WindowInteraction": {
+        "bytes": 32124,
+        "sha256": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b"
+      },
+      "LifeWorld": {
+        "bytes": 20467,
+        "sha256": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a"
+      },
+      "analysisScript": {
+        "bytes": 13413,
+        "sha256": "aa31930721fcd233fc3e8832eb102c47553fd1f24db7265f5ab2a4f7833e6d7a"
+      }
+    },
+    "projection": {
+      "fovYDegrees": 31,
+      "canvasPixels": [
+        900,
+        832
+      ],
+      "aspect": 1.0817307692307692,
+      "zoom": 1,
+      "handedness": "right-handed Y-up; camera local -Z looks at target",
+      "focalPixels": 1500.0475396445236,
+      "pixelOrigin": "canvas top-left; excludes page/header/sidebar offsets",
+      "source": "unchanged native PerspectiveCamera(31,1,.01,50), actual failure DOM canvas, Workbench zoom=1"
+    },
+    "actualSamples": {
+      "epoch": 21,
+      "actor": "A",
+      "taskStartedTime": 182.28333333333188,
+      "poseCount": 26,
+      "firstTime": 182.29999999999853,
+      "lastTime": 190.43333333332447,
+      "stageNames": [
+        "approach",
+        "close",
+        "lift",
+        "transfer",
+        "lower",
+        "lower-end",
+        "withdraw-start",
+        "verify",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw",
+        "withdraw-end",
+        "rest-start",
+        "rest",
+        "rest",
+        "rest",
+        "rest",
+        "rest",
+        "rest",
+        "rest-end"
+      ],
+      "palmAndFingerPoints": 156,
+      "bottleBoundaryPoints": 1664,
+      "pointCount": 1820,
+      "bottleRadiusM": 0.032,
+      "bottleHeightM": 0.14,
+      "bottleQuaternionApplied": true,
+      "BHeadJointWorld": [
+        0.3798826382788402,
+        1.4875993760350124,
+        0.03744342266162051
+      ]
+    },
+    "frameModel": {
+      "closedAngleRadians": 0,
+      "boxes": {
+        "frame-left-post": {
+          "center": [
+            0.072,
+            1.4275,
+            0.55
+          ],
+          "halfExtents": [
+            0.012,
+            0.3765,
+            0.024
+          ]
+        },
+        "frame-right-post": {
+          "center": [
+            0.668,
+            1.4275,
+            0.55
+          ],
+          "halfExtents": [
+            0.012,
+            0.3765,
+            0.024
+          ]
+        },
+        "frame-sill": {
+          "center": [
+            0.37,
+            1.051,
+            0.55
+          ],
+          "halfExtents": [
+            0.31,
+            0.012,
+            0.024
+          ]
+        },
+        "frame-header": {
+          "center": [
+            0.37,
+            1.804,
+            0.55
+          ],
+          "halfExtents": [
+            0.31,
+            0.012,
+            0.024
+          ]
+        },
+        "leaf-left-rail": {
+          "center": [
+            0.1175,
+            1.4275,
+            0.55
+          ],
+          "halfExtents": [
+            0.0175,
+            0.3525,
+            0.018
+          ]
+        },
+        "leaf-right-rail": {
+          "center": [
+            0.6225,
+            1.4275,
+            0.55
+          ],
+          "halfExtents": [
+            0.0175,
+            0.3525,
+            0.018
+          ]
+        },
+        "leaf-bottom-rail": {
+          "center": [
+            0.37,
+            1.0925,
+            0.55
+          ],
+          "halfExtents": [
+            0.235,
+            0.0175,
+            0.018
+          ]
+        },
+        "leaf-top-rail": {
+          "center": [
+            0.37,
+            1.7625,
+            0.55
+          ],
+          "halfExtents": [
+            0.235,
+            0.0175,
+            0.018
+          ]
+        }
+      },
+      "intersection": "slab test along camera-to-sample closed segment, excluding hits outside (0,1)",
+      "excluded": "transparent pane, window handle/mounts, stops/blocker, tabletop, all native person surfaces"
+    },
+    "views": {
+      "third-contact": {
+        "position": [
+          -1.05,
+          1.6,
+          0.9
+        ],
+        "target": [
+          0.045,
+          1.12,
+          0.4
+        ],
+        "targetDistanceM": 1.2959263096333835,
+        "elevationDeg": 21.739759852934338,
+        "sampleBoundsPixels": {
+          "min": [
+            50.02247365415366,
+            114.67602512030732
+          ],
+          "max": [
+            513.5981040001818,
+            707.0460792541448
+          ]
+        },
+        "allSamplesInsideCanvas": true,
+        "bActualHeadJointPixels": [
+          269.2473962475973,
+          -67.45348537781808
+        ],
+        "sampleRaysIntersectingFrame": 0,
+        "frameIntersectionsByBox": {
+          "frame-left-post": 0,
+          "frame-right-post": 0,
+          "frame-sill": 0,
+          "frame-header": 0,
+          "leaf-left-rail": 0,
+          "leaf-right-rail": 0,
+          "leaf-bottom-rail": 0,
+          "leaf-top-rail": 0
+        },
+        "approximateVerticalBottlePixelHeightAtMidTarget": 151.70272116170116
+      },
+      "same-ray-distance-1.35": {
+        "position": [
+          -1.43325,
+          1.768,
+          1.075
+        ],
+        "target": [
+          0.045,
+          1.12,
+          0.4
+        ],
+        "targetDistanceM": 1.7495005180050673,
+        "elevationDeg": 21.739759852934345,
+        "sampleBoundsPixels": {
+          "min": [
+            146.84579191077535,
+            196.53207016859642
+          ],
+          "max": [
+            497.6448524242059,
+            637.7508130878016
+          ]
+        },
+        "allSamplesInsideCanvas": true,
+        "bActualHeadJointPixels": [
+          309.511203445402,
+          40.23889370969715
+        ],
+        "sampleRaysIntersectingFrame": 0,
+        "frameIntersectionsByBox": {
+          "frame-left-post": 0,
+          "frame-right-post": 0,
+          "frame-sill": 0,
+          "frame-header": 0,
+          "leaf-left-rail": 0,
+          "leaf-right-rail": 0,
+          "leaf-bottom-rail": 0,
+          "leaf-top-rail": 0
+        },
+        "approximateVerticalBottlePixelHeightAtMidTarget": 112.13984623219903
+      },
+      "proposed-pair-contact": {
+        "position": [
+          -0.65,
+          1.8,
+          1.45
+        ],
+        "target": [
+          0.025,
+          1.1,
+          0.4
+        ],
+        "targetDistanceM": 1.431127178136171,
+        "elevationDeg": 29.28308285797887,
+        "sampleBoundsPixels": {
+          "min": [
+            233.2128219636295,
+            113.89936982244109
+          ],
+          "max": [
+            552.115956023532,
+            552.6358826933348
+          ]
+        },
+        "allSamplesInsideCanvas": true,
+        "bActualHeadJointPixels": [
+          541.7660058668919,
+          -104.43218503906598
+        ],
+        "sampleRaysIntersectingFrame": 0,
+        "frameIntersectionsByBox": {
+          "frame-left-post": 0,
+          "frame-right-post": 0,
+          "frame-sill": 0,
+          "frame-header": 0,
+          "leaf-left-rail": 0,
+          "leaf-right-rail": 0,
+          "leaf-bottom-rail": 0,
+          "leaf-top-rail": 0
+        },
+        "approximateVerticalBottlePixelHeightAtMidTarget": 127.90797477253341
+      },
+      "existing-window": {
+        "position": [
+          0.84,
+          1.51,
+          1.63
+        ],
+        "target": [
+          0.29,
+          1.25,
+          0.38
+        ],
+        "targetDistanceM": 1.3901798444805622,
+        "elevationDeg": 10.779285004381254,
+        "sampleBoundsPixels": {
+          "min": [
+            114.35688882366156,
+            264.8963364345473
+          ],
+          "max": [
+            410.2482953465102,
+            715.7529649447029
+          ]
+        },
+        "allSamplesInsideCanvas": true,
+        "bActualHeadJointPixels": [
+          654.1519471405046,
+          151.5507322366115
+        ],
+        "sampleRaysIntersectingFrame": 1591,
+        "frameIntersectionsByBox": {
+          "frame-left-post": 1005,
+          "frame-right-post": 0,
+          "frame-sill": 293,
+          "frame-header": 0,
+          "leaf-left-rail": 681,
+          "leaf-right-rail": 0,
+          "leaf-bottom-rail": 61,
+          "leaf-top-rail": 0
+        },
+        "approximateVerticalBottlePixelHeightAtMidTarget": 133.64717436331244
+      },
+      "existing-side": {
+        "position": [
+          3.2,
+          1.55,
+          1.3
+        ],
+        "target": [
+          0.25,
+          1,
+          0.1
+        ],
+        "targetDistanceM": 3.2318725222384623,
+        "elevationDeg": 9.798283613843685,
+        "sampleBoundsPixels": {
+          "min": [
+            248.28161287041715,
+            237.38019658430025
+          ],
+          "max": [
+            446.8182629773579,
+            478.86620708803366
+          ]
+        },
+        "allSamplesInsideCanvas": true,
+        "bActualHeadJointPixels": [
+          502.50687712456977,
+          188.0508138144994
+        ],
+        "sampleRaysIntersectingFrame": 937,
+        "frameIntersectionsByBox": {
+          "frame-left-post": 0,
+          "frame-right-post": 206,
+          "frame-sill": 202,
+          "frame-header": 0,
+          "leaf-left-rail": 0,
+          "leaf-right-rail": 199,
+          "leaf-bottom-rail": 717,
+          "leaf-top-rail": 0
+        },
+        "approximateVerticalBottlePixelHeightAtMidTarget": 62.43339643718468
+      }
+    },
+    "choice": "The existing window and side cameras intersect closed frame/rail solids along many sampled contact rays. The 1.35x same-ray alternative also frames the sample region, but projects the real B head joint from y=-67.45 to y=40.24 pixels, admitting head area. The selected left-front alternative keeps that joint above the top edge while retaining the operation region.",
+    "limits": [
+      "The sampled points come from recorded actual physics/hand poses; no pose is synthesized or mutated.",
+      "The cylinder boundary is finitely sampled using recorded quaternion; it is not the complete visible mesh.",
+      "Only the authored eight closed-window frame/rail boxes are ray-tested; real closed physics has tiny pose drift.",
+      "There is no full-person mesh occlusion, hand self-occlusion, surface-area or shader-cost calculation.",
+      "The B head joint is one real skeleton landmark, not a measured head silhouette or fragment count.",
+      "All in-canvas results refer to the failed 900x832 desktop canvas; narrow viewport framing is not proved.",
+      "No calculation here establishes GPU speed, successful deadline, uninterrupted visibility or public readiness.",
+      "Frames 699 and 700 belong to the late failure diagnostics and must not be counted as deadline acceptance."
+    ]
+  },
+  "verificationPlan": {
+    "workflowChangeRequired": false,
+    "newDiagnosticPhaseRequired": false,
+    "orderChange": "Move the entire existing identityInteraction case to immediately after startup evidence, before continuous actions; execute it once and retain every remaining full-suite gate.",
+    "purpose": "A recurring identity failure becomes visible near the beginning of the same real-browser suite, without another independent startup or duplicate action run.",
+    "expectedEarlyFailureWindow": "Approximately startup plus the unchanged 180 s action budget; about five minutes on the measured third-run startup, not a new deadline guarantee."
+  },
+  "acceptance": {
+    "browserPass": false,
+    "pairCameraGPUReverified": false,
+    "publicURLVerified": false,
+    "productionReady": false,
+    "requiredNext": "Run the unchanged physical/geometry/continuous-frame/deadline criteria in real Chromium on the new source, inspect actual paired framing and completion cost, then complete all remaining suite and exact-public gates."
+  }
+}

@@ -1,0 +1,81 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import vm from 'node:vm';
+import {fileURLToPath} from 'node:url';
+import {createBootLifecycle} from '../BootLifecycle.mjs';
+import {createObservationClock} from '../ObservationClock.mjs';
+import {manageRendering} from '../RenderQueue.mjs';
+import {fakeTime,fakeGL,microtasks} from './audit-r03-contract-support.mjs';
+const here=path.dirname(fileURLToPath(import.meta.url)),base=path.dirname(here),tests=[];
+const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
+async function test(name,fn){try{await fn();tests.push({name,passed:true});}catch(error){tests.push({name,passed:false,error:error.stack});}}
+function boot(options={}){const time=fakeTime(),states=[];const b=createBootLifecycle({...time,onChange:s=>states.push(s),...options});return{time,b,states};}
+await test('ready only follows explicit successful native completion',()=>{const {time,b}=boot();assert.equal(b.snapshot().status,'loading');b.stage('native','Native');time.elapse(10);b.ready();assert.equal(b.snapshot().status,'ready');assert.equal(time.pending(),0);assert.equal(b.snapshot().steps.at(-1).endedMS,10);});
+await test('progress cannot extend the absolute stage deadline',()=>{const {time,b}=boot({stageMS:100,totalMS:1000});time.elapse(90);b.progress('more');time.elapse(10);assert.equal(b.snapshot().failure.code,'BOOT_STAGE_TIMEOUT');assert.throws(()=>b.ready(),/超过阶段/);});
+await test('stage changes cannot extend the total deadline',()=>{const {time,b}=boot({stageMS:100,totalMS:150});time.elapse(90);b.stage('two','Two');time.elapse(60);assert.equal(b.snapshot().failure.code,'BOOT_TOTAL_TIMEOUT');});
+await test('synchronous work delaying timer dispatch still obeys stage timeout',()=>{const {time,b}=boot({stageMS:100,totalMS:1000});time.elapse(101,{fire:false});assert.throws(()=>b.check(),e=>e.code==='BOOT_STAGE_TIMEOUT');});
+await test('synchronous work delaying timer dispatch still obeys total timeout',()=>{const {time,b}=boot({stageMS:1000,totalMS:100});time.elapse(101,{fire:false});assert.throws(()=>b.ready(),e=>e.code==='BOOT_TOTAL_TIMEOUT');});
+await test('resource rejection rejects every outstanding startup waiter',async()=>{const {b}=boot();let reject;const failed=b.wait(new Promise((_,r)=>reject=r),'resource'),other=b.wait(new Promise(()=>{}),'other');const a=assert.rejects(failed,/broken asset/),c=assert.rejects(other,/broken asset/);reject(Error('broken asset'));await Promise.all([a,c]);assert.equal(b.snapshot().failure.code,'BOOT_RESOURCE_OR_NATIVE_ERROR');});
+await test('waiter timeout is terminal even if the native promise later resolves',async()=>{const {b,time}=boot({stageMS:1000,totalMS:2000});let resolve;const p=b.wait(new Promise(r=>resolve=r),'GPU',50),rejection=assert.rejects(p,e=>e.code==='BOOT_WAIT_TIMEOUT');time.elapse(50);await rejection;resolve('late');await microtasks();assert.equal(b.snapshot().status,'failed');assert.throws(()=>b.ready());});
+await test('late fulfilled wait checks absolute deadline before reporting success',async()=>{const {b,time}=boot({stageMS:100,totalMS:1000});const p=b.wait(Promise.resolve('ok'),'resource'),rejection=assert.rejects(p,e=>e.code==='BOOT_STAGE_TIMEOUT');time.elapse(101,{fire:false});await rejection;});
+await test('runtime context failure after readiness still enters persistent failed state',()=>{const {b}=boot();b.ready();b.fail(Error('lost'),{code:'WEBGL_CONTEXT_LOST'});assert.equal(b.snapshot().status,'failed');assert.equal(b.snapshot().failure.code,'WEBGL_CONTEXT_LOST');b.fail(Error('second'));assert.equal(b.snapshot().failure.message,'lost');});
+await test('native render queue coalesces requests and never invents completed GPU work',()=>{const time=fakeTime(),{gl,viewer}=fakeGL();let metadata={simulationTime:0},completed=[];const q=manageRendering(viewer,{...time,onSubmitMetadata:()=>metadata});q.onComplete(f=>completed.push(f));q.request();q.request();q.pump();assert.equal(viewer.renderer.info.render.frame,0);assert.equal(completed.length,0);gl.signalAll();q.pump();q.pump();assert.equal(viewer.renderer.info.render.frame,1);assert.equal(completed.length,0);metadata.simulationTime=99;time.elapse(25);gl.signalAll();q.pump();assert.equal(completed.length,1);assert.equal(completed[0].metadata.simulationTime,0);assert.equal(completed[0].durationMS,25);assert.equal(q.status().maxManagedInFlight,1);});
+await test('completed-frame waiters get a reader barrier before any next draw',async()=>{const time=fakeTime(),{gl,viewer}=fakeGL(),q=manageRendering(viewer,time);gl.signalAll();q.pump();const done=q.awaitFrame();q.pump();q.request();gl.signalAll();const result=q.pump();assert.equal(result.readers,true);assert.equal(viewer.renderer.info.render.frame,1);await done;assert.equal(q.status().completed,1);assert.equal(q.status().inFlight,0);q.pump();assert.equal(viewer.renderer.info.render.frame,2);});
+await test('GPU timeout terminates the queue and rejects outstanding frame readers',async()=>{const time=fakeTime(),{gl,viewer}=fakeGL();let failure;const q=manageRendering(viewer,{...time,frameTimeoutMS:45,onFailure:e=>failure=e});gl.signalAll();q.pump();const waited=q.awaitFrame(),rejection=assert.rejects(waited,/超过/);q.pump();time.elapse(45);await rejection;assert(failure);assert.equal(q.status().inFlight,0);assert.equal(q.status().pending,false);assert.throws(()=>q.request());});
+await test('GPU context loss stops rendering and cannot silently resume',()=>{const time=fakeTime(),{gl,viewer}=fakeGL(),q=manageRendering(viewer,time);gl.lose();assert.throws(()=>q.pump(),/上下文/);assert(q.status().failure);assert.throws(()=>q.request(),/上下文/);});
+await test('actual fence WAIT_FAILED terminates observation',()=>{const time=fakeTime(),{gl,viewer}=fakeGL(),q=manageRendering(viewer,time);gl.failAll();assert.throws(()=>q.pump(),/帧同步失败/);assert.equal(q.status().pending,false);});
+await test('observation waits for preceding image instead of RAF frequency',()=>{const time=fakeTime(),o=createObservationClock(time);let ticks=0;time.elapse(1000);assert.equal(o.advance({canAdvance:false,phaseKey:()=>1,tick:()=>ticks++}),0);assert.equal(ticks,0);time.elapse(1000);o.advance({canAdvance:true,phaseKey:()=>1,tick:dt=>{assert.equal(dt,1/120);ticks++;}});assert.equal(ticks,14);assert(o.summary().physicsSteps/120<=.12);});
+await test('a phase transition stops fixed-step advancement immediately',()=>{const time=fakeTime(),o=createObservationClock(time);let phase='waiting',ticks=0;time.elapse(1000);o.advance({canAdvance:true,phaseKey:()=>phase,tick:()=>{ticks++;phase='approach';}});assert.equal(ticks,1);});
+await test('pause and reset clear unobserved wall-time accumulation',()=>{const time=fakeTime(),o=createObservationClock(time);let ticks=0;time.elapse(1000);o.advance({canAdvance:true,paused:true,phaseKey:()=>1,tick:()=>ticks++});o.reset();assert.equal(o.advance({canAdvance:true,phaseKey:()=>1,tick:()=>ticks++}),0);assert.equal(ticks,0);});
+await test('completed trace copies metadata and separates slow-render wall time',()=>{const time=fakeTime(),o=createObservationClock(time),m={simulationTime:1};o.complete({serial:1,durationMS:500,metadata:m});m.simulationTime=99;const s=o.snapshot();assert.equal(s.lastCompleted.metadata.simulationTime,1);assert.equal(s.slowMode,true);assert.equal(s.physicsSteps,0);s.completedFrameTrace[0].metadata.simulationTime=7;assert.equal(o.snapshot().completedFrameTrace[0].metadata.simulationTime,1);});
+function monitorFixture({webGL=true}={}){
+  const time=fakeTime(),events={},docEvents={},nodes=new Map(),location={href:'https://fixture.invalid/',reloadCount:0,reload(){this.reloadCount++;}};
+  for(const id of ['shell','title','progress','elapsed','detail','track','actions','retry','copy','diagnostic'])nodes.set('npc-boot-'+id,{hidden:false,dataset:{},textContent:'',value:'',focus(){},select(){}});
+  for(const id of ['npc-status','npc-ready'])nodes.set(id,{textContent:''});
+  const document={documentElement:{dataset:{}},getElementById:id=>nodes.get(id),addEventListener:(name,fn)=>{docEvents[name]=fn;}};
+  const window={addEventListener:(name,fn)=>{events[name]=fn;},...(webGL?{WebGL2RenderingContext:function(){}}:{})};
+  const context={window,document,location,navigator:{},Error,JSON,Math,performance:{now:time.now},setTimeout:time.setTimer,clearTimeout:time.clearTimer,setInterval:()=>1,clearInterval:()=>{},
+    createBootLifecycle:opts=>createBootLifecycle({...time,...opts})};
+  const source=fs.readFileSync(path.join(base,'BootMonitor.mjs'),'utf8').replace(/^import[^\n]*\n/,'');vm.runInNewContext(source,context);docEvents.DOMContentLoaded();return{window,document,nodes,location,events,docEvents,time};
+}
+await test('no WebGL2 constructor gives a visible recoverable failure shell',()=>{const f=monitorFixture({webGL:false});assert.equal(f.window.__NPC_BOOT__.snapshot().failure.code,'WEBGL2_UNAVAILABLE');assert.equal(f.document.documentElement.dataset.npcReady,'failed');assert.equal(f.nodes.get('npc-boot-shell').hidden,false);assert.equal(f.nodes.get('npc-boot-actions').hidden,false);});
+await test('retry reloads a fresh document and diagnostic fallback is usable',async()=>{const f=monitorFixture();f.events.error({error:Error('script fixture')});f.nodes.get('npc-boot-retry').onclick();assert.equal(f.location.reloadCount,1);await f.nodes.get('npc-boot-copy').onclick();const area=f.nodes.get('npc-boot-diagnostic');assert.equal(area.hidden,false);assert.equal(JSON.parse(area.value).boot.status,'failed');});
+await test('required image rejection fails while decorative images do not',()=>{const f=monitorFixture();f.events.error({target:{tagName:'IMG',dataset:{}}});assert.equal(f.window.__NPC_BOOT__.snapshot().status,'loading');f.events.error({target:{tagName:'IMG',dataset:{npcRequired:'true'}}});assert.equal(f.window.__NPC_BOOT__.snapshot().failure.code,'REQUIRED_IMAGE_FAILED');});
+await test('context loss and native rejection are captured by the recovery shell',()=>{const f=monitorFixture();let prevented=false;f.docEvents.webglcontextlost({preventDefault(){prevented=true;}});assert(prevented);assert.equal(f.window.__NPC_BOOT__.snapshot().failure.code,'WEBGL_CONTEXT_LOST');const g=monitorFixture();g.events.unhandledrejection({reason:'native fixture'});assert.equal(g.window.__NPC_BOOT__.snapshot().failure.code,'UNHANDLED_NATIVE_ERROR');});
+await test('real workbench hiding selectors explicitly protect the startup and failure shell',()=>{
+  const css=fs.readFileSync(path.join(base,'styles.css'),'utf8');
+  const rules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selector,body])=>selector.includes('body.npc-observe')&&/display\s*:\s*none\s*!important/.test(body));
+  assert(rules.length>0,'The actual native-UI hiding rule must be inspected');
+  for(const [,selector]of rules)for(const part of selector.split(',')){
+    if(!part.includes('body.npc-observe'))continue;
+    assert(part.includes(':not(#npc-boot-shell)'), 'A high-specificity body hiding rule must exclude the boot/error shell: '+part);
+  }
+  const verifier=fs.readFileSync(path.join(base,'verify-browser.cjs'),'utf8');
+  assert(verifier.includes("const enteringStartup=await bootState()"));
+  assert(verifier.includes("assert.notEqual(report.lastBootState.bootShellContractViolation,true"));
+  assert(verifier.includes("shell?.getBoundingClientRect()")&&verifier.includes("getComputedStyle(shell)"),
+    'Real browser verification must evaluate composed shell visibility after app mounting');
+});
+await test('native body remains byte-identical and retained physical algorithms are pinned to R03',()=>{
+  const expected={'NativeBinding.mjs':'3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878','NativeRig.mjs':'cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1'};
+  for(const [name,hash]of Object.entries(expected))assert.equal(sha(fs.readFileSync(path.join(base,name))),hash,name+' must stay byte-identical');
+  const locks=JSON.parse(fs.readFileSync(path.join(here,'r04-physical-source-locks.json'),'utf8'));
+  assert.equal(locks.baselineSourceHead,'1ba2b58eb3fdd6efe60b993240e988980547c93e');assert.equal(locks.locks.length,5);
+  for(const lock of locks.locks){
+    const text=fs.readFileSync(path.join(base,lock.file),'utf8');
+    assert.equal(text.split(lock.startAnchor).length,2,lock.id+' unique start');
+    assert.equal(text.split(lock.endAnchor).length,2,lock.id+' unique end');
+    const start=text.indexOf(lock.startAnchor),end=text.indexOf(lock.endAnchor,start);
+    assert(end>start,lock.id+' ordered anchors');
+    const bytes=Buffer.from(text.slice(start,end+(lock.includeEndAnchor?lock.endAnchor.length:0)));
+    assert.equal(bytes.length,lock.expectedBytes,lock.id);assert.equal(sha(bytes),lock.sha256,lock.id);
+  }
+  const actor=fs.readFileSync(path.join(base,'ActorAdapter.mjs'));assert.equal(sha(actor.subarray(0,42629)),'1a16716aa4e6103f06fb6b93b9dcdad7aabf1ac21719c872ad1e9f3683430a0f','All native geometry/material/rig code before createActors is unchanged');
+});
+assert(tests.length>=20,'No zero-test false pass');
+const sourceFiles=['BootLifecycle.mjs','BootMonitor.mjs','ObservationClock.mjs','RenderQueue.mjs','Workbench.mjs','ActorAdapter.mjs','styles.css'];
+const report={schema:'kaopu/r03-boot-render-contract-tests@1',scope:'Deterministic CPU/fake-clock/fake-fence/DOM fixtures; no real browser, GPU, WebGL availability, or visual acceptance claim',
+  testedSourceSHA256:Object.fromEntries(sourceFiles.map(file=>[file,sha(fs.readFileSync(path.join(base,file)))])),tests,total:tests.length,passed:tests.every(t=>t.passed)};
+fs.writeFileSync(path.join(here,'audit-r03-boot-render-contract.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));if(!report.passed)process.exitCode=1;

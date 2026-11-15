@@ -1,0 +1,88 @@
+{
+  "schema": "kaopu/npc-root-source-and-render-review@1",
+  "reviewedAt": "2026-10-20T07:09:44.391989+00:00",
+  "sourceHead": "29b3c2f8b3f0521a01879ed2d379d343e870e77e",
+  "workflowRun": 39381766332,
+  "artifactId": 12246661955,
+  "archiveSHA256": "a09ac4f9d6b538e0491638be408679e29997713a9b33aa204151b7241e8b0f25",
+  "browserSuitePassed": true,
+  "independentChecksPassed": 13,
+  "builtInCasesPassed": 12,
+  "allExpectedErrorsAbsent": true,
+  "actualFramesReviewed": [
+    {
+      "file": "01-panorama.png",
+      "sha256": "87c48c3b50f074a4c360af652a398b62c65e766bfdcdbeb5d5d0064dc585d188"
+    },
+    {
+      "file": "A-window-open-contact.png",
+      "sha256": "34c28bae07b009baa83b394c670ab074bd79eec55e28fd28c6bea3507ee78437"
+    },
+    {
+      "file": "A-window-open-released.png",
+      "sha256": "7648359847e097b276983656ba75a644932e42da096b1f0c25653cb7d7758fcb"
+    },
+    {
+      "file": "window-ui-cancel-recovered.png",
+      "sha256": "51e6bcbbd0caca308077c3176bbcc91b7ea8e83200c7a9bf7d1a4b0e2e2aafca"
+    },
+    {
+      "file": "mobile-390x844-panorama.png",
+      "sha256": "e02fd45de5eb0ce23d9e09cf80b2e81706a75f532b5ecdd9b84eff9c6f9a64cc"
+    },
+    {
+      "file": "mobile-390x844-window.png",
+      "sha256": "d5985bfca1cae4307bc90a091e03db8629159d5683b7a26f1ad2179e8ae29baa"
+    },
+    {
+      "file": "contact-A.png",
+      "sha256": "d7ac47e0df72644319628ff2b9aec8c69ccf7780c82aa8d6aacfb492d2a9260c",
+      "observation": "Bottle and gripping palm obscured by new near window frame; visual acceptance failed."
+    },
+    {
+      "file": "contact-B.png",
+      "sha256": "69d95faf96e7ae7e6b7374ae6faf4063a593a828d9a47ece849f412ff2a84964",
+      "observation": "Bottle and gripping palm obscured by new near window frame; visual acceptance failed."
+    },
+    {
+      "file": "contact-C.png",
+      "sha256": "cfef1355939a4591f69fe8f27afabb9f27488950d7e759bd4b96fdb54867bca6",
+      "observation": "Bottle and gripping palm obscured by new near window frame; visual acceptance failed."
+    }
+  ],
+  "presentationCheckAccepted": false,
+  "visualObservations": [
+    "The panorama shows all three distinct complete native people, including heads, skin and feet, with the same table and actual window.",
+    "The window-contact camera visibly resolves the real hand wrapped around the authored cylindrical handle, forearm and leaf frame.",
+    "The released-open and cancelled frames show a different actual leaf angle and the hand returned beside the body; the stationary handle is no longer held.",
+    "The 390px panorama contains all three full bodies; the detail camera resolves the window interaction area and controls remain available through the tested responsive layout."
+  ],
+  "limits": [
+    "Screenshots supplement the actual browser operations and physics reports; they are not the delivery.",
+    "The contact camera intentionally frames the handle and arm; whole-body observation uses panorama or side view.",
+    "The window and thick handle are specified observation fixtures at a fixed workstation.",
+    "Startup timing belongs to the CI SwiftShader renderer and does not certify user-device or physical-phone performance."
+  ],
+  "humanVisualAcceptance": false,
+  "productionReady": false,
+  "publicURLVerified": false,
+  "productionSourceModifiedByReview": false,
+  "previewSHA256": "452e2750b8c16d362db5b48f067f59aa761df9a93e0433c4ccd15da70fdb96d7",
+  "priorScopedReview": {
+    "reviewedAt": "2026-10-20T07:02:03.944419+00:00",
+    "presentationCheckAccepted": true,
+    "scope": "Only the six originally listed window/panorama frames; bottle contact frames had not yet been reviewed."
+  },
+  "visualAcceptanceBlocked": true,
+  "blockingFinding": {
+    "id": "bottle-camera-occluded-by-new-window",
+    "affectedFrames": [
+      "02-hand-view.png",
+      "contact-A.png",
+      "contact-B.png",
+      "contact-C.png"
+    ],
+    "cause": "The inherited camera at [0.7,1.38,1.65] looks through the new near window frame toward the bottle station. The frame and table edge obscure the bottle and gripping palm.",
+    "resolution": "Change only contact-camera position and target, then repeat source-bound browser acceptance and inspect all three bottle-contact frames."
+  }
+}

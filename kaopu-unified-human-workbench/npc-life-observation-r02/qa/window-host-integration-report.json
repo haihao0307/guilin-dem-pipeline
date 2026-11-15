@@ -1,0 +1,368 @@
+{
+  "schema": "kaopu/window-host-integration-qa@1",
+  "createdAt": "2026-10-20T07:59:05.374Z",
+  "sourceAtStart": {
+    "../LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a",
+    "../WindowInteraction.mjs": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+    "../vendor/cannon-es.js": "f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c"
+  },
+  "sourceHashes": {
+    "../LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a",
+    "../WindowInteraction.mjs": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+    "../vendor/cannon-es.js": "f0700cbd3a482954949b9d58c1b0f76dcc74767750297647a39d8c40dd63d37c"
+  },
+  "sourceUnchangedDuringTest": true,
+  "scope": "Actual production LifeWorld + WindowInteraction + Cannon; TEST_FIXTURE_ONLY actor motion/recovery inputs",
+  "doesNotProve": [
+    "native geometry or IK",
+    "true local-quaternion recovery correctness",
+    "browser or public delivery"
+  ],
+  "passed": true,
+  "counts": {
+    "passed": 3,
+    "total": 3
+  },
+  "tests": [
+    {
+      "name": "a completed bottle task advances the real host recovery and permits a subsequent window request",
+      "pass": true,
+      "evidence": {
+        "outcome": {
+          "elapsed": 8.150000000000178,
+          "steps": 978,
+          "timeout": false
+        },
+        "bottle": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 7.5000000000001625,
+          "contactM": 0,
+          "maxHoldErrorM": 0.006053022020365617,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "observedNativeRecovery": true,
+        "restUpdates": 78,
+        "nextTask": {
+          "id": "window-task-1",
+          "taskId": "window-task-1",
+          "token": "A:window:1",
+          "generation": 1,
+          "operation": "open",
+          "skill": "set-window-angle",
+          "objectId": "window-01",
+          "reason": "manual",
+          "targetAngleRad": -0.6108652381980153,
+          "requestedRevision": 0,
+          "requestedAt": 8.150000000000178
+        }
+      }
+    },
+    {
+      "name": "one actor cannot cross from bottle or window execution/recovery until the owning recovery finishes",
+      "pass": true,
+      "evidence": {
+        "bottleExecutionRejected": true,
+        "bottleWithdrawalRejected": true,
+        "bottleRestRejected": true,
+        "bottleRecovery": {
+          "elapsed": 0.6499999999999977,
+          "steps": 78,
+          "timeout": false
+        },
+        "windowExecutionRejected": true,
+        "windowWithdrawalRejected": true,
+        "windowRestRejected": true,
+        "windowRecovery": {
+          "elapsed": 0.649999999999963,
+          "steps": 78,
+          "timeout": false
+        },
+        "acceptedAfterRecovery": true
+      }
+    },
+    {
+      "name": "host.cancel routes an actual moving window to immediate grip release while preserving its hinge and later freeing the actor",
+      "pass": true,
+      "evidence": {
+        "setup": {
+          "elapsed": 3.8583333333333223,
+          "steps": 463,
+          "timeout": false
+        },
+        "before": {
+          "id": "window-01",
+          "angleDeg": -8.039275292275342,
+          "angleRad": -0.14031182332443418,
+          "angularVelocityRadS": -0.1476768092442133,
+          "position": [
+            0.3726617751590822,
+            1.4274998045227334,
+            0.5122120521519296
+          ],
+          "quaternion": [
+            -2.66091423689485e-7,
+            -0.07009837632046079,
+            0.000004499434244940635,
+            0.9975400832131606
+          ],
+          "reservedBy": "A",
+          "heldBy": "A",
+          "gripConstraintCount": 1,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 44,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": false,
+          "targetAngleDeg": -35,
+          "settled": false,
+          "handleCentre": [
+            0.2098164773693622,
+            1.1999981929978436,
+            0.37812001010112184
+          ],
+          "handleAnchor": [
+            0.21429173753889924,
+            1.1999981961956787,
+            0.34643449217234334
+          ],
+          "forcePerAxisN": [
+            -0.2077166573266822,
+            3.7202467606967153,
+            -0.11996828540628338
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "immediate": {
+          "id": "window-01",
+          "angleDeg": -8.039275292275342,
+          "angleRad": -0.14031182332443418,
+          "angularVelocityRadS": -0.1476768092442133,
+          "position": [
+            0.3726617751590822,
+            1.4274998045227334,
+            0.5122120521519296
+          ],
+          "quaternion": [
+            -2.66091423689485e-7,
+            -0.07009837632046079,
+            0.000004499434244940635,
+            0.9975400832131606
+          ],
+          "reservedBy": null,
+          "heldBy": null,
+          "gripConstraintCount": 0,
+          "hingeConstraintCount": 1,
+          "blocked": false,
+          "obstruction": {
+            "contactCount": 0,
+            "forceN": 0,
+            "bodyId": 44,
+            "blockerId": "window-blocker"
+          },
+          "goalOpen": false,
+          "goalClosed": false,
+          "targetAngleDeg": -35,
+          "settled": false,
+          "handleCentre": [
+            0.2098164773693622,
+            1.1999981929978436,
+            0.37812001010112184
+          ],
+          "handleAnchor": [
+            0.21429173753889924,
+            1.1999981961956787,
+            0.34643449217234334
+          ],
+          "forcePerAxisN": [
+            0,
+            0,
+            0
+          ],
+          "maxGripForcePerAxisN": 24
+        },
+        "counts": {
+          "structural": 1,
+          "bottleGrip": 0,
+          "windowGrip": 0,
+          "total": 1
+        },
+        "recovery": {
+          "elapsed": 1.5500000000000695,
+          "steps": 186,
+          "timeout": false
+        },
+        "bottleNextAccepted": true,
+        "earlyCancellations": [
+          {
+            "supportEnabled": true,
+            "approach": {
+              "elapsed": 0.10833333333333332,
+              "steps": 13,
+              "timeout": false
+            },
+            "palm": [
+              0.01652173913043478,
+              1.0543478260869565,
+              -0.12478260869565216
+            ],
+            "taskToken": "A:window:1",
+            "recovery": {
+              "phase": "rest",
+              "normalDistanceM": 0,
+              "tableRearZ": 0.29000000000000004,
+              "mode": "direct-rest-no-contact",
+              "noContact": true,
+              "sourcePhase": "approach",
+              "reason": "cancelled",
+              "safePalmZ": 0.14000000000000004,
+              "target": null,
+              "progress": 0
+            },
+            "recovered": {
+              "elapsed": 0.6499999999999998,
+              "steps": 78,
+              "timeout": false
+            },
+            "reachCallsUnchanged": true,
+            "counts": {
+              "structural": 1,
+              "bottleGrip": 0,
+              "windowGrip": 0,
+              "total": 1
+            },
+            "events": [
+              {
+                "type": "window-phase",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-reserved",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-phase",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-phase",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-direct-rest",
+                "taskToken": "A:window:1",
+                "mode": "direct-rest-no-contact",
+                "noContact": true,
+                "sourcePhase": "approach",
+                "reason": "cancelled"
+              },
+              {
+                "type": "window-cancelled",
+                "taskToken": "A:window:1",
+                "sourcePhase": "approach"
+              },
+              {
+                "type": "window-restored",
+                "taskToken": "A:window:1",
+                "mode": "direct-rest-no-contact",
+                "noContact": true,
+                "sourcePhase": "approach",
+                "reason": "cancelled"
+              }
+            ]
+          },
+          {
+            "supportEnabled": false,
+            "approach": {
+              "elapsed": 0.10833333333333332,
+              "steps": 13,
+              "timeout": false
+            },
+            "palm": [
+              0.01652173913043478,
+              1.0543478260869565,
+              -0.12478260869565216
+            ],
+            "taskToken": "A:window:1",
+            "recovery": {
+              "phase": "rest",
+              "normalDistanceM": 0,
+              "tableRearZ": 0.29000000000000004,
+              "mode": "direct-rest-no-contact",
+              "noContact": true,
+              "sourcePhase": "approach",
+              "reason": "cancelled",
+              "safePalmZ": 0.14000000000000004,
+              "target": null,
+              "progress": 0
+            },
+            "recovered": {
+              "elapsed": 0.6499999999999998,
+              "steps": 78,
+              "timeout": false
+            },
+            "reachCallsUnchanged": true,
+            "counts": {
+              "structural": 1,
+              "bottleGrip": 0,
+              "windowGrip": 0,
+              "total": 1
+            },
+            "events": [
+              {
+                "type": "window-phase",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-reserved",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-phase",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-phase",
+                "taskToken": "A:window:1"
+              },
+              {
+                "type": "window-direct-rest",
+                "taskToken": "A:window:1",
+                "mode": "direct-rest-no-contact",
+                "noContact": true,
+                "sourcePhase": "approach",
+                "reason": "cancelled"
+              },
+              {
+                "type": "window-cancelled",
+                "taskToken": "A:window:1",
+                "sourcePhase": "approach"
+              },
+              {
+                "type": "window-restored",
+                "taskToken": "A:window:1",
+                "mode": "direct-rest-no-contact",
+                "noContact": true,
+                "sourcePhase": "approach",
+                "reason": "cancelled"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

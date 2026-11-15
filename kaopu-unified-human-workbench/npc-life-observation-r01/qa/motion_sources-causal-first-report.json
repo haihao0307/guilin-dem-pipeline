@@ -1,0 +1,273 @@
+{
+  "schema": "npc-independent-causal-qa/1",
+  "createdAt": "2026-10-20T02:56:51.033Z",
+  "sourceHash": "97c45528e1b46dd5462e17dc0e6ceaf1687055966381227210dd04e36b93990d",
+  "scope": "TEST_FIXTURE_ONLY actor adapters; production LifeWorld and vendored Cannon execute unchanged",
+  "proves": [
+    "rigid-body gravity/support causality",
+    "finite grip force",
+    "ownership and cancellation state",
+    "world-result feedback"
+  ],
+  "doesNotProve": [
+    "native people or surface IK",
+    "finger geometry or collisions",
+    "body/foot/table clearance",
+    "browser or mobile execution",
+    "public delivery",
+    "visual acceptance"
+  ],
+  "passed": false,
+  "counts": {
+    "passed": 8,
+    "total": 10
+  },
+  "tests": [
+    {
+      "name": "gravity and actual table support remain causal without any actor",
+      "pass": true,
+      "measurements": {
+        "supported": {
+          "y": 0.9397583961608376,
+          "supported": true,
+          "constraints": 0
+        },
+        "after": {
+          "y": 0.1811046642585934,
+          "velocityY": -3.7875652444431256,
+          "supported": false,
+          "goal": false
+        }
+      }
+    },
+    {
+      "name": "no grip may be created with a palm that misses by 5 cm",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 4.016666666666656,
+          "maxHeight": 0.9408,
+          "maxOwners": 0,
+          "maxConstraints": 0,
+          "timeout": false
+        },
+        "result": {
+          "result": "contact-failed",
+          "detail": "表皮手掌没有进入接触容差",
+          "duration": 4.016666666666656,
+          "contactM": null,
+          "maxHoldErrorM": 0,
+          "phases": [
+            "waiting",
+            "approach"
+          ]
+        },
+        "contacts": 0
+      }
+    },
+    {
+      "name": "light object performs a physical lift, then release and supported settling",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.266666666666818,
+          "maxHeight": 1.0807947967381804,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "timeout": false
+        },
+        "result": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 7.266666666666818,
+          "contactM": 0,
+          "maxHoldErrorM": 0.011963078972878089,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "position": [
+          0.11986535829664235,
+          0.9399989161936025,
+          0.4499806201442238
+        ],
+        "goal": true
+      }
+    },
+    {
+      "name": "finite assisted grip cannot carry a 100 kg object as an animated prop",
+      "pass": false,
+      "error": "Error: Heavy object was carried despite the finite force constraint\n    at check (file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:27:47)\n    at file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:57:29\n    at test (file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:29:80)\n    at file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:54:7"
+    },
+    {
+      "name": "two requests share one physical item and preserve unique grip ownership",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.266666666666818,
+          "maxHeight": 1.0807947967381804,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "timeout": false
+        },
+        "results": [
+          {
+            "result": "completed",
+            "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+            "duration": 7.266666666666818,
+            "contactM": 0,
+            "maxHoldErrorM": 0.011963078972878089,
+            "phases": [
+              "waiting",
+              "approach",
+              "close",
+              "lift",
+              "transfer",
+              "lower",
+              "verify"
+            ]
+          },
+          {
+            "result": "already-sorted",
+            "detail": "物品已由另一人放稳，无需重复执行",
+            "duration": 6.6750000000001215,
+            "contactM": null,
+            "maxHoldErrorM": 0,
+            "phases": [
+              "waiting"
+            ]
+          }
+        ],
+        "contacts": [
+          {
+            "id": "A",
+            "errorM": 0,
+            "time": 2.066666666666662
+          }
+        ]
+      }
+    },
+    {
+      "name": "removing support during transport prevents successful placement",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 6.98333333333347,
+          "maxHeight": 1.0807947967381804,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "timeout": false
+        },
+        "result": {
+          "result": "world-result-failed",
+          "detail": "支撑面已移开，物品下落，任务失败",
+          "duration": 6.98333333333347,
+          "contactM": 0,
+          "maxHoldErrorM": 0.011963078972878089,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "y": 0.14713505373569086
+      }
+    },
+    {
+      "name": "changing the placement zone during transfer is observed by the production task",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 7.266666666666818,
+          "maxHeight": 1.0807947967383695,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "timeout": false
+        },
+        "result": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 7.266666666666818,
+          "contactM": 0,
+          "maxHoldErrorM": 0.01196307897287809,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        },
+        "x": -0.12013464170332537,
+        "target": [
+          -0.12,
+          0.9408,
+          0.45
+        ]
+      }
+    },
+    {
+      "name": "cancelling a held item frees both the constraint and the visible grip",
+      "pass": true,
+      "measurements": {
+        "phase": "cancelled",
+        "semanticGrip": 0,
+        "actorGrip": 0,
+        "heldBy": null,
+        "reservedBy": null,
+        "constraints": 0
+      }
+    },
+    {
+      "name": "helper can acquire the physical item after holder cancellation",
+      "pass": true,
+      "measurements": {
+        "outcome": {
+          "elapsed": 9.333333333333444,
+          "maxHeight": 1.0807947972063439,
+          "maxOwners": 1,
+          "maxConstraints": 1,
+          "timeout": false
+        },
+        "cancelled": {
+          "heldBy": null,
+          "reservedBy": null,
+          "constraints": 0
+        },
+        "b": {
+          "result": "completed",
+          "detail": "已松手；物品在目标区内受到桌面支撑，速度连续低于阈值",
+          "duration": 9.333333333333444,
+          "contactM": 0,
+          "maxHoldErrorM": 0.011963078972878311,
+          "phases": [
+            "waiting",
+            "approach",
+            "close",
+            "lift",
+            "transfer",
+            "lower",
+            "verify"
+          ]
+        }
+      }
+    },
+    {
+      "name": "review text invalidates its old success when physical support disappears",
+      "pass": false,
+      "error": "Error: The current UI review phase still says complete after its world predicate became false\n    at check (file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:27:47)\n    at file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:108:3\n    at test (file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:29:80)\n    at file:///workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r01/qa/motion_sources-causal.mjs:104:7"
+    }
+  ]
+}

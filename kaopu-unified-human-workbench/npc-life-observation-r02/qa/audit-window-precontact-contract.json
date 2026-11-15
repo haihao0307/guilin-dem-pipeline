@@ -1,0 +1,351 @@
+{
+  "schema": "kaopu/npc-r02-window-precontact-verifier-contract@1",
+  "createdAt": "2026-10-20T07:59:12.463Z",
+  "scope": "Only the necessary new window precontact gate; previous cross-object checks remain historical evidence. Synthetic fixtures are TEST_FIXTURE_ONLY and cannot certify a runtime.",
+  "verifierSHA256": "95a31e78656d4a05d70c0b38767395175247f485fe34f49359d043e65323e628",
+  "previousVerifierSHA256": "21c2224912aab1d515b04df3d37a33afc71f7ef9c158a7fe2738ed650e7c9111",
+  "previousAudit": {
+    "path": "/workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r02/qa/audit-cross-object-contract.json",
+    "sha256": "7a001183cc177989e7ca9cecfc4be83cebcd6f278bc303a5cd69f2b65bef660e",
+    "originalCheckCount": 29
+  },
+  "scriptSHA256": "6ca463cd7d945f59d9ed95be6d1967570d17d0d6d747181b02420548691d1302",
+  "producer": {
+    "path": "/workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r02/WindowInteraction.mjs",
+    "sha256": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b",
+    "contractMarkers": [
+      {
+        "marker": "'approach-start'",
+        "line": 199
+      },
+      {
+        "marker": "'approach-transition'",
+        "line": 367
+      },
+      {
+        "marker": "'approach-end'",
+        "line": 371
+      },
+      {
+        "marker": "approach:",
+        "line": 99
+      },
+      {
+        "marker": "elapsed:",
+        "line": 194
+      }
+    ]
+  },
+  "windowEvidenceRetention": {
+    "capacity": 256,
+    "reviewed": "Workbench deep-copies each completed open, close and other window case; the verifier selects the case copy by taskToken, with no window-array-length cursor.",
+    "baselineActualMaximumRowsPerTask": 26,
+    "additionalApproachRows": "At about 1.8 seconds, around 20 approach rows including its segment boundary plus the prior maximum of 26 gives about 46 rows per task, well below 256; this is a source-based estimate, not a new browser measurement.",
+    "boundary": "The final rolling world snapshot can omit older tasks; their completed case copies remain in verification. Missing required stages still fail."
+  },
+  "originalFailure": {
+    "path": "/workspace/scratch/e6ae91f16d9c/npc-observation/repo/kaopu-unified-human-workbench/npc-life-observation-r02/qa/native-window-approach-handle-first-failure.json",
+    "sha256": "1dd1eac6ec7759e3e11d51d5db452979d11f561b6e449c9b55fa24c4639346d5",
+    "sourceHashes": {
+      "ActorAdapter.mjs": "cb25c68c4ad5bf4c12859b2a70a57bfeb6dd75c56571ba54a5c2c0bc89b82b9f",
+      "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+      "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1"
+    },
+    "geometrySourceHashes": {
+      "WindowInteraction.mjs": "7382c1b5af96bd017ceec9bbae2eb1f41473145437bca459d47b668109c53354",
+      "LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a"
+    },
+    "measuredAt": "2026-10-20T07:37:38.765Z"
+  },
+  "thresholdsUnchanged": {
+    "operatedHandleM": 0.005,
+    "otherSolidM": 0.003,
+    "maxApproachSampleGapSeconds": 0.15
+  },
+  "realWitnesses": [
+    {
+      "actor": "A",
+      "vertex": 5379,
+      "sourceTime": 9.58333333333343,
+      "stage": "approach",
+      "heldBy": null,
+      "exactSignedDistanceM": -0.028658761052613564,
+      "penetrationM": 0.028658761052613564,
+      "rejectedBeforeContact": true,
+      "evidenceType": "existing production-native CPU weighted vertex and actual Cannon cylinder; not new browser evidence"
+    },
+    {
+      "actor": "B",
+      "vertex": 5332,
+      "sourceTime": 9.70000000000009,
+      "stage": "approach",
+      "heldBy": null,
+      "exactSignedDistanceM": -0.012197350527489957,
+      "penetrationM": 0.012197350527489957,
+      "rejectedBeforeContact": true,
+      "evidenceType": "existing production-native CPU weighted vertex and actual Cannon cylinder; not new browser evidence"
+    },
+    {
+      "actor": "C",
+      "vertex": 5339,
+      "sourceTime": 9.650000000000093,
+      "stage": "approach",
+      "heldBy": null,
+      "exactSignedDistanceM": -0.020348574480782304,
+      "penetrationM": 0.020348574480782304,
+      "rejectedBeforeContact": true,
+      "evidenceType": "existing production-native CPU weighted vertex and actual Cannon cylinder; not new browser evidence"
+    }
+  ],
+  "syntaxCheck": {
+    "exitCode": 0,
+    "stderr": ""
+  },
+  "testCount": 15,
+  "passedCount": 15,
+  "tests": [
+    {
+      "name": "full recorded approach accepts 4.5 mm own-handle contact without applying held palm-distance gate",
+      "passed": true,
+      "detail": {
+        "file": "window-poses-A-window-synthetic-contract-only.json",
+        "taskToken": "A:window:synthetic-contract-only",
+        "accepted": true,
+        "sampleCount": 45,
+        "swingCount": 6,
+        "maxSampleAngleGapDeg": 5,
+        "approachTransitionCount": 17,
+        "maxApproachSampleGapSeconds": 0.10000000000000009,
+        "approachDurationSeconds": 1.7999999999999998,
+        "approachSegments": [
+          "pre-position",
+          "normal-entry"
+        ],
+        "maxApproachIKHandErrorM": 1e-8,
+        "withdrawalTransitionCount": 8,
+        "maxWithdrawalSampleGapSeconds": 0.10000000000000053,
+        "recoveryTransitionCount": 6,
+        "maxRecoverySampleGapSeconds": 0.10000000000000053
+      }
+    },
+    {
+      "name": "unchanged exact 5 mm operated-handle boundary passes during approach",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "approach hand penetration fails before temporary grip exists",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "approach-transition",
+            "time": 1.1,
+            "angleDeg": 0,
+            "reason": "Actual hand penetrates the finite handle cylinder by more than 5 mm"
+          }
+        ]
+      }
+    },
+    {
+      "name": "approach neighbouring bottle remains under the 3 mm other-solid gate",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "approach-transition",
+            "time": 1.1,
+            "angleDeg": 0,
+            "reason": "Native hand/forearm penetrates other cylinder by more than 3 mm: bottle-01"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing entire approach cannot be replaced by held contact evidence",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "stage": "approach-start",
+            "reason": "Actual window approach before contact lacks a required surface sample"
+          },
+          {
+            "stage": "approach-transition",
+            "reason": "Actual window approach before contact lacks a required surface sample"
+          },
+          {
+            "stage": "approach-end",
+            "reason": "Actual window approach before contact lacks a required surface sample"
+          },
+          {
+            "reason": "Actual window approach lacks intermediate surface samples at at most 0.15 second gaps",
+            "approachTransitionCount": 0,
+            "maxApproachSampleGapSeconds": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "native joint interpolation needs no invented IK request or fixed candidate segment names",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "a 300 ms gap in approach surface evidence fails",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "reason": "Actual window approach lacks intermediate surface samples at at most 0.15 second gaps",
+            "approachTransitionCount": 14,
+            "maxApproachSampleGapSeconds": 0.40000000000000013
+          }
+        ]
+      }
+    },
+    {
+      "name": "end from another task cannot fill this task approach",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "stage": "approach-end",
+            "reason": "Actual window approach before contact lacks a required surface sample"
+          }
+        ]
+      }
+    },
+    {
+      "name": "approach world time and elapsed time must describe the same motion",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "approach-transition",
+            "time": 1.1,
+            "angleDeg": 0,
+            "reason": "Approach elapsed time disagrees with the same task world-time interval"
+          }
+        ]
+      }
+    },
+    {
+      "name": "start must record the initial pose before elapsed approach time",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "approach-start",
+            "time": 1,
+            "angleDeg": 0,
+            "reason": "Approach start must preserve the actual initial pose at zero elapsed time"
+          },
+          {
+            "id": "A",
+            "stage": "approach-start",
+            "time": 1,
+            "angleDeg": 0,
+            "reason": "Approach elapsed time disagrees with the same task world-time interval"
+          }
+        ]
+      }
+    },
+    {
+      "name": "approach-end must precede physical attachment",
+      "passed": true,
+      "detail": {
+        "rejected": true,
+        "evidencePreservedBeforeAssertion": true,
+        "violations": [
+          {
+            "id": "A",
+            "stage": "approach-end",
+            "time": 2.8,
+            "angleDeg": 0,
+            "reason": "Actual approach start, end and handle contact are not in causal order"
+          }
+        ]
+      }
+    },
+    {
+      "name": "real native A precontact deepest vertex is rejected",
+      "passed": true,
+      "detail": {
+        "actor": "A",
+        "vertex": 5379,
+        "sourceTime": 9.58333333333343,
+        "stage": "approach",
+        "heldBy": null,
+        "exactSignedDistanceM": -0.028658761052613564,
+        "penetrationM": 0.028658761052613564,
+        "rejectedBeforeContact": true,
+        "evidenceType": "existing production-native CPU weighted vertex and actual Cannon cylinder; not new browser evidence"
+      }
+    },
+    {
+      "name": "real native B precontact deepest vertex is rejected",
+      "passed": true,
+      "detail": {
+        "actor": "B",
+        "vertex": 5332,
+        "sourceTime": 9.70000000000009,
+        "stage": "approach",
+        "heldBy": null,
+        "exactSignedDistanceM": -0.012197350527489957,
+        "penetrationM": 0.012197350527489957,
+        "rejectedBeforeContact": true,
+        "evidenceType": "existing production-native CPU weighted vertex and actual Cannon cylinder; not new browser evidence"
+      }
+    },
+    {
+      "name": "real native C precontact deepest vertex is rejected",
+      "passed": true,
+      "detail": {
+        "actor": "C",
+        "vertex": 5339,
+        "sourceTime": 9.650000000000093,
+        "stage": "approach",
+        "heldBy": null,
+        "exactSignedDistanceM": -0.020348574480782304,
+        "penetrationM": 0.020348574480782304,
+        "rejectedBeforeContact": true,
+        "evidenceType": "existing production-native CPU weighted vertex and actual Cannon cylinder; not new browser evidence"
+      }
+    },
+    {
+      "name": "current producer contains the locked approach stages and actual elapsed metadata",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "passed": true,
+  "dynamicNativeExecuted": false,
+  "dynamicBrowserExecuted": false,
+  "productionSourceChanged": false,
+  "visualAcceptance": false,
+  "publicURLVerified": false,
+  "limits": [
+    "The browser verifier validates complete approaches only for tasks that reached contact; early cancellation does not invent approach-end or contact.",
+    "This checks actual recorded vertex SDF and bounded sampling gaps, not continuous triangle collision.",
+    "New corrected full native R07 browser and public-page acceptance remain required."
+  ]
+}

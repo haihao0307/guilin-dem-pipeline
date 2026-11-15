@@ -1,0 +1,238 @@
+{
+  "schema": "npc-r02-native-corrected-production-summary/1",
+  "createdAt": "2026-10-20T08:05:42.279Z",
+  "rigBaselineHead": "85718686d88585a449c3add050a089c45eee1207",
+  "sourceHashes": {
+    "ActorAdapter.mjs": "e33ce703703cfb418004c4931452ff91701dca593dad5c96ab787b855c38c7be",
+    "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+    "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1",
+    "LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a",
+    "WindowInteraction.mjs": "27328c425921b6a741c572512657b62b4b6f2b12cff245796497732dbd74b23b"
+  },
+  "sourceBinding": "Exact five production source SHA256 values. The root coordinator separately binds the committed browser candidate head; the old rig baseline is not claimed as the current implementation head.",
+  "passed": true,
+  "currentProductionPaths": 29,
+  "allCurrentReportsSourceHashesMatch": true,
+  "currentReports": {
+    "native-cross-object-production.json": {
+      "sha256": "84137fa0a84ee8fdc41c963603245dfe30552aa3f3ddd10fa9f6f6529bd463bb",
+      "passed": true,
+      "startedAt": "2026-10-20T07:59:05.448Z",
+      "completedAt": "2026-10-20T08:02:38.131Z",
+      "cases": 15,
+      "sourceHashesMatch": true
+    },
+    "native-window-cross-object.json": {
+      "sha256": "442440c8ea08df12390181e1499a5caa5b071a523c4a3486d792c32b6e63c5ab",
+      "passed": true,
+      "startedAt": "2026-10-20T07:58:56.154Z",
+      "completedAt": "2026-10-20T08:02:06.583Z",
+      "cases": 6,
+      "sourceHashesMatch": true
+    },
+    "native-window-cancel-cross-object.json": {
+      "sha256": "897f35b66dcc824697cee0811c1756a198c741ea7dda687199a88199cca9a575",
+      "passed": true,
+      "startedAt": "2026-10-20T07:58:59.272Z",
+      "completedAt": "2026-10-20T08:00:22.318Z",
+      "cases": 8,
+      "sourceHashesMatch": true
+    }
+  },
+  "corrections": {
+    "native": "Full weighted hand and forearm finite oriented cylinder diagnostics; native fixed-pivot local-delta quaternion approach transition. NativeBinding/NativeRig and original geometry/material/CSR/bone lengths unchanged.",
+    "bottle": "Root production uses primary [0,1.0908,.44] and alternate [-.06,1.0908,.40], a 4cm smooth approach arc and actual 1/120s SPOOK parameters; the finite grip force and torque limits are unchanged.",
+    "window": "1.15s current native pose to the existing safe low prepose, then .65s quintic reverse of the verified withdrawal line to the actual moving handle. No live object pose or success-state override."
+  },
+  "nativeAPI": {
+    "beginReachTransition": "beginReachTransition(target,{duration:1.15,side,frame}) returns true if already complete, false while active; solves a real reachable prepose and restores the visible source pose in the same call.",
+    "updateReachTransition": "updateReachTransition(dt) returns true when the fixed-pivot local quaternion transition is complete.",
+    "hasReachTransition": "hasReachTransition() returns boolean; rest(), beginRest() and setReach() cancel the pending transition.",
+    "skinSynchronization": "Each pose applies the original native hierarchy and updates that actor's independent CSR bone texture. No matrix linear interpolation, mesh scaling or child translation edits."
+  },
+  "fullNativeProduction": {
+    "bottle": {
+      "cases": 15,
+      "scope": "Five real fixed stations × primary release, alternate release and mid-lift cancel; alternate tasks requested through production moveTarget().",
+      "actualSurfaceFrames": 12410,
+      "maxOperatedCylinderPenetrationM": 0.0030625321710137272,
+      "maxDuringHoldM": 0.0030625321710137272,
+      "maxWithoutHoldM": 0.0009973014742882258,
+      "maxOtherSolidPenetrationM": 0,
+      "minimumRealTableSignedDistanceM": 0.001499245580840497,
+      "minimumOtherHandleSignedDistanceM": 0.029966958652236954,
+      "minimumPostApproachReachMarginM": 0.0172464313234294,
+      "postApproachClampedSamples": 0,
+      "finalNativeRestErrorRad": 0,
+      "finalTemporaryOwnersCleared": true,
+      "allPassed": true
+    },
+    "windowCycles": {
+      "cases": 6,
+      "scope": "Each of three real native people opens then closes the same live hinged window without resetting its physical pose between operations.",
+      "actualSurfaceFrames": 6619,
+      "maxOperatedHandlePenetrationM": 0.0023189731187537796,
+      "maxOtherSolidPenetrationM": 0,
+      "minimumOtherBottleSignedDistanceM": 0.07719891695704525,
+      "allStageClampedSamples": 0,
+      "finalNativeRestErrorRad": 0,
+      "ownershipClearedAndPermanentHingeRetained": true,
+      "allPassed": true
+    },
+    "windowCancel": {
+      "cases": 8,
+      "scope": "A first-leg cancellation with/without table support; five actual window stations canceling during the second approach leg; A holding the moving leaf cancels after −8°.",
+      "actualSurfaceFrames": 2658,
+      "maxOperatedHandlePenetrationM": 0.0034624726524529748,
+      "maxOtherSolidPenetrationM": 0,
+      "clampedSamples": 0,
+      "minimumRealTableSignedDistanceM": 0.022234339726629665,
+      "finalNativeRestErrorRad": 0,
+      "heldCancelAdditionalPhysicalTravelDeg": -9.062895963200328,
+      "requestedAndObservedCancelTimes": [
+        {
+          "case": "prepose-0.1s",
+          "requestedPhaseTime": 0.1,
+          "actualSampledPhaseTime": 0.10833333333333332,
+          "mode": "direct-rest-no-contact"
+        },
+        {
+          "case": "prepose-0.1s-support-off",
+          "requestedPhaseTime": 0.1,
+          "actualSampledPhaseTime": 0.10833333333333332,
+          "mode": "direct-rest-no-contact"
+        },
+        {
+          "case": "entry-1.475s-A",
+          "requestedPhaseTime": 1.4749999999999999,
+          "actualSampledPhaseTime": 1.4833333333333305,
+          "mode": "withdraw-then-rest"
+        },
+        {
+          "case": "entry-1.475s-B",
+          "requestedPhaseTime": 1.4749999999999999,
+          "actualSampledPhaseTime": 1.4833333333333305,
+          "mode": "withdraw-then-rest"
+        },
+        {
+          "case": "entry-1.475s-C",
+          "requestedPhaseTime": 1.4749999999999999,
+          "actualSampledPhaseTime": 1.4833333333333305,
+          "mode": "withdraw-then-rest"
+        },
+        {
+          "case": "entry-1.475s-A-pair",
+          "requestedPhaseTime": 1.4749999999999999,
+          "actualSampledPhaseTime": 1.4833333333333305,
+          "mode": "withdraw-then-rest"
+        },
+        {
+          "case": "entry-1.475s-B-pair",
+          "requestedPhaseTime": 1.4749999999999999,
+          "actualSampledPhaseTime": 1.4833333333333305,
+          "mode": "withdraw-then-rest"
+        }
+      ],
+      "ownershipClearedAndPermanentHingeRetained": true,
+      "allPassed": true
+    },
+    "sharedInvariants": {
+      "timeStepS": 0.008333333333333333,
+      "boneCount": 104,
+      "maxNativeBoneLengthErrorM": 5.898059818321144e-16,
+      "maxFootJointErrorM": 5.551115123125783e-17,
+      "maxMeasuredFootSurfaceDriftM": 2.6586991880867813e-8,
+      "boneAndFootJointGateM": 1e-8,
+      "operatedCylinderGateM": 0.005,
+      "otherSolidGateM": 0.003,
+      "actualSurfaceScope": "All original weighted display hand and forearm vertices selected by original native bone ancestry; exact finite boxes and local-Y cylinders with real world transforms, including cylinder end caps. These sampled vertices are not a continuous triangle or physical soft-tissue proof."
+    }
+  },
+  "preintegrationCandidate": {
+    "file": "native-window-prepose-candidate.json",
+    "sha256": "9a4347d68d9a03b93826b174495025198321407aab8e80da376854357347d764",
+    "passed": true,
+    "cases": 10,
+    "sourceHashes": {
+      "ActorAdapter.mjs": "e33ce703703cfb418004c4931452ff91701dca593dad5c96ab787b855c38c7be",
+      "NativeBinding.mjs": "3d9934a8be35074678383c1f9f5de7f847f87326c7fbad32d7b9674f4c4db878",
+      "NativeRig.mjs": "cb1443f48e37cc54d85d041d49ef9d50d6d34d32189d4fa3af34965493931ce1"
+    },
+    "geometrySourceHashes": {
+      "WindowInteraction.mjs": "7382c1b5af96bd017ceec9bbae2eb1f41473145437bca459d47b668109c53354",
+      "LifeWorld.mjs": "4e7a4dff083bd73a45a03feb485e19b96a6df748843b0b8a712bfd0546925a1a"
+    },
+    "classification": "Static candidate before Window controller integration; original shape dimensions match the live tests. Not counted among the 29 current live paths.",
+    "beginRestoredVisiblePalmMaxChangeM": 2.7401992126251197e-8,
+    "allPreposeTimersComplete": true,
+    "maxBoneErrorM": 4.753142324176451e-16,
+    "maxFootJointErrorM": 5.551115123125783e-17,
+    "minimumTableSignedDistanceM": 0.022234339726629665,
+    "minimumPreposeReachMarginM": 0.05998013489990994
+  },
+  "scopeAndLimits": {
+    "fullHeadMaterialGPUAcceptance": false,
+    "fullHeadMaterialGPURequirement": "Independent current-candidate Chromium gate; this numerical fixture retains original body/CSR data, not the full rendered head and shader.",
+    "bottleInitialApproach": {
+      "status": "Recorded existing initial wrist-frame clamps remain in the unchanged bottle approach. Their actual native surfaces, bones and feet are included in geometry checks; perfect Cartesian tracking during this initial phase is not claimed.",
+      "maxRecordedInitialPalmTargetErrorM": 0.026582738746839876,
+      "totalInitialClampedSamples": 516,
+      "maxActualOtherSolidPenetrationM": 0
+    },
+    "assistedContact": "Operated cylinder uses the unchanged 5mm surface gate; non-operated solids use 3mm. No claim of friction-complete fingers, fully physical limbs or whole-body collision.",
+    "promotion": "Producer numerical evidence only; public/browser acceptance and promotion remain with the independent verifier and root coordinator."
+  },
+  "unchangedCoreHistoricalValidation": {
+    "native-frame-recovery.json": {
+      "sha256": "13f3868a2ecf29b65f697e610ad4dcaf789868fa70f403ec9d0212dbf582a89a",
+      "historicalPassed": true,
+      "classification": "unchanged-core historical validation only; not counted as a current-source production path"
+    },
+    "native-withdraw-clearance-actual.json": {
+      "sha256": "da51f2605fdc613c8dd3938f82b6bbfd6d5c9cbc2d3249f98f36df5bd9350b55",
+      "historicalPassed": true,
+      "classification": "unchanged-core historical validation only; not counted as a current-source production path"
+    },
+    "native-final-production-summary.json": {
+      "sha256": "9464bacdb1f05202ecb3789c9bd4aabb57e9d6d9c0e9fdc6cb1c14cdc83d6430",
+      "historicalPassed": true,
+      "classification": "unchanged-core historical validation only; not counted as a current-source production path"
+    }
+  },
+  "failureEvidenceRetained": {
+    "bottle-window-handle-first-failure.json": {
+      "sha256": "a9db1342b9ad2360a6dc9c7d77ae0b1d3f67181b1e6098177f173220cbbeb7f2",
+      "passed": false,
+      "classification": "retained original failure evidence; not overwritten or promoted"
+    },
+    "native-cross-object-first-layout-failure.json": {
+      "sha256": "2c7b57b966e48ed5d25e61225c59deb65c15561ce0a5d5e1734f4d36f270a24e",
+      "passed": false,
+      "classification": "retained original failure evidence; not overwritten or promoted"
+    },
+    "native-cross-object-live-first-failure.json": {
+      "sha256": "7b33b4112310c6a7b4e5c66273f5e7604a12165585f05e7ff732c128e246f027",
+      "passed": false,
+      "classification": "retained original failure evidence; not overwritten or promoted"
+    },
+    "native-bottle-approach-table-first-failure.json": {
+      "sha256": "ef1cb5161f2a71a3d24f782087dd4b16cfbca96e1e271dc791096e288191ee51",
+      "passed": false,
+      "classification": "retained original failure evidence; not overwritten or promoted"
+    },
+    "native-window-approach-first-failure.json": {
+      "sha256": "49e06d0529de910c63988009f59d3e70adbb0a1757e3be3c9a6f4296ce39d28c",
+      "passed": false,
+      "classification": "retained original failure evidence; not overwritten or promoted"
+    },
+    "native-window-pregrasp-candidate.json": {
+      "sha256": "b90c7426940ad884220d673c867f92c2575a72c0ac3a40baffa84842a76d6bbe",
+      "passed": false,
+      "classification": "retained original failure evidence; not overwritten or promoted"
+    }
+  },
+  "priorSummaryUnmodified": {
+    "file": "native-final-production-summary.json",
+    "sha256": "9464bacdb1f05202ecb3789c9bd4aabb57e9d6d9c0e9fdc6cb1c14cdc83d6430"
+  }
+}

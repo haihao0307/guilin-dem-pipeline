@@ -1,0 +1,83 @@
+{
+  "schema": "R02-json-export-negative-zero-contract@1",
+  "createdAt": "2026-10-20T08:36:52.720Z",
+  "scope": "Pure tests of the exact helper extracted from verify-browser.cjs; no browser or product behavior executed",
+  "failedRunRetained": {
+    "sourceHead": "1bac098583b04a415ecdd6e94db6a80b29e337de",
+    "runId": 39391126228,
+    "status": "FAILED",
+    "originalVerifierSHA256": "95a31e78656d4a05d70c0b38767395175247f485fe34f49359d043e65323e628"
+  },
+  "change": "Only numeric negative zero becomes positive zero in expected export data; keys, array order, undefined and nonfinite values stay available for strict comparison",
+  "verifierSHA256": "975110bcf3c25f3d0fec74c5412dcc609dbed6559c097a47ed65c61910ea78f6",
+  "testSourceSHA256": "405b20d7ed60532da65cd6901aaccca7ce0089f71d26f5b634dd0a3fc6553683",
+  "checks": [
+    {
+      "name": "Numeric negative zero at every nested position matches its JSON value",
+      "passed": true
+    },
+    {
+      "name": "Comparison leaves the authoritative source object untouched",
+      "passed": true
+    },
+    {
+      "name": "Ordinary values, all keys, and array ordering remain exact",
+      "passed": true
+    },
+    {
+      "name": "A genuine angle difference is rejected",
+      "passed": true
+    },
+    {
+      "name": "A changed target revision is rejected",
+      "passed": true
+    },
+    {
+      "name": "A changed task token is rejected",
+      "passed": true
+    },
+    {
+      "name": "A missing key is rejected",
+      "passed": true
+    },
+    {
+      "name": "An unexpected key is rejected",
+      "passed": true
+    },
+    {
+      "name": "Changed event ordering is rejected",
+      "passed": true
+    },
+    {
+      "name": "Changed array ordering is rejected",
+      "passed": true
+    },
+    {
+      "name": "Undefined object keys are preserved and cannot be silently dropped",
+      "passed": true
+    },
+    {
+      "name": "Undefined array entries cannot silently become JSON null",
+      "passed": true
+    },
+    {
+      "name": "NaN and both infinities are retained and rejected against JSON null",
+      "passed": true
+    },
+    {
+      "name": "Sparse array holes are preserved and differ from JSON null entries",
+      "passed": true
+    },
+    {
+      "name": "Object descriptors and symbol keys survive the zero-only comparison copy",
+      "passed": true
+    },
+    {
+      "name": "Both real UI export comparison sites use the same zero-only helper",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "publicURLVerified": false,
+  "browserAcceptance": "Not assessed by this pure regression test; a fresh unchanged-gate full browser suite is still required"
+}
