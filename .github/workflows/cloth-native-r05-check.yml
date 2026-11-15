@@ -1,0 +1,91 @@
+name: Cloth native R05 isolated browser validation
+on:
+  push:
+    branches: [codex/cloth-native-r05-20261115]
+    paths:
+      - kaopu-clothing/native-r05/source/**
+      - .github/workflows/cloth-native-r05-check.yml
+permissions:
+  contents: write
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: kaopu-clothing/native-r05
+      - name: Recover exact checksummed source and record task boundary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,lzma,hashlib,re,json,os
+          p=Path('kaopu-clothing/native-r05');s=p/'source'
+          parts=sorted(s.glob('template-*.part'))
+          assert len(parts)==5
+          text=lzma.decompress(base64.b64decode(''.join(x.read_text().strip() for x in parts)))
+          assert hashlib.sha256(text).hexdigest()=='6711ed91faec9b16be60c724bc1fa1950e86d35e6faecd6d8df99d73d29f87fc','source integrity mismatch'
+          (s/'template.html').write_bytes(text)
+          c=re.search(r'<script type="text/plain" id="embedded-solver-c-source">(.*?)</script>',text.decode(),re.S).group(1)
+          (s/'solver.c').write_text(c)
+          (p/'TASK_ANCHOR.json').write_text(json.dumps({'task':'native-cloth-r05','userRequest':'再迭代一版','baseline':'KAOPU_Cloth_Native_R04.html','sourceCommit':os.environ['GITHUB_SHA'],'scope':'reduce collapse and duplicate contact/render work; persistent workers and shared surface cache','protected':['R08/R07 untouched','1176 simulation points per cloth','2304 simulation triangles','31040 display triangles','original 8 materials'],'notImplemented':['full triangle self contact','CCD','original whole-garment integration'],'sourceModified':True,'interactive3D':True,'staticImageSubstitute':False,'userVisualAcceptance':False,'productionReady':False},ensure_ascii=False,indent=2))
+          PY
+      - name: Compile actual embedded solver
+        run: |
+          if ! command -v clang >/dev/null || ! command -v wasm-ld >/dev/null; then sudo apt-get -qq update && sudo apt-get -qq install -y clang lld; fi
+          clang --target=wasm32 -O3 -fno-builtin -nostdlib kaopu-clothing/native-r05/source/solver.c -Wl,--no-entry -Wl,--export-all -Wl,--initial-memory=8388608 -Wl,--max-memory=8388608 -Wl,-z,stack-size=262144 -o kaopu-clothing/native-r05/source/solver.wasm
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          p=Path('kaopu-clothing/native-r05');t=(p/'source/template.html').read_text();assert t.count('__WASM_BASE64__')==1
+          (p/'index.html').write_text(t.replace('__WASM_BASE64__',base64.b64encode((p/'source/solver.wasm').read_bytes()).decode()))
+          PY
+      - name: Install isolated browser runner
+        run: |
+          python3 -m pip install --quiet playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Real file navigation, GPU drawing and worker lifecycle
+        run: python3 kaopu-clothing/native-r05/source/browser_ci.py
+      - name: Commit only tested isolated candidate
+        id: commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add kaopu-clothing/native-r05/index.html kaopu-clothing/native-r05/TASK_ANCHOR.json kaopu-clothing/native-r05/source/template.html kaopu-clothing/native-r05/source/solver.c kaopu-clothing/native-r05/source/solver.wasm kaopu-clothing/native-r05/qa/browser-report.json
+          git commit -m 'Build browser-checked R05 standalone candidate on isolated branch [skip ci]'
+          git push origin HEAD:codex/cloth-native-r05-20261115
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Check immutable public mirror without assuming publication
+        env:
+          PAGE_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,json,hashlib,time,urllib.request
+          from playwright.sync_api import sync_playwright
+          p=Path('kaopu-clothing/native-r05');url='https://raw.githack.com/haihao0307/guilin-dem-pipeline/'+os.environ['PAGE_SHA']+'/kaopu-clothing/native-r05/index.html'
+          proof={'url':url,'commit':os.environ['PAGE_SHA'],'httpPassed':False,'browserPassed':False,'shareAllowed':False,'physicalDeviceTested':False}
+          try:
+           expected=hashlib.sha256((p/'index.html').read_bytes()).hexdigest()
+           with urllib.request.urlopen(url,timeout=35) as response:
+            data=response.read();proof['httpStatus']=response.status;proof['receivedSha256']=hashlib.sha256(data).hexdigest();proof['httpPassed']=response.status==200 and proof['receivedSha256']==expected
+           if proof['httpPassed']:
+            with sync_playwright() as pw:
+             b=pw.chromium.launch(headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']);page=b.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+             page.goto(url,wait_until='load',timeout=60000);page.wait_for_function("window.__bootError||(window.__fabric&&document.querySelector('#loading').style.display==='none')",timeout=60000)
+             assert not page.evaluate('window.__bootError||null')
+             page.evaluate('async()=>{__fabric.UI.playing=false;await __fabric.settle();await __fabric.step(30,30);}')
+             page.locator('#gray').click();page.wait_for_timeout(200);assert page.evaluate('__fabric.UI.gray');assert not errors
+             page.screenshot(path=str(p/'qa/public.png'));proof['browserPassed']=True;proof['shareAllowed']=True;b.close()
+          except Exception as e:proof['error']=str(e)
+          (p/'qa/PUBLICATION_PROOF.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2));print(json.dumps(proof))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloth-native-r05-checked
+          path: kaopu-clothing/native-r05/
+          retention-days: 7
+          if-no-files-found: error
