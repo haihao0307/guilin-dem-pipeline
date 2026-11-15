@@ -4,6 +4,7 @@ on:
     branches: [codex/cloth-native-r05-20261115]
     paths:
       - kaopu-clothing/native-r05/source/**
+      - kaopu-clothing/native-r05/patches/**
       - .github/workflows/cloth-native-r05-check.yml
 permissions:
   contents: write
@@ -32,6 +33,8 @@ jobs:
           (s/'solver.c').write_text(c)
           (p/'TASK_ANCHOR.json').write_text(json.dumps({'task':'native-cloth-r05','userRequest':'再迭代一版','baseline':'KAOPU_Cloth_Native_R04.html','sourceCommit':os.environ['GITHUB_SHA'],'scope':'reduce collapse and duplicate contact/render work; persistent workers and shared surface cache','protected':['R08/R07 untouched','1176 simulation points per cloth','2304 simulation triangles','31040 display triangles','original 8 materials'],'notImplemented':['full triangle self contact','CCD','original whole-garment integration'],'sourceModified':True,'interactive3D':True,'staticImageSubstitute':False,'userVisualAcceptance':False,'productionReady':False},ensure_ascii=False,indent=2))
           PY
+      - name: Correct verified transform-feedback buffer alias
+        run: python3 kaopu-clothing/native-r05/patches/feedback.py
       - name: Compile actual embedded solver
         run: |
           if ! command -v clang >/dev/null || ! command -v wasm-ld >/dev/null; then sudo apt-get -qq update && sudo apt-get -qq install -y clang lld; fi
@@ -53,7 +56,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add kaopu-clothing/native-r05/index.html kaopu-clothing/native-r05/TASK_ANCHOR.json kaopu-clothing/native-r05/source/template.html kaopu-clothing/native-r05/source/solver.c kaopu-clothing/native-r05/source/solver.wasm kaopu-clothing/native-r05/qa/browser-report.json
+          git add kaopu-clothing/native-r05/index.html kaopu-clothing/native-r05/TASK_ANCHOR.json kaopu-clothing/native-r05/source/template.html kaopu-clothing/native-r05/source/solver.c kaopu-clothing/native-r05/source/solver.wasm kaopu-clothing/native-r05/qa/browser-report.json kaopu-clothing/native-r05/FEEDBACK_REGRESSION.json
           git commit -m 'Build browser-checked R05 standalone candidate on isolated branch [skip ci]'
           git push origin HEAD:codex/cloth-native-r05-20261115
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
