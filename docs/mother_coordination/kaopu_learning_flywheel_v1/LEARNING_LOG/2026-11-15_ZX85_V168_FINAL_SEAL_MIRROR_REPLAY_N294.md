@@ -2,7 +2,7 @@
 
 - observedAt: `2026-11-15T19:44:04+08:00`
 - candidateId: `PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE`
-- lifecycle: `POSTED_PENDING / GATE-RUN`
+- lifecycle: `POSTED / GATE-RUN`
 - production Mother changed: `false`
 - main / R2 / Site / asset changed: `false`
 
@@ -68,3 +68,10 @@ The same Candidate is refined in place. New executable distinction:
 `PARTIAL_PASS_FINAL_SEAL_AND_MIRROR_REPLAY_HOLD_EXTERNAL_RUNTIME_AND_CONCRETE_BINDING`
 
 Rollback remains deletion of this Candidate refinement branch only. No production Mother, main, R2, Site or asset was modified.
+
+## Routing receipt
+
+- target: `#91`
+- commentId: `6893825323`
+- state: `POSTED`
+- acknowledged: `false`
