@@ -10,18 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Read exact public reference, not a substitute
+      - name: Read public source scene and rig evidence
         run: |
-          mkdir -p reference/frames
-          curl --fail --location --retry 2 --max-time 90 'https://www.sidefx.com/docs/houdini/videos/vellum_fabrics_small.webm' -o reference/vellum_fabrics_small.webm
-          sha256sum reference/vellum_fabrics_small.webm > reference/source.sha256
-          printf '%s\n' 'Source: https://www.sidefx.com/docs/houdini/videos/vellum_fabrics_small.webm' 'Task: study visible fabric motion before implementation; no claim of exact proprietary solver parameters.' > reference/README.txt
-          if ! command -v ffmpeg; then sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg; fi
-          ffprobe -v quiet -show_format -show_streams -of json reference/vellum_fabrics_small.webm > reference/probe.json
-          ffmpeg -v error -i reference/vellum_fabrics_small.webm -vf 'fps=1,scale=960:-2' -q:v 2 reference/frames/frame-%03d.jpg
+          mkdir -p reference
+          curl --fail --location --retry 2 --max-time 90 'https://www.sidefx.com/contentlibrary/download/fabric-samples/55/' -o reference/fabric-samples.zip
+          curl --fail --location --retry 2 --max-time 60 'https://media.sidefx.com/cache/91/12/9112bb569d78ed3207b67b3e299432bc.png' -o reference/source-rig.png
+          curl --fail --location --retry 2 --max-time 60 'https://media.sidefx.com/cache/f9/76/f9762941c5b83d217d9c5d77b77e5038.png' -o reference/source-material.png
+          sha256sum reference/* > reference/SHA256.txt
+          printf '%s\n' 'Reference only: SideFX Fabric Samples by Andriy Bilichenko. No external mesh is to be copied into the output.' 'Exact video inspected separately: vellum_fabrics_small.webm.' > reference/README.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: vellum-r03-exact-reference
+          name: vellum-r03-source-study
           path: reference/
           retention-days: 1
           if-no-files-found: error
