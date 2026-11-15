@@ -4,7 +4,7 @@
 - Baseline: R2 OS + reference-replication gate + freshness gate
 - Scope: learning branch only; no production Mother, main, Site, asset, or global gate changed
 - Refines: `PHYSICAL-SYMMETRY-REUSE-001-N290-DEPENDENCY-CLOSURE`
-- State at authoring: `IMPLEMENTED_CANDIDATE / GATE-RUN`; routing pending; `ACKNOWLEDGED=false / ADOPTED=false / USER-ACCEPTED=false`
+- State at authoring: `IMPLEMENTED_CANDIDATE / GATE-RUN`; routing `POSTED` to #91 comment 6888763529; `ACKNOWLEDGED=false / ADOPTED=false / USER-ACCEPTED=false`
 
 ## One bounded question
 
@@ -38,4 +38,4 @@ Boundary: do not promote until one canonical package-relative dependency locator
 
 `PROBATION_COUNTERFACTUAL_PATH_FIX_PASS_HOLD_EXACT_PACKAGE_MANIFEST_AND_CONCRETE_MIRROR_INTEGRATION`
 
-This is a refinement of the existing Candidate, not a new regression case. KPI effects remain `unknown`; no production adoption or user acceptance is claimed.
+This is a refinement of the existing Candidate, not a new regression case. It was routed only to #91 as comment 6888763529; no acknowledgement is recorded. KPI effects remain `unknown`; no production adoption or user acceptance is claimed.
