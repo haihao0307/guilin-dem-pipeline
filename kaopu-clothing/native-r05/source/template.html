@@ -1,0 +1,423 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101213"><title>KAOPU · 原生稀疏布料 R05</title><style>
+:root{--bg:#111415;--panel:#191d1f;--ink:#e6e5df;--muted:#929b99;--line:#303638;--accent:#d4c39d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.6 system-ui,-apple-system,"Microsoft YaHei",sans-serif}button,input,select{font:inherit}button,select{border:1px solid var(--line);background:#202527;color:var(--ink);border-radius:6px;padding:8px 12px;cursor:pointer}button:hover{background:#2b3335}button.active{border-color:#b5ad92;background:#35382e;color:#f1e4bd}button.primary{background:#d5c7a5;color:#20271f;border-color:#d5c7a5}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #d5c7a5;outline-offset:4px}button:disabled{opacity:.5;cursor:default}header{height:62px;border-bottom:1px solid var(--line);padding:0 30px;display:flex;justify-content:space-between;align-items:center}.logo{font:600 14px/1 monospace;letter-spacing:3px}.logo span{font:11px system-ui;color:var(--muted);letter-spacing:0;margin-left:22px}.revision{font:11px monospace;color:var(--muted)}main{max-width:1800px;margin:auto;padding:26px 30px}.head{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:22px}h1{font-size:29px;line-height:1.3;font-weight:500;letter-spacing:-.7px;margin:0 0 8px}.head p{font-size:12px;color:var(--muted);margin:0}.headnav{display:flex;gap:7px}.headnav button{font-size:12px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:16px}.stage{height:calc(100vh - 230px);min-height:550px;max-height:850px;border:1px solid #343a3c;border-radius:10px;overflow:hidden;position:relative;background:#030404}canvas{width:100%;height:100%;display:block;touch-action:none}.stageTop{position:absolute;top:18px;left:21px;right:21px;display:flex;justify-content:space-between;pointer-events:none}.stageTop span{font-size:11px;color:#9aaba7}.stageTop b{font-weight:400;color:#c8d2cd}.split{position:absolute;top:70px;bottom:80px;left:50%;border-left:1px solid #343c3b55;pointer-events:none}.labels{position:absolute;left:0;right:0;bottom:72px;display:grid;grid-template-columns:1fr 1fr;pointer-events:none;text-align:center}.labels strong{font-size:21px;font-weight:400;letter-spacing:.2px}.labels span{display:block;color:#7d8d8a;font-size:11px;margin-top:3px}.stage.single .labels{grid-template-columns:1fr}.labels em{font-style:normal;font-size:11px;letter-spacing:2px;display:block;margin-top:3px;color:#a3afaa}.stageFoot{position:absolute;bottom:14px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;gap:10px}.stageFoot button{background:#141a1cd9;font-size:10px;padding:6px 9px}.stageFoot small{font-size:10px;color:#7f908b}.loading{position:absolute;inset:0;background:#101516;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;z-index:5}.loading b{font-size:17px;font-weight:500}.loading span{font-size:11px;color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}.section{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:16px}.section:last-child{border:0;margin:0;padding:0}.section h2{font-size:12px;font-weight:600;margin:0 0 10px}.pairs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pairs button{padding:9px 4px;font-size:11px}.pairs button span{display:block;font-size:10px;color:#a3aaa2}.sels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.sels label{font-size:10px;color:var(--muted)}select{width:100%;padding:6px;font-size:11px;margin-top:3px}.row{display:flex;gap:6px}.row>*{flex:1}.row button{font-size:11px;padding:8px 4px}.slider{margin-top:12px}.slider label{display:flex;justify-content:space-between;font-size:11px}output{font:11px monospace;color:#d3c5a3}input[type=range]{width:100%;accent-color:#c9bb99;height:14px;margin:8px 0 0;cursor:pointer}.micro{color:#8e9994;font-size:10px;line-height:1.7;margin:8px 0 0}.stats{font:10px/1.9 monospace;color:#93a29c}.stats div{display:flex;justify-content:space-between;gap:6px}.stats b{font-weight:400;color:#c5d0c9}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:13px 0 4px}.metrics div{border-left:1px solid #566357;padding-left:11px}.metrics strong{font:19px/1.3 monospace;color:#c7c9b7}.metrics span{display:block;font-size:9px;color:#8d9993}.timeline{margin:14px 0 0;padding:12px 16px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;gap:15px;background:#181c1e}.timeline button{font-size:11px;white-space:nowrap}.timeline .track{height:2px;background:#35423e;flex:1;position:relative}.timeline .track i{display:block;width:0;height:2px;background:#c5be9b}.timeline span{font:11px monospace;color:#afbbb4;white-space:nowrap}.timeline small{font-size:10px;color:#939e98}.scope{font-size:11px;color:#8c9993;margin:15px 0 20px}.docs{border-top:1px solid var(--line);padding:18px 0}.docs summary{cursor:pointer;font-size:13px;list-style:none;display:flex;justify-content:space-between}.docs summary:after{content:'＋';color:#b7bcaa}.docbody{max-width:1000px;line-height:1.85;color:#a8b4ae;font-size:12px;padding-top:10px}.docbody h3{color:#dadbd0;font-size:13px;margin:18px 0 7px}.docbody a{color:#d7c7a6}.docbody p{margin:7px 0}.docbody table{border-collapse:collapse;width:100%;font-size:11px;margin:12px 0}.docbody td,.docbody th{border-bottom:1px solid #333d38;padding:7px 9px;text-align:left}.docbody th{color:#d3d6c9}.footer{display:flex;justify-content:space-between;font-size:10px;color:#65766b;padding:18px 0;border-top:1px solid var(--line)}.warn{display:none;background:#453727;color:#e2c4a0;font-size:11px;padding:10px;border-radius:5px;margin-top:10px}.modal{display:none;position:fixed;inset:0;background:#000d;z-index:12;align-items:center;justify-content:center;padding:20px}.modal.open{display:flex}.modalbox{width:min(1000px,95vw);background:#161b1d;border:1px solid #3c4641;border-radius:10px;overflow:hidden}.modalhead{padding:12px 16px;display:flex;justify-content:space-between;align-items:center}.modalbox video{display:block;width:100%;aspect-ratio:853/480;background:#000}.modalbox p{margin:12px 16px;font-size:11px;color:#96a39d}.modalbox a{color:#ceb995}.toast{display:none;position:fixed;left:50%;bottom:25px;transform:translateX(-50%);background:#d5c7a5;color:#253125;border-radius:6px;padding:12px 18px;z-index:20;font-size:12px}
+@media(max-width:1000px){main{padding:20px 18px}.workspace{grid-template-columns:minmax(0,1fr) 238px}.panel{padding:14px}.headnav{display:none}.stage{min-height:540px}.logo span{margin-left:12px}}
+@media(max-width:720px){header{padding:0 18px;height:54px}.logo span{display:none}main{padding:19px 12px}.head{margin-bottom:16px}h1{font-size:25px}.workspace{display:flex;flex-direction:column}.stage{width:100%;height:680px;min-height:0}.panel{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{border-bottom:0;margin-bottom:0;padding:0}.section:first-child{grid-column:1/-1}.pairs{grid-template-columns:repeat(4,1fr)}.pairs button{font-size:10px}.labels{top:0;bottom:0;display:block;text-align:left}.labels>div{position:absolute;bottom:auto;left:18px;top:40%}.labels>div+div{top:87%}.labels strong{font-size:17px}.labels span{display:none}.labels em{display:inline;margin-left:8px;font-size:10px}.split{left:18px;right:18px;top:50%;bottom:auto;border-left:0;border-top:1px solid #343c3b55}.stageTop{left:16px;right:16px}.stageTop span{font-size:9px}.stageFoot small{display:none}.timeline{gap:10px}.timeline small{display:none}.scope{font-size:10px}.footer{display:block;line-height:1.8}.stage.single .labels>div{top:auto;bottom:65px}.stage.single .split{display:none}}
+.docbody{max-width:1000px}.timeline{flex-wrap:wrap}.timeline .track{min-width:45px}@media(max-width:720px){.timeline{gap:7px;padding:10px}.timeline button{padding:7px 9px}.timeline .track{min-width:40px}.stage{height:680px}}
+</style></head><body><header><div class="logo">KAOPU<span>布料动态研究 / FABRIC DYNAMICS</span></div><div class="revision">R05 · 稀疏物理候选</div></header><main><div class="head"><div><h1>让褶皱展开，不让布面塌缩。</h1><p>双线程独立求解 · 接触与结构交替修正 · GPU 表面一次生成、多次复用。</p></div><div class="headnav"><button id="reference">查看 SideFX 原片 ↗</button><button id="sourceDoc">本轮方法</button></div></div><div class="workspace"><div><div class="stage" id="stage"><canvas id="canvas" aria-label="可以旋转缩放的实时三维袖筒布料模拟"></canvas><div class="stageTop"><span id="backend">正在初始化</span><span id="state">相同运动 · 独立求解</span></div><div class="split" id="split"></div><div class="labels" id="labels"><div id="label0"></div><div id="label1"></div></div><div class="stageFoot"><div><button id="front">参考视角</button> <button id="close">肘部近看</button> <button id="focus">单件 / 对照</button></div><small>拖动旋转 · 滚轮缩放 · 双击复位视角</small></div><div class="loading" id="loading"><b>建立布料约束与显示表面</b><span>不读取模型文件，不使用预录动画。</span></div></div><div class="timeline"><button id="play" class="primary">暂停</button><button id="replay">重新披挂</button><button id="singleStep">单步</button><div class="track"><i id="progress"></i></div><span id="clock">0.00 s</span><small id="phase">松弛成褶</small></div></div><aside class="panel"><section class="section"><h2>按原片分组</h2><div class="pairs"><button class="active" data-pair="0">丝绒 / 丝绸<span>Velvet · Silk</span></button><button data-pair="1">针织 / 雨衣<span>Jersey · Raincoat</span></button><button data-pair="2">薄纱 / 牛仔<span>Tulle · Jeans</span></button><button data-pair="3">羊毛 / 皮革<span>Wool · Leather</span></button></div><div class="sels"><label>左侧<select id="left"></select></label><label>右侧<select id="right"></select></label></div></section><section class="section"><h2>同一动作</h2><div class="row"><button id="auto" class="active">原片动作</button><button id="manual">手动屈肘</button></div><div class="slider"><label>弯曲角度<output id="angleOut">0°</output></label><input id="angle" type="range" min="0" max="100" step="1" value="0"></div><div class="slider"><label>播放速度<output id="speedOut">1.0×</output></label><input id="speed" type="range" min=".25" max="1.25" step=".25" value="1"></div><div class="row" style="margin-top:12px"><button id="tug">轻拉后释放</button><button id="rest">伸直</button></div><p class="micro">两侧共享动作输入，但各自计算受力状态；不是共用一段变形动画。</p></section><section class="section"><h2>检查形体</h2><div class="row"><button id="gray">统一灰模</button><button id="wire">控制网格</button></div><div class="slider"><label>弯曲柔顺性<output id="bendOut">1.00×</output></label><input id="bend" type="range" min="-1" max="1" step=".05" value="0"></div><p class="micro">相对当前布料参数。数值越大越容易弯折；不是单纯增强表面波纹。</p><button id="inspect" style="width:100%;font-size:11px">检查当前接触与形变</button><pre id="inspection" style="white-space:pre-wrap;font-size:11px;color:#c9c4b6"></pre><button id="freeze" style="width:100%;margin-top:10px;font-size:11px">定格当前褶皱</button></section><section class="section"><h2>运行状态</h2><select id="quality" style="margin:0 0 10px" aria-label="物理时间步"><option value="240">精细求解 · 240 Hz</option><option value="180" selected>本版默认 · 180 Hz</option><option value="120">较低计算预算 · 120 Hz</option></select><div class="stats"><div><span>物理顶点 / 每件</span><b id="nodes">—</b></div><div><span>固定物理时间步</span><b id="stepLabel">1/180 s</b></div><div><span>实际模拟 / 墙钟时间</span><b id="simRatio">—</b></div><div><span>主线程更新与绘制提交</span><b id="mainCost">—</b></div><div><span>双线程求解用时之和</span><b id="workCost">—</b></div><div><span>累计表面更新 / 两件</span><b id="surfaceCount">—</b></div><div><span>逐帧重新绑定</span><b>0</b></div><div><span>运行时外部资源</span><b>0</b></div></div><div class="metrics"><div><strong id="fps">—</strong><span>当前页面帧 / 秒</span></div><div><strong id="ms">—</strong><span id="msLabel">最近一批双线程墙钟 / 毫秒</span></div></div><p class="micro" id="perfNote">帧率表示新状态或视角完成更新后的绘制提交频率，不是 GPU 完成速率。双线程用时之和不能当墙钟时间。超预算仍会减速，模拟／墙钟比例单独显示。</p><div class="warn" id="warning"></div></section></aside></div><p class="scope">R05 是依据原片与官方场景建立的独立浏览器实现，不是 Vellum 原生求解器；尚未接入 R08 人物服装和 R07 毛丝。默认褶皱由物理产生，材质细纹仅负责表面着色。</p><p class="scope" id="releaseStatus">R05 独立候选：保留 R04 的 1,176 点、2,304 物理三角面及 31,040 显示三角面。完整三角面自碰撞、CCD、原人物整衣接入与实机帧率认证未完成。</p>
+<details id="docs" class="docs"><summary>这一版改了什么，以及没有改什么</summary><div class="docbody">
+<h3>不是再减面</h3><p>仍然是两块布、八个材质配置、同一动作、180 Hz 默认固定步长和四轮主约束。没有删掉纱线外观或降低显示网格；不是预录回放，也没有移植 SideFX 专有求解器。</p>
+<h3>约束与接触</h3><p>沿用 R04 的轴向链式、环向联解、剪切与二面角弯曲。新增结构边防塌缩约束，并在面内接触闭合前交替修正。工程保护界限不是实物纺织参数，也不是最终误差保证；接触、固定边界与其他约束仍会互相影响。</p><p>24 段身体代理通过保守空间网格筛选；接触仍做精确段距离检查。三角形重心与共享边中点保留，共享中点只建立一个身份。仍只有粒子级自接触，不是完整三角面自碰撞。</p>
+<h3>计算与显示分开</h3><p>两件布分别运行在常驻 Web Worker 的 CPU／WASM 上，主线程不执行求解。每次最多一批在途；两件布同一步完成后才一起接收。重置、快速切换材质使用版本号，旧结果不能覆盖新状态。</p><p>细表面由 WebGL2 Transform Feedback 更新一次，阴影和主画面共同读取相同位置与法线。只旋转相机不重新生成表面；暂停不重复更新材质。该缓存仍消耗 GPU 时间与显存，不是零开销。</p>
+<h3>检查方式</h3><p>先看完整的收拢—展开—屈肘—伸直，再用灰模、控制网格和单步检查。接触诊断同时列出最大拉伸、最大压缩及 P99 应变。诊断只是定格的代理采样，不能证明整个动作或全表面没有穿插。</p>
+<h3>来源</h3><p>从用户提供 KAOPU_Cloth_Native_R04.html 原文件迭代。R04 已有约束链源说明保留：Humanoid-Rig-Lab-Next / denim-workshop/r15/dynamics.js @9a3dd9845266。没有修改原 R08／R07 工作台。外观参数未实物标定。</p>
+<p><a href="https://www.sidefx.com/docs/houdini/nodes/dop/vellumsolver.html" target="_blank" rel="noopener">SideFX 约束与接触迭代说明</a> · <a href="https://www.sidefx.com/contentlibrary/fabric-samples/" target="_blank" rel="noopener">官方参考案例</a></p>
+</div></details><div class="footer"><span>KAOPU · VELLUM_FABRICS_R05_20261115 · 独立单文件</span><span>CPU 双线程求解 · WebGL2 显示；不是全 GPU 物理。</span></div></main><div class="modal" id="modal"><div class="modalbox"><div class="modalhead"><span>SideFX 官方原片 · 16 秒</span><button id="closeRef">关闭</button></div><video id="video" controls playsinline preload="none"></video><p>此处播放原始参考，不是本页实时效果。该对照视频需要联网；主工作台不需要。<a href="https://www.sidefx.com/docs/houdini/videos/vellum_fabrics_small.webm" target="_blank" rel="noopener">单独打开原片</a></p></div></div><div id="toast" class="toast"></div><script id="physics-core">
+
+
+// Original browser implementation. Reference: SideFX Fabric Samples (visual/parameter study only).
+// Positions in metres; mass, stiffness and compliance are engineering study coefficients, not measured textile properties. Edge XPBD + signed dihedral XPBD. No authored wrinkle displacement.
+const TAU=Math.PI*2, clamp=(x,a,b)=>Math.max(a,Math.min(b,x)), mix=(a,b,t)=>a+(b-a)*t;
+const smooth=(a,b,x)=>{let t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const FABRICS=[
+ {id:0,name:'丝绒',en:'Velvet',color:'#b9647c',bend:23,stretch:1e-8,damp:3.4,friction:.55,slack:.14,mass:1.15,plastic:.25,threshold:.6,rough:.58},
+ {id:1,name:'丝绸',en:'Silk',color:'#dfa7ad',bend:75,stretch:5e-9,damp:1.8,friction:.16,slack:.14,mass:.55,plastic:0,threshold:1,rough:.22},
+ {id:2,name:'针织',en:'Jersey',color:'#acada6',bend:130,stretch:3e-7,damp:4.3,friction:.7,slack:.06,mass:.8,plastic:.12,threshold:.3,rough:.78},
+ {id:3,name:'雨衣',en:'Raincoat',color:'#e2b31c',bend:.9,stretch:1e-9,damp:2.4,friction:.35,slack:.14,mass:1.15,plastic:.16,threshold:.5,rough:.28},
+ {id:4,name:'绣花薄纱',en:'Tulle',color:'#c8b463',bend:120,stretch:4e-8,damp:4.7,friction:.38,slack:.14,mass:.4,plastic:0,threshold:1,rough:.64},
+ {id:5,name:'牛仔',en:'Jeans',color:'#566187',bend:3,stretch:4e-9,damp:4,friction:.8,slack:.14,mass:1.5,plastic:.16,threshold:.7,rough:.66},
+ {id:6,name:'羊毛',en:'Wool',color:'#747b76',bend:7,stretch:1.5e-7,damp:4.6,friction:.76,slack:.14,mass:1.1,plastic:.3,threshold:.3,rough:.9},
+ {id:7,name:'皮革',en:'Leather',color:'#986a4e',bend:.45,stretch:3e-9,damp:4.5,friction:.7,slack:.14,mass:2,plastic:.27,threshold:.62,rough:.39}
+];
+class Cloth {
+ constructor(material,U=24,V=48){if(!Number.isInteger(U)||!Number.isInteger(V)||U<8||V<8||U>96||V>96||U*(V+1)>8192||!FABRICS[material])throw Error("物理拓扑或材料超出当前内核范围");this.U=U;this.V=V;this.n=U*(V+1);this.mat={...FABRICS[material]};this.x=new Float32Array(this.n*4);this.prev=new Float32Array(this.n*4);this.vel=new Float32Array(this.n*4);this.target=new Float32Array(this.n*4);this.rest=new Float32Array(this.n*4);this.collision=new Float32Array(this.n*4);this.time=0;this.angle=0;this.lastAngle=0;this.tug=0;this.updateRig(0,0);this.initialize();this.topology();if(typeof WASM!=='undefined'&&WASM.exports)WASM.adopt(this);}
+ initialize(){let {U,V,x,rest,mat}=this;for(let j=0;j<=V;j++)for(let i=0;i<U;i++){let k=(j*U+i)*4,t=j/V,a=i/U*TAU;let taper=mix(.083,.078,t);let tiny=.00022*Math.sin(i*2.319+j*1.717);let r=taper+tiny;x[k]=-.37+.74*t;x[k+1]=r*Math.cos(a);x[k+2]=r*Math.sin(a);x[k+3]=(j<1||j>V-1)?0:1/mat.mass;rest[k]=x[k]*(1+mat.slack);rest[k+1]=x[k+1];rest[k+2]=x[k+2];rest[k+3]=x[k+3];}this.prev.set(x);this.vel.fill(0);this.initial=x.slice();}
+ topology(){let {U,V,rest}=this,edges=[],tri=[],hinges=[],map=new Map();const id=(i,j)=>j*U+(i+U)%U;const edge=(a,b,type)=>{let ax=a*4,bx=b*4;let L=Math.hypot(rest[ax]-rest[bx],rest[ax+1]-rest[bx+1],rest[ax+2]-rest[bx+2]);edges.push(a,b,L,type)};
+ for(let j=0;j<=V;j++)for(let i=0;i<U;i++){edge(id(i,j),id(i+1,j),0);if(j<V){edge(id(i,j),id(i,j+1),1);edge(id(i,j),id(i+1,j+1),2);edge(id(i+1,j),id(i,j+1),2);let a=id(i,j),b=id(i+1,j),c=id(i,j+1),d=id(i+1,j+1); // outward winding
+ if((i+j)%2===0)tri.push(a,c,b,b,c,d);else tri.push(a,c,d,a,d,b);}}
+ 
+ for(let t=0;t<tri.length;t+=3)for(let j=0;j<3;j++){let a=tri[t+j],b=tri[t+(j+1)%3],o=tri[t+(j+2)%3],key=Math.min(a,b)*this.n+Math.max(a,b);if(map.has(key)){let q=map.get(key);hinges.push(q[0],q[1],q[2],o,0,0);}else map.set(key,[a,b,o]);}
+ this.edges=new Float32Array(edges);this.tris=new Uint32Array(tri);this.hinges=new Float32Array(hinges);this.elambda=new Float32Array(edges.length/4);this.blambda=new Float32Array(hinges.length/6);
+ for(let k=0;k<hinges.length;k+=6)this.hinges[k+4]=this.dihedral(rest,this.hinges[k],this.hinges[k+1],this.hinges[k+2],this.hinges[k+3]);this.hingeRest=this.hinges.slice();
+ this.chains=new Int32Array(U*V);for(let z=0;z<this.edges.length;z+=4)if(this.edges[z+3]===1){let a=this.edges[z],i=a%U,j=Math.floor(a/U);this.chains[i*V+j]=z/4;}
+ this.triangleNodes=new Int32Array(this.tris);this.contactEdges=Int32Array.from([...map.values()].flatMap(q=>[q[0],q[1]]));
+ this.materialCoordinates=new Float32Array(this.n*2);for(let j=0;j<=V;j++)for(let i=0;i<U;i++){let k=(j*U+i)*2;this.materialCoordinates[k]=i/U;this.materialCoordinates[k+1]=j/V;}
+ this.bindingBuilds=1;
+
+ }
+ dihedral(p,a,b,c,d){a*=4;b*=4;c*=4;d*=4;let ex=p[b]-p[a],ey=p[b+1]-p[a+1],ez=p[b+2]-p[a+2],ux=p[c]-p[a],uy=p[c+1]-p[a+1],uz=p[c+2]-p[a+2],vx=p[d]-p[a],vy=p[d+1]-p[a+1],vz=p[d+2]-p[a+2];let n1x=ey*uz-ez*uy,n1y=ez*ux-ex*uz,n1z=ex*uy-ey*ux,n2x=vy*ez-vz*ey,n2y=vz*ex-vx*ez,n2z=vx*ey-vy*ex;let L=Math.hypot(ex,ey,ez);return Math.atan2((ex*(n1y*n2z-n1z*n2y)+ey*(n1z*n2x-n1x*n2z)+ez*(n1x*n2y-n1y*n2x))/L,n1x*n2x+n1y*n2y+n1z*n2z);}
+ updateRig(angle,tug){this.lastAngle=this.angle;this.angle=angle;let {U,V,target}=this;const K=24;if(!this.rig){this.rig=new Float32Array((K+1)*3);this.rigPrev=new Float32Array((K+1)*3);}else this.rigPrev.set(this.rig);let cyc=this.time%5.3,compress=(this.autoCompress===false?0:.17*smooth(0,.958333,cyc)*(1-smooth(.958333,1.958333,cyc))),length=.74*(1-compress);let rig=this.rig;rig[0]=-.37+.74*compress;rig[1]=0;rig[2]=0;for(let j=1;j<=K;j++){let t=(j-.5)/K,a=angle*smooth(.38,.62,t);rig[j*3]=rig[(j-1)*3]+length/K*Math.cos(a);rig[j*3+1]=rig[(j-1)*3+1]+length/K*Math.sin(a);rig[j*3+2]=0;}for(let j of [0,V]){let t=j/V,q=t*K,k=Math.min(K-1,Math.floor(q)),f=q-k,a=angle*smooth(.38,.62,t),cs=Math.cos(a),sn=Math.sin(a);let px=mix(rig[k*3],rig[(k+1)*3],f),py=mix(rig[k*3+1],rig[(k+1)*3+1],f);for(let i=0;i<U;i++){let o=(j*U+i)*4,u=i/U*TAU,r=mix(.083,.078,t);target[o]=px-sn*r*Math.cos(u);target[o+1]=py+cs*r*Math.cos(u);target[o+2]=r*Math.sin(u);target[o+3]=a;}}this.tug=tug;if(this.time===0)this.rigPrev.set(rig);}
+
+ step(dt,angle,tug=0){if(!this.wasm)throw Error('稀疏求解器尚未启动');WASM.step(this,dt,angle,tug);}
+ metrics(){let p=this.x,e=this.edges,max=0,sum=0,num=0,finite=true;for(let z=0;z<e.length;z+=4){if(e[z+3]===3)continue;num++;let a=e[z]*4,b=e[z+1]*4;let q=Math.abs(Math.hypot(p[a]-p[b],p[a+1]-p[b+1],p[a+2]-p[b+2])/e[z+2]-1);max=Math.max(max,q);sum+=q;}for(let v of p)if(!Number.isFinite(v))finite=false;return {finite,maxStrain:max,meanStrain:sum/num,points:this.n,edges:e.length/4,hinges:this.hinges.length/6};}
+}
+function motion(t){t=t%5.3;return 88*Math.PI/180*smooth(1.96,2.96,t)*(1-smooth(4.125,4.96,t));}
+if(typeof module!=='undefined')module.exports={Cloth,FABRICS,motion};
+
+// Native KAOPU sparse cloth: axial block + shear + signed bending + proxy contacts.
+// Axial block adapted from Cloth.rodBlock in our denim R15, not SideFX executable code.
+const WASM={exports:null,base:0,heap:0,async init(){try{let b=Uint8Array.from(atob('__WASM_BASE64__'),c=>c.charCodeAt(0)),r=await WebAssembly.instantiate(b,{});this.exports=r.instance.exports;this.base=this.exports.__heap_base.value;this.heap=this.base;return true;}catch(e){console.error(e);return false;}},reset(){this.heap=this.base;},adopt(c){if(!this.exports)return;const mem=this.exports.memory.buffer;function put(a){let at=(WASM.heap+15)&~15;WASM.heap=at+a.byteLength;if(WASM.heap>mem.byteLength)throw Error('Solver memory limit');let view=new a.constructor(mem,at,a.length);view.set(a);return view;}for(let key of ['x','prev','vel','target','collision','edges','elambda','hinges','blambda','rig','rigPrev','chains','triangleNodes','contactEdges'])c[key]=put(c[key]);let w=new Float32Array(c.n);for(let i=0;i<c.n;i++){let t=Math.floor(i/c.U)/c.V,u=(i%c.U)/c.U;w[i]=Math.exp(-Math.pow((t-.60)/.11,2)-Math.pow((u-.25)/.14,2));}c.tugWeights=put(w);c.wasm=true;c.steps=0;},step(c,dt,angle,tug){c.updateRig(angle,tug);let m=c.mat;this.exports.solve(c.x.byteOffset,c.prev.byteOffset,c.vel.byteOffset,c.target.byteOffset,c.collision.byteOffset,c.edges.byteOffset,c.elambda.byteOffset,c.hinges.byteOffset,c.blambda.byteOffset,c.rig.byteOffset,c.rigPrev.byteOffset,c.tugWeights.byteOffset,c.chains.byteOffset,c.triangleNodes.byteOffset,c.contactEdges.byteOffset,c.contactEdges.length/2,c.U,c.V,c.edges.length/4,c.hinges.length/6,c.tris.length/3,dt,m.stretch,m.bend,Math.exp(-m.damp*dt),Math.exp(-m.friction*dt*90),tug,4,1);c.contacts=this.exports.contact_count();c.virtualContacts=this.exports.virtual_count();c.time+=dt;c.steps++;}};
+</script>
+<script type="text/plain" id="worker-source">
+// Persistent, isolated solver. Exactly one requested job per side is in flight.
+const ready = WASM.init();
+let cloth=null, currentEpoch=0;
+self.onmessage=async ({data:d})=>{
+ try {
+  if(!await ready)throw Error('WebAssembly 启动失败');
+  if(d.type==='reset'){
+   WASM.reset();cloth=new Cloth(d.material);currentEpoch=d.epoch;
+   self.postMessage({id:d.id,epoch:d.epoch,reset:true});return;
+  }
+  if(!cloth||currentEpoch!==d.epoch)throw Error('过期物理状态');
+  cloth.autoCompress=d.auto;
+  cloth.mat.bend=FABRICS[cloth.mat.id].bend*d.bend;
+  let pose=d.pose,time=cloth.time;const begin=performance.now();
+  for(let k=0;k<d.steps;k++){
+   const desired=d.auto?motion(time):d.angle*Math.PI/180;
+   pose+=clamp(desired-pose,-.025,.025);
+   const tug=time<d.tugUntil?Math.sin((time-d.tugPhase)/.7*Math.PI)*1.3:0;
+   cloth.step(1/d.hz,pose,tug);time=cloth.time;
+  }
+  const solveMs=performance.now()-begin;
+  for(let k=0;k<cloth.x.length;k++)if(!Number.isFinite(cloth.x[k]))throw Error('布料出现非有限位置；已冻结');
+  const output=d.buffer&&d.buffer.byteLength===cloth.x.byteLength?new Float32Array(d.buffer):new Float32Array(cloth.x.length);
+  output.set(cloth.x);
+  self.postMessage({id:d.id,epoch:d.epoch,time,pose,positions:output.buffer,rig:Array.from(cloth.rig),contacts:cloth.contacts,virtualContacts:cloth.virtualContacts,solveMs,queries:WASM.exports.queries(),candidates:WASM.exports.candidates()},[output.buffer]);
+ }catch(e){self.postMessage({id:d.id,epoch:d.epoch,error:String(e.message||e)});}
+};
+</script>
+<script>
+function renderCenter(){let c=cloths[0],r=c.rig,minX=1e3,maxX=-1e3,minY=1e3,maxY=-1e3;for(let j=0;j<r.length;j+=3){let x=.819152*r[j]+.573576*r[j+1],y=-.573576*r[j]+.819152*r[j+1];minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}return [(minX+maxX)/2,(minY+maxY)/2,0];}
+const V3={sub:(a,b)=>a.map((x,i)=>x-b[i]),dot:(a,b)=>a.reduce((x,v,i)=>x+v*b[i],0),cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm:a=>{let l=Math.hypot(...a)||1;return a.map(x=>x/l)}};
+function matmul(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o}
+function look(eye,at){let z=V3.norm(V3.sub(eye,at)),x=V3.norm(V3.cross([0,1,0],z)),y=V3.cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-V3.dot(x,eye),-V3.dot(y,eye),-V3.dot(z,eye),1])}
+function projection(aspect,gpu=false){let f=1/Math.tan(.58/2),n=.025,z=12;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,gpu?z/(n-z):(z+n)/(n-z),-1,0,0,gpu?z*n/(n-z):2*z*n/(n-z),0])}
+function ortho(gpu=false){let s=.71,n=.1,f=4;return new Float32Array([1/s,0,0,0,0,1/s,0,0,0,0,gpu?1/(n-f):2/(n-f),0,0,0,gpu?n/(n-f):(f+n)/(n-f),1])}
+function matrixSet(aspect,gpu=false){let yaw=UI.yaw,pitch=UI.pitch,d=UI.distance* (aspect<.7?.7/aspect:1),at=renderCenter();let eye=[at[0]+Math.sin(yaw)*Math.cos(pitch)*d,at[1]+Math.sin(pitch)*d,Math.cos(yaw)*Math.cos(pitch)*d];return {vp:matmul(projection(aspect,gpu),look(eye,at)),light:matmul(ortho(gpu),look([-1,1.7,1.8],[0,.12,0])),eye};}
+function displayMesh(U=40,V=96){let verts=[],ix=[],RU=U*2,RV=V*2;for(let j=0;j<=RV;j++)for(let i=0;i<=RU;i++)verts.push(i/RU,j/RV,0);for(let j=0;j<RV;j++)for(let i=0;i<RU;i++){let a=j*(RU+1)+i,b=a+1,c=a+RU+1,d=c+1;ix.push(a,b,c,b,d,c);} // edge thickness ring
+ for(let end of [0,1]){let base=verts.length/3;for(let side=0;side<2;side++)for(let i=0;i<=RU;i++)verts.push(i/RU,end,side?-.0015:0);for(let i=0;i<RU;i++){let a=base+i,b=a+1,c=a+RU+1,d=c+1;ix.push(a,c,b,b,c,d);}}
+ return {verts:new Float32Array(verts),indices:new Uint32Array(ix)};}
+const GL_VERTEX=`#version 300 es
+precision highp float;
+precision highp sampler2D;
+layout(location=0) in vec3 aUV;
+uniform sampler2D uPos;uniform mat4 uVP,uLight;uniform vec4 uSettings;
+out vec3 vP,vN,vT;out vec2 vUV;out vec4 vShadow;out float vFold;
+vec4 weights(float t){return mix(vec4(-.5*t+t*t-.5*t*t*t,1.-2.5*t*t+1.5*t*t*t,.5*t+2.*t*t-1.5*t*t*t,-.5*t*t+.5*t*t*t),vec4(pow(1.-t,3.)/6.,(4.-6.*t*t+3.*t*t*t)/6.,(1.+3.*t+3.*t*t-3.*t*t*t)/6.,t*t*t/6.),.32);}
+vec4 deriv(float t){return mix(vec4(-.5+2.*t-1.5*t*t,-5.*t+4.5*t*t,.5+4.*t-4.5*t*t,-t+1.5*t*t),vec4(-.5*(1.-t)*(1.-t),-2.*t+1.5*t*t,.5+t-1.5*t*t,.5*t*t),.32);}
+vec3 rot(vec3 p){float c=.819152,s=-.573576;return vec3(c*p.x-s*p.y,s*p.x+c*p.y,p.z);}
+void main(){ivec2 sz=textureSize(uPos,0);float uu=fract(aUV.x)*float(sz.x),vv=aUV.y*float(sz.y-1);int i=int(floor(uu)),j=int(floor(vv));vec4 wu=weights(fract(uu)),wv=weights(fract(vv)),du=deriv(fract(uu)),dv=deriv(fract(vv));vec3 p=vec3(0),tu=vec3(0),tv=vec3(0);for(int b=0;b<4;b++)for(int a=0;a<4;a++){vec3 q=texelFetch(uPos,ivec2((i+a-1+sz.x)%sz.x,clamp(j+b-1,0,sz.y-1)),0).xyz;p+=q*wu[a]*wv[b];tu+=q*du[a]*wv[b];tv+=q*wu[a]*dv[b];}vec3 nn=normalize(cross(tu,tv));p+=nn*aUV.z;vP=rot(p);vN=rot(nn);vT=normalize(rot(tv));vUV=aUV.xy;vShadow=uLight*vec4(vP,1);vFold=length(tv)/(.74/float(sz.y-1));gl_Position=uVP*vec4(vP,1);}`;
+const GL_FRAGMENT=`#version 300 es
+precision highp float;precision highp sampler2DShadow;
+in vec3 vP,vN,vT;in vec2 vUV;in vec4 vShadow;in float vFold;
+uniform vec2 uGrid;uniform vec3 uEye;uniform vec4 uSettings;uniform sampler2DShadow uShadow;
+out vec4 outColor;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+float stripe(float x,float freq){float width=fwidth(x*freq);return cos(x*freq*6.28318)*exp(-width*width*2.);}
+float shadowing(vec3 N,vec3 L){vec3 p=vShadow.xyz/vShadow.w;p=p*.5+.5;float bias=.0018+.0020*(1.-max(dot(N,L),0.));float s=0.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++)s+=texture(uShadow,vec3(p.xy+vec2(x,y)/1024.,p.z-bias));return mix(.27,1.,s/9.);}
+vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+vec3 brdf(vec3 N,vec3 T,vec3 V,vec3 L,vec3 color,float rough,float spec,float anis){vec3 B=normalize(cross(N,T)),H=normalize(V+L);float nv=max(.001,dot(N,V)),nl=max(.0,dot(N,L)),nh=max(.001,dot(N,H)),vh=max(0.,dot(V,H));float a=max(.03,rough*rough),ax=max(.025,a*(1.+anis)),ay=max(.025,a/(1.+anis));float td=dot(H,T),bd=dot(H,B),dd=td*td/(ax*ax)+bd*bd/(ay*ay)+nh*nh;float D=1./(3.1415926*ax*ay*dd*dd);float k=(rough+1.)*(rough+1.)/8.,G=nv/(nv*(1.-k)+k)*nl/(nl*(1.-k)+k);vec3 F=mix(vec3(.04*spec),vec3(1.),pow(1.-vh,5.));return ((1.-F)*color/3.1415926+D*G*F/max(.01,4.*nv*nl))*nl;}
+void main(){int id=int(uSettings.x+.1);bool gray=uSettings.y>0.5;vec3 N=normalize(vN);if(!gl_FrontFacing)N=-N;vec3 T=normalize(vT-N*dot(N,vT)),V=normalize(uEye-vP);float nv=abs(dot(N,V));vec2 uv=vUV;vec3 col=vec3(.45);float rough=.55,spec=1.,anis=0.,sheen=.0;float small=noise(uv*vec2(310.,530.));float weave=(stripe(uv.x,180.)+stripe(uv.y,420.))*.5;
+ if(id==0){col=vec3(.028,.0015,.007)*(1.+.12*small);rough=.88;spec=.15;sheen=.70;}
+ if(id==1){col=vec3(.44,.19,.25);rough=.32;anis=.7;spec=1.15;col*=1.+.025*weave;}
+ if(id==2){col=vec3(.38,.385,.36)*(1.+.17*(small-.5)+.055*weave);rough=.86;sheen=.22;}
+ if(id==3){vec2 pp=uv*vec2(9.,17.);pp.x+=mod(floor(pp.y),2.)*.5;float d=length(fract(pp)-.5);float dotmask=1.-smoothstep(.14,.18,d);col=mix(vec3(.68,.43,.008),vec3(.82,.83,.76),dotmask);rough=.29;spec=1.35;}
+ if(id==4){vec2 q=uv*vec2(5.,11.);q.x+=mod(floor(q.y),2.)*.5;vec2 f=fract(q)-.5;float an=atan(f.y,f.x),r=length(f),petal=.21+.105*cos(an*6.);float aa=max(.006,fwidth(r)*1.1);float ring=1.-smoothstep(.012,.012+aa,abs(r-petal));float inner=(1.-smoothstep(.008,.008+aa,abs(r-(.08+.035*cos(an*6.)))));float veins=(1.-smoothstep(.015,.03,abs(sin(an*6.))))*(1.-smoothstep(petal-.02,petal+.015,r));float stem=1.-smoothstep(.008,.018,abs(f.x-.2*sin(f.y*5.)));float flower=max(max(ring,inner),max(veins*.7,stem*.8));float net=abs(stripe(uv.x,120.))*abs(stripe(uv.y,260.));if(!gray&&flower<.13&&net<.17)discard;col=mix(vec3(.025,.027,.022),vec3(.31,.23,.07)*(1.+.12*weave),flower);rough=.76;sheen=.18;}
+ if(id==5){float twill=stripe(uv.y-uv.x*.45,230.);col=vec3(.075,.096,.18)*(1.+.18*(small-.5)+.13*twill);rough=.73;sheen=.3;}
+ if(id==6){float ribs=stripe(uv.x+.002*sin(uv.y*2600.),160.);col=vec3(.105,.12,.11)*(1.+.35*(small-.5)+.12*ribs);rough=.93;sheen=.42;}
+ if(id==7){float n=noise(uv*vec2(230.,500.));col=vec3(.22,.105,.064)*(1.+.15*(n-.5));rough=.42+.08*n;spec=1.15;}
+ float seam=exp(-pow(min(uv.x,1.-uv.x)/.007,2.));float hem=1.-smoothstep(.004,.009,min(uv.y,1.-uv.y));col*=1.-.16*seam-.08*hem;
+ if(gray){col=vec3(.40,.435,.43);rough=.62;spec=.85;anis=0.;sheen=.08;}
+ if(uSettings.z>0.5){vec2 q=uv*uGrid;vec2 w=fwidth(q)*1.3;vec2 dd=min(fract(q),1.-fract(q));float grid=1.-min(smoothstep(0.,w.x,dd.x),smoothstep(0.,w.y,dd.y));col=mix(col,vec3(.10,.57,.51),grid*.8);}
+ vec3 L=normalize(vec3(-.6,1.4,1.7)),L2=normalize(vec3(1.5,.1,1.3)),L3=normalize(vec3(-.5,.7,-1.2));float sha=shadowing(N,L);
+ vec3 light=col*(.19+.18*max(0.,N.y));light+=brdf(N,T,V,L,col,rough,spec,anis)*vec3(3.5,3.35,3.2)*sha;light+=brdf(N,T,V,L2,col,rough,spec,anis)*vec3(1.,1.08,1.3);light+=brdf(N,T,V,L3,col,rough,spec,anis)*vec3(1.4,1.16,1.04);
+ light+=sheen*pow(1.-nv,2.6)*mix(vec3(.32,.25,.25),vec3(.18,.018,.09),float(id==0))*(.25+.75*max(dot(N,L),0.));
+ // Extended softbox reflection: a shading approximation, not extra cloth geometry.
+ vec3 R=reflect(-V,N);float box=pow(max(0.,dot(R,normalize(vec3(-.45,1.1,1.5)))),mix(60.,5.,rough));light+=vec3(1.,.9,.87)*box*(.16+.12*float(id==1))*(1.-rough)*sha*float(id!=0);
+ float facing=gl_FrontFacing?1.:.72;outColor=vec4(pow(aces(light*facing*1.2),vec3(1./2.2)),1.);}`;
+const GL_CACHED_VERTEX=`#version 300 es
+precision highp float;
+layout(location=0) in vec3 aUV;
+layout(location=1) in vec3 aP;
+layout(location=2) in vec3 aN;
+layout(location=3) in vec3 aT;
+layout(location=4) in float aFold;
+uniform mat4 uVP,uLight;
+out vec3 vP,vN,vT;out vec2 vUV;out vec4 vShadow;out float vFold;
+void main(){vP=aP;vN=aN;vT=aT;vUV=aUV.xy;vFold=aFold;vShadow=uLight*vec4(vP,1.);gl_Position=uVP*vec4(vP,1.);}`;
+class GLRenderer{
+ constructor(canvas,cloths){this.canvas=canvas;this.gl=canvas.getContext('webgl2',{alpha:false,antialias:true});if(!this.gl)throw Error('浏览器不支持 WebGL2');const gl=this.gl;this.name='WebGL2 显示 · CPU XPBD';this.gpu=false;this.program=this.programOf(GL_CACHED_VERTEX,GL_FRAGMENT);this.shadowProgram=this.programOf(GL_CACHED_VERTEX,'#version 300 es\nprecision highp float;void main(){}');let mesh=displayMesh(40,96);this.count=mesh.indices.length;this.vertexCount=mesh.verts.length/3;this.surfaceBuilds=0;this.shadowPasses=0;this.uploadCount=0;this.lastPrepareMs=0;this.vao=gl.createVertexArray();gl.bindVertexArray(this.vao);let vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,mesh.verts,gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,12,0);let ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);this.textures=[];this.shadows=[];this.fbs=[];
+ this.prepareProgram=this.programOf(GL_VERTEX,'#version 300 es\nprecision highp float;void main(){}',['vP','vN','vT','vFold']);
+ this.surfaceBuffers=[];this.surfaceVAOs=[];this.feedback=gl.createTransformFeedback();
+ for(let side=0;side<2;side++){
+  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,this.vertexCount*40,gl.DYNAMIC_COPY);this.surfaceBuffers.push(buf);
+  const vao=gl.createVertexArray();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,12,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);for(let k=1;k<=4;k++){gl.enableVertexAttribArray(k);gl.vertexAttribPointer(k,k===4?1:3,gl.FLOAT,false,40,(k-1)*12);}
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);this.surfaceVAOs.push(vao);
+ }
+ gl.bindVertexArray(this.vao);
+
+ for(let c of cloths){let tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,c.U,c.V+1,0,gl.RGBA,gl.FLOAT,c.x);for(let n of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,n,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);this.textures.push(tex);
+ let st=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,st);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,1024,1024,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_COMPARE_MODE,gl.COMPARE_REF_TO_TEXTURE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_COMPARE_FUNC,gl.LEQUAL);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);this.shadows.push(st);let fb=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,st,0);gl.drawBuffers([gl.NONE]);gl.readBuffer(gl.NONE);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('阴影缓冲创建失败');this.fbs.push(fb);}
+ gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);this.errors=[];}
+ programOf(v,f,outputs=null){let gl=this.gl;function compile(t,s){let sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh));return sh}let p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,v));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,f));if(outputs)gl.transformFeedbackVaryings(p,outputs,gl.INTERLEAVED_ATTRIBS);gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p}
+ upload(cloths){let gl=this.gl;for(let i=0;i<cloths.length;i++){gl.bindTexture(gl.TEXTURE_2D,this.textures[i]);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,cloths[i].U,cloths[i].V+1,gl.RGBA,gl.FLOAT,cloths[i].x)}this.uploadCount++;this.prepareSurfaces(cloths);}
+ prepareSurfaces(cloths){
+ const g=this.gl,tm=performance.now();g.bindVertexArray(this.vao);g.bindBuffer(g.ARRAY_BUFFER,null);g.bindTransformFeedback(g.TRANSFORM_FEEDBACK,this.feedback);g.enable(g.RASTERIZER_DISCARD);
+ for(let i=0;i<cloths.length;i++){
+  this.bind(this.prepareProgram,i,matrixSet(1,false),cloths[i].mat.id,true);
+  g.bindVertexArray(this.vao);g.bindBufferBase(g.TRANSFORM_FEEDBACK_BUFFER,0,this.surfaceBuffers[i]);
+  g.beginTransformFeedback(g.POINTS);g.drawArrays(g.POINTS,0,this.vertexCount);g.endTransformFeedback();this.surfaceBuilds++;
+ }
+ g.bindBufferBase(g.TRANSFORM_FEEDBACK_BUFFER,0,null);g.bindTransformFeedback(g.TRANSFORM_FEEDBACK,null);g.disable(g.RASTERIZER_DISCARD);this.lastPrepareMs=performance.now()-tm;
+ }
+ bind(p,i,m,mat,shadow=false){let g=this.gl;g.useProgram(p);const loc=n=>{p._loc??={};return p._loc[n]??(p._loc[n]=g.getUniformLocation(p,n));};g.uniformMatrix4fv(loc('uVP'),false,shadow?m.light:m.vp);g.uniformMatrix4fv(loc('uLight'),false,m.light);g.uniform3fv(loc('uEye'),m.eye);g.uniform4f(loc('uSettings'),mat,UI.gray?1:0,UI.wire?1:0,0);g.uniform2f(loc('uGrid'),cloths[i].U,cloths[i].V);g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.textures[i]);g.uniform1i(loc('uPos'),0);if(!shadow){g.activeTexture(g.TEXTURE1);g.bindTexture(g.TEXTURE_2D,this.shadows[i]);g.uniform1i(loc('uShadow'),1)}g.bindVertexArray(p===this.prepareProgram?this.vao:this.surfaceVAOs[i]);}
+ draw(cloths,dirty=true){let g=this.gl,w=this.canvas.width,h=this.canvas.height,regions=viewports(w,h);if(dirty){for(let i=0;i<cloths.length;i++){let m=matrixSet(1,false);g.bindFramebuffer(g.FRAMEBUFFER,this.fbs[i]);g.viewport(0,0,1024,1024);g.clear(glDepth);this.bind(this.shadowProgram,i,m,cloths[i].mat.id,true);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);this.shadowPasses++;}}g.bindFramebuffer(g.FRAMEBUFFER,null);g.viewport(0,0,w,h);g.clearColor(.012,.014,.017,1);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);for(let r of regions){let m=matrixSet(r.w/r.h,false);g.viewport(r.x,r.y,r.w,r.h);this.bind(this.program,r.i,m,cloths[r.i].mat.id);g.drawElements(g.TRIANGLES,this.count,g.UNSIGNED_INT,0);}}
+}
+const glDepth=0x0100;
+function viewports(w,h){if(UI.focus===1)return[{x:0,y:0,w,h,i:0}];if(UI.focus===2)return[{x:0,y:0,w,h,i:1}];if(w/h<.9)return[{x:0,y:Math.floor(h/2),w,h:Math.floor(h/2),i:0},{x:0,y:0,w,h:Math.floor(h/2),i:1}];return[{x:0,y:0,w:Math.floor(w/2),h,i:0},{x:Math.floor(w/2),y:0,w:Math.ceil(w/2),h,i:1}]}
+
+let PHYS_HZ=180;
+const $=id=>document.getElementById(id),canvas=$('canvas');
+const UI={playing:true,auto:true,angle:0,speed:1,gray:false,wire:false,focus:0,yaw:.06,pitch:.12,distance:1.93,bend:1,dirty:true};
+let cloths=[new Cloth(0),new Cloth(1)],renderer=null,simTime=0,raf=0,last=0,accum=0,frames=0,fpsStart=0,simMs=0,tugUntil=0,tugPhase=0,steps=0,pose=0,loopCount=0,wallAccum=0,simAdvance=0;
+class SolverPool {
+ constructor(){
+  this.serial=0;this.waiters=new Map();this.free=[null,null];this.active=0;
+  const source=document.getElementById('physics-core').textContent+'\n'+document.getElementById('worker-source').textContent;
+  this.url=URL.createObjectURL(new Blob([source],{type:'application/javascript'}));
+  this.workers=[0,1].map(side=>{
+   const w=new Worker(this.url,{name:'kaopu-cloth-'+side});
+   w.onmessage=({data:d})=>{const p=this.waiters.get(d.id);if(!p)return;this.waiters.delete(d.id);if(d.error)p.reject(Error(d.error));else p.resolve(d);};
+   w.onerror=e=>{const msg=e.message||'布料工作线程失败';for(const p of this.waiters.values())p.reject(Error(msg));this.waiters.clear();runtimeError(msg);};return w;
+  });
+ }
+ send(side,data,transfer=[]){return new Promise((resolve,reject)=>{const id=++this.serial;this.waiters.set(id,{resolve,reject});this.workers[side].postMessage({...data,id},transfer);});}
+ reset(ids,epoch){this.free=[null,null];return Promise.all(ids.map((material,i)=>this.send(i,{type:'reset',material,epoch})));}
+ async run(params){
+  const results=await Promise.all(this.workers.map((w,i)=>{const buffer=this.free[i];this.free[i]=null;return this.send(i,{type:'step',...params,buffer},buffer?[buffer]:[]);}));
+  results.forEach((r,i)=>{this.free[i]=r.positions;});return results;
+ }
+ close(){this.workers.forEach(w=>w.terminate());URL.revokeObjectURL(this.url);}
+}
+let solverPool=null,epoch=0,pending=null,resetPending=null,dataDirty=false,solverWall=0,solverSum=0,lastJobSteps=0,completedBatches=0,droppedSeconds=0;
+function runtimeError(message){UI.playing=false;UI.dirty=true;$('warning').style.display='block';$('warning').textContent=message;window.__runtimeError=message;updateButtons();}
+function applyResults(results,n,wall){
+ results.forEach((r,i)=>{const c=cloths[i];c.x.set(new Float32Array(r.positions));c.rig.set(r.rig);c.time=r.time;c.contacts=r.contacts;c.virtualContacts=r.virtualContacts;c.steps+=n;c.queryCount=r.queries;c.candidateCount=r.candidates;});
+ simTime=results[0].time;pose=results[0].pose;steps+=n;simAdvance+=n/PHYS_HZ;lastJobSteps=n;solverWall=wall;solverSum=results.reduce((s,r)=>s+r.solveMs,0);completedBatches++;dataDirty=true;
+ if(UI.auto)UI.angle=pose*180/Math.PI;
+}
+async function advance(n){
+ if(resetPending)await resetPending;
+ if(pending)await pending;
+ const generation=epoch,begin=performance.now();
+ const task=solverPool.run({epoch:generation,steps:n,hz:PHYS_HZ,pose,auto:UI.auto,angle:UI.angle,bend:UI.bend,tugUntil,tugPhase});
+ pending=task;
+ try{const results=await task;if(generation===epoch)applyResults(results,n,performance.now()-begin);}
+ catch(e){if(generation===epoch)runtimeError(e.message);throw e;}
+ finally{if(pending===task)pending=null;}
+ wake();
+}
+
+function toast(s){$('toast').textContent=s;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3200)}
+function labels(){for(let i=0;i<2;i++){let m=cloths[i].mat;$('label'+i).innerHTML=`<strong style="color:${m.color}">${m.name}</strong><em>${m.en}</em><span>${i===0?'左侧':'右侧'}独立受力 · 固定材料坐标</span>`;$('label'+i).style.display=UI.focus&&UI.focus!==i+1?'none':'';}for(let [id,i] of [['left',0],['right',1]])$(id).value=cloths[i].mat.id;$('nodes').textContent=cloths[0].n.toLocaleString();$('split').style.display=UI.focus?'none':'';$('stage').classList.toggle('single',!!UI.focus);}
+function reset(ids=null){
+ epoch++;const generation=epoch;
+ if(ids)cloths=ids.map(x=>new Cloth(x));else cloths=cloths.map(x=>new Cloth(x.mat.id));
+ for(let c of cloths){c.mat.bend=FABRICS[c.mat.id].bend*UI.bend;c.steps=0;}
+ simTime=0;pose=0;accum=0;steps=0;loopCount=0;UI.angle=0;UI.dirty=true;dataDirty=true;last=0;wallAccum=simAdvance=0;labels();
+ if(solverPool){const task=solverPool.reset(cloths.map(c=>c.mat.id),generation);resetPending=task;task.then(()=>{if(resetPending===task)resetPending=null;wake();}).catch(e=>runtimeError(e.message));}
+ wake();
+}
+function wake(){if(!raf)raf=requestAnimationFrame(frame)}
+function resize(){let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio,1.4),w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;UI.dirty=true;if(renderer&&renderer.resize)renderer.resize();}wake()}
+function updateButtons(){$('play').textContent=UI.playing?'暂停':'继续';if(!UI.playing){$('fps').textContent='静止';$('ms').textContent='—';$('simRatio').textContent='暂停';}$('auto').classList.toggle('active',UI.auto);$('manual').classList.toggle('active',!UI.auto);$('gray').classList.toggle('active',UI.gray);$('wire').classList.toggle('active',UI.wire);$('angleOut').textContent=Math.round(UI.angle)+'°';$('angle').value=UI.angle;}
+for(let id of ['left','right']){for(let m of FABRICS)$(id).add(new Option(m.name,m.id));$(id).onchange=()=>{reset([+$('left').value,+$('right').value]);document.querySelectorAll('[data-pair]').forEach(b=>b.classList.remove('active'))}}
+document.querySelectorAll('[data-pair]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-pair]').forEach(q=>q.classList.remove('active'));b.classList.add('active');let k=+b.dataset.pair;UI.playing=true;UI.auto=true;reset([k*2,k*2+1]);updateButtons()});
+$('play').onclick=()=>{UI.playing=!UI.playing;last=0;updateButtons();wake()};$('replay').onclick=()=>{UI.playing=true;reset();updateButtons()};$('auto').onclick=()=>{UI.auto=true;UI.playing=true;reset();updateButtons()};$('manual').onclick=()=>{UI.auto=false;UI.playing=true;updateButtons();wake()};$('angle').oninput=e=>{UI.auto=false;UI.playing=true;UI.angle=+e.target.value;updateButtons();wake()};$('quality').onchange=e=>{PHYS_HZ=+e.target.value;$('stepLabel').textContent='1/'+PHYS_HZ+' s';reset();toast('已用所选时间步重新披挂；有限迭代下的细节可能改变。');};$('speed').oninput=e=>{UI.speed=+e.target.value;$('speedOut').textContent=UI.speed.toFixed(2).replace(/0$/,'')+'×';wake()};$('bend').oninput=e=>{UI.bend=10**(+e.target.value);$('bendOut').textContent=UI.bend.toFixed(2)+'×';for(let c of cloths)c.mat.bend=FABRICS[c.mat.id].bend*UI.bend;if(renderer&&renderer.parameters)renderer.parameters(cloths);UI.playing=true;updateButtons();wake()};
+$('singleStep').onclick=async()=>{UI.playing=false;updateButtons();try{await advance(Math.round(PHYS_HZ/60));}catch(e){runtimeError(e.message);}};
+$('gray').onclick=()=>{UI.gray=!UI.gray;UI.dirty=true;updateButtons();wake()};$('wire').onclick=()=>{UI.wire=!UI.wire;UI.dirty=true;updateButtons();wake()};$('tug').onclick=()=>{UI.playing=true;tugUntil=simTime+.7;tugPhase=simTime;updateButtons();wake()};$('rest').onclick=()=>{UI.auto=false;UI.angle=0;UI.playing=true;updateButtons();wake()};$('freeze').onclick=()=>{UI.playing=false;updateButtons();toast('已定格当前求解形态。没有修改拉伸静止长度。');wake()};
+function view(){UI.yaw=.06;UI.pitch=.12;UI.distance=1.93;UI.focus=0;labels();UI.dirty=true;wake()}
+$('front').onclick=view;$('close').onclick=()=>{UI.distance=.99;UI.yaw=.12;UI.pitch=.05;UI.focus=1;labels();UI.dirty=true;wake()};$('focus').onclick=()=>{UI.focus=(UI.focus+1)%3;labels();UI.dirty=true;wake()};canvas.ondblclick=view;
+let drag=null,pointers=new Map(),pinch=0;canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);if(pointers.size===1)drag=[e.clientX,e.clientY,UI.yaw,UI.pitch];if(pointers.size===2){let p=[...pointers.values()];pinch=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);}};canvas.onpointermove=e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,[e.clientX,e.clientY]);if(pointers.size===2){let p=[...pointers.values()],d=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);UI.distance=clamp(UI.distance*pinch/Math.max(d,1),.65,3);pinch=d;}else if(drag){UI.yaw=drag[2]+(e.clientX-drag[0])*.007;UI.pitch=clamp(drag[3]+(e.clientY-drag[1])*.005,-1.2,1.2);}UI.dirty=true;wake()};function endPointer(e){pointers.delete(e.pointerId);drag=null;}canvas.onpointerup=endPointer;canvas.onpointercancel=endPointer;canvas.onwheel=e=>{e.preventDefault();UI.distance=clamp(UI.distance*Math.exp(e.deltaY*.001),.65,3);UI.dirty=true;wake()};
+$('reference').onclick=()=>{$('modal').classList.add('open');let v=$('video');if(!v.src)v.src='https://www.sidefx.com/docs/houdini/videos/vellum_fabrics_small.webm';v.play().catch(()=>{});UI.wasPlaying=UI.playing;UI.playing=false;updateButtons()};$('closeRef').onclick=()=>{$('video').pause();$('modal').classList.remove('open');UI.playing=!!UI.wasPlaying;last=0;updateButtons();wake()};$('sourceDoc').onclick=()=>{$('docs').open=true;$('docs').scrollIntoView({behavior:'smooth'})};document.addEventListener('visibilitychange',()=>{last=0;accum=0;if(!document.hidden)wake()});
+function frame(now){
+ raf=0;if(!renderer)return;resizeNow();
+ const rawElapsed=last?(now-last)/1000:0;last=now;
+ if(UI.playing&&!document.hidden){
+  wallAccum+=rawElapsed;accum+=Math.min(.1,rawElapsed)*UI.speed;
+  if(!pending&&!resetPending&&accum>=1/PHYS_HZ){
+   const n=Math.min(8,Math.floor(accum*PHYS_HZ));accum-=n/PHYS_HZ;
+   if(accum>.12){droppedSeconds+=accum-.12;accum=.12;}
+   advance(n).catch(()=>{});
+  }
+ }
+ const dirty=dataDirty;let t0=performance.now();
+ if(dirty){renderer.upload(cloths);dataDirty=false;}
+ if(dirty||UI.dirty){renderer.draw(cloths,dirty);UI.dirty=false;frames++;}
+ simMs=performance.now()-t0;
+ if(!fpsStart)fpsStart=now;
+ if(now-fpsStart>650){
+  $('simRatio').textContent=UI.playing?(simAdvance/Math.max(wallAccum,.001)).toFixed(2)+'×':'暂停';
+  $('fps').textContent=UI.playing?(frames*1000/(now-fpsStart)).toFixed(1):'静止';
+  $('ms').textContent=UI.playing?solverWall.toFixed(1):'—';
+  $('mainCost').textContent=simMs.toFixed(2)+' ms';
+  $('workCost').textContent=solverSum.toFixed(1)+' ms / '+lastJobSteps+' 步';
+  $('surfaceCount').textContent=renderer.surfaceBuilds.toLocaleString();
+  $('clock').textContent=(simTime%5.3).toFixed(2)+' s';$('progress').style.width=(simTime%5.3)/5.3*100+'%';
+  const t=simTime%5.3;$('phase').textContent=!UI.auto?'手动角度':t<.96?'轴向收拢':t<1.96?'重新展开':t<2.96?'屈肘压缩':t<4.125?'停留回弹':'伸直展开';
+  updateButtons();frames=0;fpsStart=now;wallAccum=simAdvance=0;
+ }
+ if((UI.playing||pending||resetPending)&&!document.hidden)wake();
+}
+function resizeNow(){let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio,1.4),w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;UI.dirty=true;if(renderer&&renderer.resize)renderer.resize();}}
+// Manual diagnostic. Does not advance the simulation, alter geometry, or run in animation frames.
+function inspectCloth(c){
+ const p=c.x,rig=c.rig;
+ function penetration(x,y,z){let worst=0;for(let s=0;s<24;s++){const a=s*3,b=a+3,ex=rig[b]-rig[a],ey=rig[b+1]-rig[a+1],t=clamp(((x-rig[a])*ex+(y-rig[a+1])*ey)/(ex*ex+ey*ey),0,1);const radius=.066-.004*((s+.5)/24);worst=Math.max(worst,radius-Math.hypot(x-rig[a]-t*ex,y-rig[a+1]-t*ey,z));}return worst*1000;}
+ let vertexMax=0,faceMax=0,displayMax=0,samples=0,inside=0;
+ function record(x,y,z,type){const d=penetration(x,y,z);samples++;if(d>.1)inside++;if(type===0)vertexMax=Math.max(vertexMax,d);else if(type===1)faceMax=Math.max(faceMax,d);else displayMax=Math.max(displayMax,d);}
+ for(let i=0;i<c.n;i++)record(p[i*4],p[i*4+1],p[i*4+2],0);
+ for(let t=0;t<c.tris.length;t+=3){let a=c.tris[t]*4,b=c.tris[t+1]*4,d=c.tris[t+2]*4;for(let w of [[1/3,1/3,1/3],[.5,.5,0],[0,.5,.5],[.5,0,.5]])record(p[a]*w[0]+p[b]*w[1]+p[d]*w[2],p[a+1]*w[0]+p[b+1]*w[1]+p[d+1]*w[2],p[a+2]*w[0]+p[b+2]*w[1]+p[d+2]*w[2],1);}
+ function weights(t){const t2=t*t,t3=t2*t;let c=[-.5*t+t2-.5*t3,1-2.5*t2+1.5*t3,.5*t+2*t2-1.5*t3,-.5*t2+.5*t3],b=[(1-t)**3/6,(4-6*t2+3*t3)/6,(1+3*t+3*t2-3*t3)/6,t3/6];return c.map((x,i)=>x*.68+b[i]*.32);}
+ for(let v=0;v<=192;v+=2)for(let u=0;u<80;u+=2){let uu=u/80*c.U,vv=v/192*c.V,i=Math.floor(uu),j=Math.floor(vv),wu=weights(uu-i),wv=weights(vv-j),x=0,y=0,z=0;for(let b=0;b<4;b++)for(let a=0;a<4;a++){let id=(clamp(j+b-1,0,c.V)*c.U+(i+a-1+c.U)%c.U)*4,w=wu[a]*wv[b];x+=p[id]*w;y+=p[id+1]*w;z+=p[id+2]*w;}record(x,y,z,2);}
+ let structuralTension=0,structuralCompression=0,stretchSamples=[];for(let k=0;k<c.edges.length;k+=4){if(c.edges[k+3]>1)continue;let a=c.edges[k]*4,b=c.edges[k+1]*4,ratio=Math.hypot(p[a]-p[b],p[a+1]-p[b+1],p[a+2]-p[b+2])/c.edges[k+2]-1;structuralTension=Math.max(structuralTension,ratio);structuralCompression=Math.max(structuralCompression,-ratio);stretchSamples.push(Math.abs(ratio));}stretchSamples.sort((a,b)=>a-b);
+ return {material:c.mat.name,physicsPoints:c.n,physicsTriangles:c.tris.length/3,physicalTime:c.time,bindingBuilds:c.bindingBuilds,vertexPenetrationMm:vertexMax,faceSamplePenetrationMm:faceMax,displaySamplePenetrationMm:displayMax,insideOver01mm:inside,samples,structuralMaxTension:structuralTension,structuralMaxCompression:structuralCompression,structuralP99AbsStrain:stretchSamples[Math.floor(stretchSamples.length*.99)],limits:'Discrete body-proxy samples only. No triangle self-contact/CCD certification. Display samples cover alternate vertices, not all surface points.'};
+}
+
+
+$('inspect').onclick=()=>{const reports=cloths.map(inspectCloth);window.__lastClothInspection=reports;$('inspection').textContent=reports.map(r=>r.material+'：承载点 '+r.vertexPenetrationMm.toFixed(2)+' mm；面内 '+r.faceSamplePenetrationMm.toFixed(2)+' mm；显示抽样 '+r.displaySamplePenetrationMm.toFixed(2)+' mm\n最大结构拉伸 '+(r.structuralMaxTension*100).toFixed(1)+'%；最大结构压缩 '+(r.structuralMaxCompression*100).toFixed(1)+'%；P99 |应变| '+(r.structuralP99AbsStrain*100).toFixed(1)+'%').join('\n\n')+'\n仅离散代理接触检查，不证明全局零穿透。';};
+
+window.__fabric={
+ inspect:()=>cloths.map(inspectCloth),version:'R05_NATIVE_SPARSE',get PHYS_HZ(){return PHYS_HZ},get cloths(){return cloths},UI,reset,
+ async settle(){if(resetPending)await resetPending;if(pending)await pending;},
+ async step(n=180,deg=88){UI.playing=false;UI.auto=false;UI.angle=deg;await advance(n);renderer.upload(cloths);renderer.draw(cloths,true);dataDirty=false;updateButtons();return cloths.map(c=>c.metrics());},
+ metrics:()=>({time:simTime,backend:renderer?.name,errors:renderer?.errors,epoch,solverWall,solverSum,lastJobSteps,completedBatches,droppedSeconds,physicsWorkers:2,mainSubmitMs:simMs,surfaceBuilds:renderer?.surfaceBuilds,uploadCount:renderer?.uploadCount,shadowPasses:renderer?.shadowPasses,renderTriangles:renderer?.count/3,cloths:cloths.map(c=>({...c.metrics(),contacts:c.contacts,virtualContacts:c.virtualContacts,bindingBuilds:c.bindingBuilds,uploadBytes:c.x.byteLength}))}),
+ render(){renderer.upload(cloths);renderer.draw(cloths,true);},
+ async setTime(t){UI.playing=false;UI.auto=true;reset();await advance(Math.round(t*PHYS_HZ));renderer.upload(cloths);renderer.draw(cloths,true);dataDirty=false;UI.dirty=false;UI.angle=pose*180/Math.PI;$('clock').textContent=t.toFixed(2)+' s';$('phase').textContent='定格检查';updateButtons();}
+};
+(async()=>{try{
+ if(typeof Worker==='undefined')throw Error('需要支持 Web Worker 的浏览器');
+ solverPool=new SolverPool();await solverPool.reset(cloths.map(c=>c.mat.id),epoch);
+ renderer=new GLRenderer(canvas,cloths);renderer.name='2 × CPU WASM Worker · WebGL2 表面缓存';
+ $('backend').textContent=renderer.name;labels();resizeNow();renderer.upload(cloths);renderer.draw(cloths,true);
+ $('loading').style.display='none';updateButtons();new ResizeObserver(resize).observe($('stage'));wake();
+}catch(e){console.error(e);if(solverPool)solverPool.close();$('loading').innerHTML='<b>工作台启动失败</b><span>'+String(e.message).replace(/[<>]/g,'')+'</span>';window.__bootError=e.message;}})();
+</script>
+<script type="text/plain" id="embedded-solver-c-source">
+
+// Original standalone XPBD implementation; compiled to embedded WebAssembly.
+// Material parameters are browser-study values, not native Vellum presets.
+#define EXPORT __attribute__((visibility("default")))
+static float absf(float x){return x<0?-x:x;}
+static float minf(float a,float b){return a<b?a:b;}
+static float maxf(float a,float b){return a>b?a:b;}
+static float clampf(float x,float a,float b){return minf(b,maxf(a,x));}
+static float sqrtf_(float x){return __builtin_sqrtf(x);}
+static float atan2_(float y,float x){float ax=absf(x),ay=absf(y),t=minf(ax,ay)/maxf(maxf(ax,ay),1e-30f),s=t*t;float r=(((((-.01172120f*s+.05265332f)*s-.11643287f)*s+.19354346f)*s-.33262347f)*s+.99997726f)*t;if(ay>ax)r=1.5707963267948966f-r;if(x<0)r=3.141592653589793f-r;return y<0?-r:r;}
+
+// R04 native sparse-sheet adapter. Axial block solver adapted from project
+// denim-workshop/r15/dynamics.js Cloth.rodBlock, commit 9a3dd9845266.
+// No SideFX solver binaries. Metre positions. Engineering material parameters.
+static float bodyv[32768], seg[24][16];
+static int contacts, virtuals;static float maxdepth;
+// Conservative capsule broadphase: cached per physical substep, exact narrowphase retained.
+static unsigned capsule_grid[1600];
+static float grid_x,grid_y;
+static int query_count,candidate_count;
+static int gridcoord(float x){int i=(int)x;return i-(x<i);}
+static void grid_build(void){
+ grid_x=seg[0][11];grid_y=seg[0][13];
+ for(int j=1;j<24;j++){grid_x=minf(grid_x,seg[j][11]);grid_y=minf(grid_y,seg[j][13]);}
+ for(int i=0;i<1600;i++)capsule_grid[i]=0;
+ for(int j=0;j<24;j++){
+  int x0=(int)clampf(gridcoord((seg[j][11]-grid_x)/.03f),0,39),x1=(int)clampf(gridcoord((seg[j][12]-grid_x)/.03f),0,39);
+  int y0=(int)clampf(gridcoord((seg[j][13]-grid_y)/.03f),0,39),y1=(int)clampf(gridcoord((seg[j][14]-grid_y)/.03f),0,39);
+  for(int y=y0;y<=y1;y++)for(int x=x0;x<=x1;x++)capsule_grid[y*40+x]|=1u<<j;
+ }
+}
+
+static void prepare(float*r,float*o,float dt){for(int j=0;j<24;j++){int a=j*3,b=a+3;float*s=seg[j],ex=r[b]-r[a],ey=r[b+1]-r[a+1],ox=o[b]-o[a],oy=o[b+1]-o[a+1];s[0]=r[a];s[1]=r[a+1];s[2]=ex;s[3]=ey;s[4]=1/maxf(ex*ex+ey*ey,1e-12f);s[5]=.066f-.004f*((j+.5f)/24);s[6]=(r[a]-o[a])/dt;s[7]=(r[a+1]-o[a+1])/dt;s[8]=(ex-ox)/dt;s[9]=(ey-oy)/dt;s[10]=atan2_(ox*ey-oy*ex,ox*ex+oy*ey)/dt;float m=s[5]+.008f;s[11]=minf(r[a],r[b])-m;s[12]=maxf(r[a],r[b])+m;s[13]=minf(r[a+1],r[b+1])-m;s[14]=maxf(r[a+1],r[b+1])+m;}}
+// All 24 capsule segments are conservatively culled, not restricted by material index.
+static int query(float x,float y,float z,float margin,float*out){float best=0;int hit=-1;
+int gx=gridcoord((x-grid_x)/.03f),gy=gridcoord((y-grid_y)/.03f);
+unsigned mask=(gx>=0&&gx<40&&gy>=0&&gy<40)?capsule_grid[gy*40+gx]:0x00ffffffu;
+query_count++;
+int hint=mask?(__builtin_ctz(mask)+31-__builtin_clz(mask))/2:-1;
+if(hint>=0&&!(mask&(1u<<hint)))hint=__builtin_ctz(mask);
+while(mask){int j=hint>=0?hint:__builtin_ctz(mask);hint=-1;mask&=~(1u<<j);candidate_count++;float*s=seg[j];if(x<s[11]||x>s[12]||y<s[13]||y>s[14]||absf(z)>s[5]+margin)continue;float t=clampf(((x-s[0])*s[2]+(y-s[1])*s[3])*s[4],0,1),cx=s[0]+t*s[2],cy=s[1]+t*s[3],dx=x-cx,dy=y-cy,d2=dx*dx+dy*dy+z*z,r=s[5]+margin;if(d2>=(r-best)*(r-best))continue;float d=sqrtf_(d2),dep=r-d;if(dep>best){best=dep;hit=j;float q=1/maxf(d,1e-8f);out[0]=dx*q;out[1]=dy*q;out[2]=z*q;if(d<1e-8f){out[0]=0;out[1]=0;out[2]=1;}out[3]=dep;out[4]=t;out[5]=cx;out[6]=cy;}}return hit;}
+static void point_contact(float*p,float*tar,float*co,int n,float margin){for(int i=0;i<n;i++){int k=i*4;if(!p[k+3]){p[k]=tar[k];p[k+1]=tar[k+1];p[k+2]=tar[k+2];continue;}float q[7];int j=query(p[k],p[k+1],p[k+2],margin,q);if(j>=0){float*s=seg[j];p[k]+=q[0]*q[3];p[k+1]+=q[1]*q[3];p[k+2]+=q[2]*q[3];co[k]=q[0];co[k+1]=q[1];co[k+2]=q[2];co[k+3]=1;bodyv[k]=s[6]+q[4]*s[8]-s[10]*(p[k+1]-q[6]);bodyv[k+1]=s[7]+q[4]*s[9]+s[10]*(p[k]-q[5]);bodyv[k+2]=0;contacts++;maxdepth=maxf(maxdepth,q[3]);}}}
+static void bary_contact(float*p,int a,int b,int c,float wa,float wb,float wc,float margin){a*=4;b*=4;c*=4;float q[7],w=p[a+3]*wa*wa+p[b+3]*wb*wb+p[c+3]*wc*wc;if(w<1e-12f)return;float x=p[a]*wa+p[b]*wb+p[c]*wc,y=p[a+1]*wa+p[b+1]*wb+p[c+1]*wc,z=p[a+2]*wa+p[b+2]*wb+p[c+2]*wc;if(query(x,y,z,margin,q)<0)return;float d=q[3]/w;for(int k=0;k<3;k++){p[a+k]+=q[k]*d*p[a+3]*wa;p[b+k]+=q[k]*d*p[b+3]*wb;p[c+k]+=q[k]*d*p[c+3]*wc;}virtuals++;}
+// Same triangle centroids; each shared edge midpoint has one identity.
+static void surface_contact(float*p,int*tri,int nt,int mids,int*edges,int nedges){
+ for(int i=0;i<nt;i++)bary_contact(p,tri[i*3],tri[i*3+1],tri[i*3+2],.33333333f,.33333333f,.33333333f,.0024f);
+ if(mids)for(int i=0;i<nedges;i++)bary_contact(p,edges[i*2],edges[i*2+1],edges[i*2+1],.5f,.5f,0,.002f);
+}
+// Finite-iteration safety bound. It is not a calibrated textile constitutive law.
+// Let the sheet buckle through dihedral motion rather than collapse its edge metric.
+static void metric_guard(float*p,float*e,int ne,float upper,int reverse){
+ for(int ii=0;ii<ne;ii++){
+ int i=reverse?ne-1-ii:ii,k=i*4;if(e[k+3]>1)continue;
+ int a=(int)e[k]*4,b=(int)e[k+1]*4;float w=p[a+3]+p[b+3];if(w<=0)continue;
+ float dx=p[a]-p[b],dy=p[a+1]-p[b+1],dz=p[a+2]-p[b+2],d2=dx*dx+dy*dy+dz*dz;
+ float lo=e[k+2]*.88f,hi=e[k+2]*upper;
+ if(d2>=lo*lo&&d2<=hi*hi)continue;
+ float d=sqrtf_(maxf(d2,1e-14f));float target=clampf(d,lo,hi);
+ float f=(target-d)/(d*w);p[a]+=dx*f*p[a+3];p[a+1]+=dy*f*p[a+3];p[a+2]+=dz*f*p[a+3];p[b]-=dx*f*p[b+3];p[b+1]-=dy*f*p[b+3];p[b+2]-=dz*f*p[b+3];
+ }
+}
+// Coupled closed weft rows. Cyclic tridiagonal solve (Sherman-Morrison),
+// sharing the same XPBD chain equations as the native axial rodBlock.
+static int ring_ids[8192];
+static float rw[128][12];
+static void weft_blocks(float*p,float*e,float*l,int U,int V,float alpha){
+for(int row=1;row<V;row++){
+ for(int j=0;j<U;j++){int id=ring_ids[row*U+j],k=id*4,a=(int)e[k]*4,b=(int)e[k+1]*4;float dx=p[a]-p[b],dy=p[a+1]-p[b+1],dz=p[a+2]-p[b+2],len=maxf(1e-10f,sqrtf_(dx*dx+dy*dy+dz*dz));rw[j][0]=dx/len;rw[j][1]=dy/len;rw[j][2]=dz/len;rw[j][3]=p[a+3]+p[b+3]+alpha;rw[j][5]=-(len-e[k+2])-alpha*l[id];}
+ for(int j=0;j<U;j++){int next=(j+1)%U,b=(int)e[ring_ids[row*U+j]*4+1]*4;rw[j][4]=-p[b+3]*(rw[j][0]*rw[next][0]+rw[j][1]*rw[next][1]+rw[j][2]*rw[next][2]);}
+ float corner=rw[U-1][4],gamma=-rw[0][3];
+ for(int j=0;j<U;j++){rw[j][7]=rw[j][3];rw[j][8]=rw[j][5];rw[j][9]=0;}
+ rw[0][7]-=gamma;rw[U-1][7]-=corner*corner/gamma;rw[0][9]=gamma;rw[U-1][9]=corner;
+ for(int j=1;j<U;j++){float q=rw[j-1][4]/maxf(1e-12f,rw[j-1][7]);rw[j][7]-=q*rw[j-1][4];rw[j][8]-=q*rw[j-1][8];rw[j][9]-=q*rw[j-1][9];}
+ for(int j=U-1;j>=0;j--){rw[j][10]=(rw[j][8]-(j+1<U?rw[j][4]*rw[j+1][10]:0))/maxf(1e-12f,rw[j][7]);rw[j][11]=(rw[j][9]-(j+1<U?rw[j][4]*rw[j+1][11]:0))/maxf(1e-12f,rw[j][7]);}
+ float fact=(rw[0][10]+corner*rw[U-1][10]/gamma)/(1+rw[0][11]+corner*rw[U-1][11]/gamma);
+ for(int j=0;j<U;j++)rw[j][6]=rw[j][10]-fact*rw[j][11];
+ float maxmove=0;for(int j=0;j<U;j++){int a=(int)e[ring_ids[row*U+j]*4]*4,pr=(j+U-1)%U;float dx=p[a+3]*(rw[j][0]*rw[j][6]-rw[pr][0]*rw[pr][6]),dy=p[a+3]*(rw[j][1]*rw[j][6]-rw[pr][1]*rw[pr][6]),dz=p[a+3]*(rw[j][2]*rw[j][6]-rw[pr][2]*rw[pr][6]);maxmove=maxf(maxmove,sqrtf_(dx*dx+dy*dy+dz*dz));}
+ float trust=minf(1,.35f*e[ring_ids[row*U]*4+2]/maxf(1e-10f,maxmove));
+ for(int j=0;j<U;j++){int id=ring_ids[row*U+j],a=(int)e[id*4]*4,b=(int)e[id*4+1]*4;float dl=rw[j][6]*trust;l[id]+=dl;for(int k=0;k<3;k++){p[a+k]+=p[a+3]*dl*rw[j][k];p[b+k]-=p[b+3]*dl*rw[j][k];}}
+}}
+
+static void shear_edges(float*p,float*e,float*l,int ne,float alpha0,int reverse){for(int ii=0;ii<ne;ii++){int i=reverse?ne-1-ii:ii,k=i*4; if(e[k+3]!=2)continue;int a=(int)e[k]*4,b=(int)e[k+1]*4;float w=p[a+3]+p[b+3];if(w==0)continue;float dx=p[a]-p[b],dy=p[a+1]-p[b+1],dz=p[a+2]-p[b+2],d=sqrtf_(dx*dx+dy*dy+dz*dz);if(d<1e-10f)continue;float alpha=alpha0*(e[k+3]==2?6.f:1.5f),dl=(-(d-e[k+2])-alpha*l[i])/(w+alpha);l[i]+=dl;float s=dl/d;p[a]+=dx*s*p[a+3];p[a+1]+=dy*s*p[a+3];p[a+2]+=dz*s*p[a+3];p[b]-=dx*s*p[b+3];p[b+1]-=dy*s*p[b+3];p[b+2]-=dz*s*p[b+3];}}
+static float work[128][7];
+static void axial_blocks(float*p,float*e,float*l,int*chain,int U,int V,float alpha){for(int i=0;i<U;i++){
+for(int j=0;j<V;j++){int id=chain[i*V+j],k=id*4,a=(int)e[k]*4,b=(int)e[k+1]*4;float dx=p[a]-p[b],dy=p[a+1]-p[b+1],dz=p[a+2]-p[b+2],d=maxf(1e-10f,sqrtf_(dx*dx+dy*dy+dz*dz));work[j][0]=dx/d;work[j][1]=dy/d;work[j][2]=dz/d;work[j][3]=p[a+3]+p[b+3]+alpha;work[j][5]=-(d-e[k+2])-alpha*l[id];}
+for(int j=0;j<V-1;j++){int shared=(int)e[chain[i*V+j]*4+1]*4;work[j][4]=-p[shared+3]*(work[j][0]*work[j+1][0]+work[j][1]*work[j+1][1]+work[j][2]*work[j+1][2]);}
+for(int j=1;j<V;j++){float r=work[j-1][4]/maxf(work[j-1][3],1e-12f);work[j][3]-=r*work[j-1][4];work[j][5]-=r*work[j-1][5];}
+for(int j=V-1;j>=0;j--)work[j][6]=(work[j][5]-(j+1<V?work[j][4]*work[j+1][6]:0))/maxf(1e-12f,work[j][3]);
+float maxmove=0;for(int j=1;j<V;j++){int node=(int)e[chain[i*V+j]*4]*4;float dx=0,dy=0,dz=0;dx=p[node+3]*(work[j][0]*work[j][6]-work[j-1][0]*work[j-1][6]);dy=p[node+3]*(work[j][1]*work[j][6]-work[j-1][1]*work[j-1][6]);dz=p[node+3]*(work[j][2]*work[j][6]-work[j-1][2]*work[j-1][6]);maxmove=maxf(maxmove,sqrtf_(dx*dx+dy*dy+dz*dz));}float trust=minf(1,.18f*e[chain[i*V]*4+2]/maxf(maxmove,1e-10f));
+for(int j=0;j<V;j++){int id=chain[i*V+j],k=id*4,a=(int)e[k]*4,b=(int)e[k+1]*4;float d=work[j][6]*trust;l[id]+=d;for(int q=0;q<3;q++){p[a+q]+=p[a+3]*work[j][q]*d;p[b+q]-=p[b+3]*work[j][q]*d;}}}}
+static void bends(float *p,float *h,float *lambda,int count,float alpha){for(int k=0;k<count;k++){int z=k*6,a=(int)h[z]*4,b=(int)h[z+1]*4,c=(int)h[z+2]*4,d=(int)h[z+3]*4;float ex=p[b]-p[a],ey=p[b+1]-p[a+1],ez=p[b+2]-p[a+2],e2=ex*ex+ey*ey+ez*ez;if(e2<1e-12f)continue;float L=sqrtf_(e2),ux=p[c]-p[a],uy=p[c+1]-p[a+1],uz=p[c+2]-p[a+2],vx=p[d]-p[a],vy=p[d+1]-p[a+1],vz=p[d+2]-p[a+2];float nx=ey*uz-ez*uy,ny=ez*ux-ex*uz,nz=ex*uy-ey*ux,mx=vy*ez-vz*ey,my=vz*ex-vx*ez,mz=vx*ey-vy*ex;float n2=nx*nx+ny*ny+nz*nz,m2=mx*mx+my*my+mz*mz;if(n2<1e-16f||m2<1e-16f)continue;float ang=atan2_((ex*(ny*mz-nz*my)+ey*(nz*mx-nx*mz)+ez*(nx*my-ny*mx))/L,nx*mx+ny*my+nz*mz),C=ang-h[z+4];if(C>3.14159265f)C-=6.283185307f;if(C< -3.14159265f)C+=6.283185307f;float cx=-L*nx/n2,cy=-L*ny/n2,cz=-L*nz/n2,dx=-L*mx/m2,dy=-L*my/m2,dz=-L*mz/m2;float t=(ux*ex+uy*ey+uz*ez)/e2,v=(vx*ex+vy*ey+vz*ez)/e2,ax=(t-1)*cx+(v-1)*dx,ay=(t-1)*cy+(v-1)*dy,az=(t-1)*cz+(v-1)*dz,bx=-t*cx-v*dx,by=-t*cy-v*dy,bz=-t*cz-v*dz;float w0=p[a+3],w1=p[b+3],w2=p[c+3],w3=p[d+3],den=w0*(ax*ax+ay*ay+az*az)+w1*(bx*bx+by*by+bz*bz)+w2*(cx*cx+cy*cy+cz*cz)+w3*(dx*dx+dy*dy+dz*dz);float aa=alpha;if(absf(C)>1.45f){C-=C>0?1.45f:-1.45f;aa=minf(aa,500.f);}float dl=clampf((-C-aa*lambda[k])/(den+aa),-.00012f,.00012f);lambda[k]+=dl;p[a]+=w0*dl*ax;p[a+1]+=w0*dl*ay;p[a+2]+=w0*dl*az;p[b]+=w1*dl*bx;p[b+1]+=w1*dl*by;p[b+2]+=w1*dl*bz;p[c]+=w2*dl*cx;p[c+1]+=w2*dl*cy;p[c+2]+=w2*dl*cz;p[d]+=w3*dl*dx;p[d+1]+=w3*dl*dy;p[d+2]+=w3*dl*dz;}}
+
+// Broadphase particle self-contact, retained at sparse control level.
+// This is NOT full triangle CCD. Local topological neighbours are excluded.
+static int buckets[4096],nextnode[8192],cx[8192],cy[8192],cz[8192];
+static int ihash(int x,int y,int z){return ((unsigned)x*73856093u^(unsigned)y*19349663u^(unsigned)z*83492791u)&4095;}
+static int floor_(float x){int i=(int)x;return i-(x<i);}
+static void self_contact(float*p,int U,int V){int n=U*(V+1);float cell=.015f,radius=.007f;for(int i=0;i<4096;i++)buckets[i]=-1;for(int i=0;i<n;i++){int k=i*4;cx[i]=floor_(p[k]/cell);cy[i]=floor_(p[k+1]/cell);cz[i]=floor_(p[k+2]/cell);int h=ihash(cx[i],cy[i],cz[i]);nextnode[i]=buckets[h];buckets[h]=i;}for(int i=0;i<n;i++){int a=i*4,ui=i%U,vi=i/U;for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){int xx=cx[i]+x,yy=cy[i]+y,zz=cz[i]+z;for(int j=buckets[ihash(xx,yy,zz)];j>=0;j=nextnode[j]){if(j<=i||cx[j]!=xx||cy[j]!=yy||cz[j]!=zz)continue;int du=ui-j%U;if(du<0)du=-du;if(du>U/2)du=U-du;int dv=vi-j/U;if(dv<0)dv=-dv;if(du<=1&&dv<=1)continue;int b=j*4;float w=p[a+3]+p[b+3];if(w==0)continue;float dx=p[a]-p[b],dy=p[a+1]-p[b+1],dz=p[a+2]-p[b+2],d2=dx*dx+dy*dy+dz*dz;if(d2<radius*radius&&d2>1e-14f){float d=sqrtf_(d2),s=(radius-d)/d/w;for(int k=0;k<3;k++){float q=k==0?dx:k==1?dy:dz;p[a+k]+=q*s*p[a+3];p[b+k]-=q*s*p[b+3];}}}}}}
+EXPORT void solve(float*p,float*prev,float*vel,float*tar,float*co,float*e,float*el,float*h,float*bl,float*rig,float*oldrig,float*tugw,int*chain,int*tri,int*vedges,int nvedges,int U,int V,int ne,int nh,int nt,float dt,float stretch,float bend,float damping,float friction,float tug,int iterations,int self){
+ int n=U*(V+1);contacts=virtuals=0;maxdepth=0;query_count=candidate_count=0;prepare(rig,oldrig,dt);grid_build();for(int ci=0,ri=0;ci<ne;ci++)if(e[ci*4+3]==0)ring_ids[ri++]=ci;for(int i=0;i<ne;i++)el[i]=0;for(int i=0;i<nh;i++)bl[i]=0;
+ for(int i=0;i<n;i++){int k=i*4;prev[k]=p[k];prev[k+1]=p[k+1];prev[k+2]=p[k+2];co[k+3]=0;if(!p[k+3]){p[k]=tar[k];p[k+1]=tar[k+1];p[k+2]=tar[k+2];continue;}vel[k]*=damping;vel[k+1]=vel[k+1]*damping-9.81f*dt;vel[k+2]=vel[k+2]*damping+tug*tugw[i]*dt*5;p[k]+=vel[k]*dt;p[k+1]+=vel[k+1]*dt;p[k+2]+=vel[k+2]*dt;}
+ for(int it=0;it<iterations;it++){if((it&1)==0)bends(p,h,bl,nh,bend/(dt*dt));shear_edges(p,e,el,ne,stretch/(dt*dt),it&1);axial_blocks(p,e,el,chain,U,V,stretch/(dt*dt));weft_blocks(p,e,el,U,V,stretch/(dt*dt));metric_guard(p,e,ne,stretch>1e-7f?1.25f:1.12f,it&1);point_contact(p,tar,co,n,.0026f);if(it==iterations-1)surface_contact(p,tri,nt,0,vedges,nvedges);}
+ if(self)self_contact(p,U,V);
+ // Virtual face-centre / edge samples return contact corrections to the same sparse DOFs.
+ for(int it=0;it<2;it++){for(int q=0;q<3;q++)metric_guard(p,e,ne,stretch>1e-7f?1.25f:1.12f,(it+q)&1);surface_contact(p,tri,nt,1,vedges,nvedges);point_contact(p,tar,co,n,.0026f);}
+ for(int i=0;i<n;i++){int k=i*4;if(!p[k+3]){vel[k]=vel[k+1]=vel[k+2]=0;continue;}float vx=(p[k]-prev[k])/dt,vy=(p[k+1]-prev[k+1])/dt,vz=(p[k+2]-prev[k+2])/dt;
+ if(co[k+3]){vx-=bodyv[k];vy-=bodyv[k+1];vz-=bodyv[k+2];float vn=vx*co[k]+vy*co[k+1]+vz*co[k+2];vx=(vx-vn*co[k])*friction+maxf(0,vn)*co[k]+bodyv[k];vy=(vy-vn*co[k+1])*friction+maxf(0,vn)*co[k+1]+bodyv[k+1];vz=(vz-vn*co[k+2])*friction+maxf(0,vn)*co[k+2]+bodyv[k+2];}float speed=sqrtf_(vx*vx+vy*vy+vz*vz),cap=minf(1,3/maxf(speed,1e-8f));vel[k]=vx*cap;vel[k+1]=vy*cap;vel[k+2]=vz*cap;}}
+EXPORT int contact_count(){return contacts;}
+EXPORT int virtual_count(){return virtuals;}
+EXPORT float max_depth(){return maxdepth;}
+
+EXPORT int queries(){return query_count;}
+EXPORT int candidates(){return candidate_count;}
+</script>
+</body></html>
