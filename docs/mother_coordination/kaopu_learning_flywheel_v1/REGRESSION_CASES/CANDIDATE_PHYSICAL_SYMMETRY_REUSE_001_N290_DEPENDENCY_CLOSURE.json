@@ -32,7 +32,13 @@
     "freshReplayExitCode",
     "parentIntegrationBinding",
     "acceptanceState",
-    "verifier"
+    "verifier",
+    "packageSealSha256",
+    "manifestEntryCount",
+    "archiveFileCountAtSeal",
+    "postSealMutationDetected",
+    "externalDependencyContract",
+    "externalMaterializationReceipt"
   ],
   "auditRules": [
     "mirror or parameter reuse requires explicit source and target object IDs plus physical symmetry evidence; category labels or visual similarity alone are insufficient",
@@ -44,7 +50,10 @@
     "production replacement remains forbidden until the current whole builder consumes the mirrored child through the declared parent assembly and the verifier confirms no independent duplicate geometry",
     "dependency closure requires a canonical package-relative locator plus content digest, license/provenance and owning package; a mutable developer checkout path cannot satisfy closure",
     "every gate executable and every dependency used by it must be covered by the delivered package manifest; an unmanifested file cannot satisfy dependency closure even when present in the ZIP",
-    "manifest coverage gaps or digest mismatches fail subject integrity before a stored receipt or counterfactual gate result can be promoted to production evidence"
+    "manifest coverage gaps or digest mismatches fail subject integrity before a stored receipt or counterfactual gate result can be promoted to production evidence",
+    "the package integrity manifest must be generated after the final content mutation; any post-seal addition or replacement invalidates the receipt and requires a new manifest plus fresh replay",
+    "a split own/external dependency ledger passes closure only when every external entry has an immutable source identity, exact content digest, license/provenance, owner, materialization result and post-materialization replay receipt",
+    "unchanged manifest cardinality while archive contents grow is direct post-seal mutation evidence and must fail closed before production or user delivery"
   ],
   "n290FreshObservation": {
     "observedAt": "2026-11-14T23:38:43+08:00",
@@ -121,7 +130,7 @@
     "failIf": "a stored PASS cannot be reproduced, a whole asymmetric assembly is mirrored, exceptions disappear, or a generic helper is reported as implemented rearview-mirror hardware",
     "rollback": "remove this N290 Candidate and learning log; no production Mother, main, R2 OS or global gate changed"
   },
-  "decision": "PROBATION_COUNTERFACTUAL_PATH_FIX_PASS_HOLD_EXACT_PACKAGE_MANIFEST_AND_CONCRETE_MIRROR_INTEGRATION",
+  "decision": "HOLD_POST_SEAL_MUTATION_AND_UNPINNED_EXTERNAL_RUNTIME",
   "lifecycle": {
     "POSTED": true,
     "ACKNOWLEDGED": false,
@@ -132,7 +141,7 @@
     "USER_ACCEPTED": false
   },
   "adoption": "NOT_ADOPTED",
-  "currentBoundedQuestion": "Does v121's newly vendored, licensed Three.js copy close the N290 clean-extraction mirror replay; if not, is the hidden development-path import the sole replay blocker, and can that copy count as package closure while CHECKSUMS.json omits it?",
+  "currentBoundedQuestion": "Does v139's RESTORE_RUNTIME_CLOSURE plus CHECKSUMS.json form a trustworthy two-ledger dependency contract, or is the checkpoint mutating after its integrity receipt is sealed?",
   "n292V121Observation": {
     "observedAt": "2026-11-15T11:46:54+08:00",
     "targetArtifact": {
@@ -218,6 +227,76 @@
       "target": "#91",
       "commentId": 6888763529,
       "state": "POSTED",
+      "acknowledged": false
+    }
+  },
+  "n293V139Observation": {
+    "observedAt": "2026-11-15T15:44:20+08:00",
+    "targetArtifact": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "139",
+      "modifiedAt": "2026-11-15T15:35:05+08:00",
+      "sizeBytes": 133145028,
+      "sha256": "896f7bc0be9b76fbedd8f4d6c952a04f9ffabe28e04847f8e458eede441e3e0f",
+      "archiveEntryCount": 3293,
+      "archiveFilesExcludingManifest": 3292
+    },
+    "comparisonToV121": {
+      "sizeBytesDelta": 57004341,
+      "archiveFilesExcludingManifestDelta": 257,
+      "manifestEntriesV121": 2598,
+      "manifestEntriesV139": 2598,
+      "unmanifestedFilesV121": 437,
+      "unmanifestedFilesV139": 694,
+      "unmanifestedDelta": 257,
+      "digestMismatchesV121": 11,
+      "digestMismatchesV139": 11,
+      "inference": "all 257 newly present files are outside the frozen manifest; the subject continued mutating after the integrity receipt was sealed"
+    },
+    "restoreRuntimeClosure": {
+      "path": "RESTORE_RUNTIME_CLOSURE.json",
+      "sha256": "367c9af9cfabebf23fc16991d88469c0b0a8b456ac92de64c3e1c2cd575d0b40",
+      "ownFilesDeclared": 150,
+      "ownFilesPresent": 150,
+      "ownDigestMismatches": 0,
+      "externalFilesDeclared": 18,
+      "externalFilesPresent": 0,
+      "externalPerFileDigestsProvided": false,
+      "externalLicenseProvided": false,
+      "immutableSourceLocatorProvided": false,
+      "materializationCommandProvided": false,
+      "materializationReceiptProvided": false,
+      "criticalMirrorDependencyListed": "front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js"
+    },
+    "cleanExtractionMirrorReplay": {
+      "methodUnchangedFromV81": true,
+      "parameterMirrorSha256": "a53c5e778e8111bc6506b1d19fe29c18a31e19d47436116c85df39dacc841a07",
+      "parameterMirrorCheckSha256": "5e137ccf8ec865330018b1f6746364993a6e03f6b75bbe65781214cfa86b609e",
+      "storedReceiptSha256": "a47eb46021ba0c45faaff1345eaaae1edd5e7d8eded1b810bf17ad1a6e2af535",
+      "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+      "exitCode": 1,
+      "error": "ERR_MODULE_NOT_FOUND",
+      "missingPath": "front-r04-release/.sites-checkout/dist/boom-functional-r05/vendor/three.module.js",
+      "storedReceiptReproduced": false
+    },
+    "integrationBoundary": {
+      "specificRearviewMirrorPairImplemented": false,
+      "symmetryPairIdReferences": 0,
+      "rearviewTextOnlyInOfficialReference": true,
+      "wholeBindingForConcreteMirrorPair": false,
+      "realPartsMirroredByGenericReceipt": 0
+    },
+    "falsifiableTrial": {
+      "hypothesis": "a trustworthy final-seal step makes manifest coverage grow with the archive and turns each external restore dependency into a pinned, materializable, replayed contract",
+      "historicalReplayResult": "REFUTED_BY_V121_TO_V139",
+      "passIf": "after all package writes, manifest coverage equals the final archive subject; every external dependency is pinned by immutable locator, digest, license/provenance and owner; materialization succeeds; the exact clean-extraction mirror replay exits 0",
+      "failIf": "manifest cardinality remains frozen while archive files grow, any listed external dependency lacks its contract or materialization receipt, or the clean replay still fails"
+    },
+    "decision": "HOLD_POST_SEAL_MUTATION_AND_UNPINNED_EXTERNAL_RUNTIME",
+    "routingReceipt": {
+      "target": "#91",
+      "state": "NOT_POSTED_AT_AUTHORING",
       "acknowledged": false
     }
   }
