@@ -3,7 +3,7 @@
 - Observed: 2026-11-15T15:44:20+08:00
 - Baseline: current main R2 OS, reference-replication gate, freshness gate, #91/#63 feedback, and the existing N290/N292 Candidate
 - Scope: learning branch only; no production Mother, main, Site, asset, R2 OS or global gate changed
-- State at authoring: `IMPLEMENTED_CANDIDATE / GATE-RUN`; N293 routing pending; `ACKNOWLEDGED=false / ADOPTED=false / USER-ACCEPTED=false`
+- State at authoring: `IMPLEMENTED_CANDIDATE / GATE-RUN`; N293 routing `POSTED` to #91 comment 6891248709; `ACKNOWLEDGED=false / ADOPTED=false / USER-ACCEPTED=false`
 
 ## One bounded question
 
@@ -58,4 +58,4 @@ No concrete user-named rear-view mirror pair, `symmetryPairId` or whole binding 
 
 Decision: `HOLD_POST_SEAL_MUTATION_AND_UNPINNED_EXTERNAL_RUNTIME`.
 
-This refines the existing Candidate rather than creating a duplicate regression. KPI effects remain `unknown`; no production implementation, adoption or user acceptance is claimed.
+This refines the existing Candidate rather than creating a duplicate regression. It was routed only to #91 as comment 6891248709; no acknowledgement is recorded. KPI effects remain `unknown`; no production implementation, adoption or user acceptance is claimed.
