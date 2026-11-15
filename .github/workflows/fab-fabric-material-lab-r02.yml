@@ -1,0 +1,59 @@
+name: Fab fabric material lab R02
+on:
+  push:
+    branches: [feature/fab-fabric-material-lab-r02-3d-cloth-20261112]
+    paths:
+      - kaopu-fabric-workbench/fab-fabric-material-lab-r02/**
+      - .github/workflows/fab-fabric-material-lab-r02.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: fab-fabric-material-lab-r02
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: kaopu-fabric-workbench/fab-fabric-material-lab-r02
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax checks
+        run: cd kaopu-fabric-workbench/fab-fabric-material-lab-r02 && node --check app.js
+      - name: Install WebGPU Chromium
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+          mkdir -p /tmp/fab-fabric-r02
+          cd /tmp/fab-fabric-r02
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Real 3D WebGPU mesh QA
+        run: |
+          ROOT="$GITHUB_WORKSPACE/kaopu-fabric-workbench/fab-fabric-material-lab-r02"
+          python -m http.server 8925 --bind 127.0.0.1 >/tmp/fab-fabric-r02-http.log 2>&1 &
+          cp "$ROOT/qa.mjs" /tmp/fab-fabric-r02/qa.mjs
+          SITE_DIR="$ROOT" xvfb-run -a node /tmp/fab-fabric-r02/qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fab-fabric-material-lab-r02
+          path: kaopu-fabric-workbench/fab-fabric-material-lab-r02/evidence
+          retention-days: 7
+      - name: Preserve QA evidence
+        if: always()
+        run: |
+          git sparse-checkout add kaopu-fabric-workbench/fab-fabric-material-lab-r02
+          git config user.name 'Fabric material QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A kaopu-fabric-workbench/fab-fabric-material-lab-r02
+          if ! git diff --cached --quiet; then
+            git commit -m 'Save R02 3D fabric material browser evidence [skip ci]'
+            git push origin HEAD:feature/fab-fabric-material-lab-r02-3d-cloth-20261112
+          fi
