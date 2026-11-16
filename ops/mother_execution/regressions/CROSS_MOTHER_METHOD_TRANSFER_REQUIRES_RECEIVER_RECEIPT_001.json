@@ -1,0 +1,39 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0",
+  "caseId": "CROSS_MOTHER_METHOD_TRANSFER_REQUIRES_RECEIVER_RECEIPT_001",
+  "domain": "cross_mother_method_transfer",
+  "source": "user_correction",
+  "createdAt": "2026-11-17T02:30:00+08:00",
+  "failureClass": "METHOD_TRANSFER_CLAIM_WITHOUT_RECEIVER_RECEIPT",
+  "failureDescription": "A valid teacher/source package or meeting post is treated as proof that a receiving Mother acknowledged, implemented, gate-ran, adopted, or obtained user acceptance for the method.",
+  "rejectedArtifact": "Teacher-only package, old receiver checkpoint, or receiver output without an exact Task Anchor, fresh receiver delta, exact-commit run, and Delivery Receipt.",
+  "mustNeverRepeat": [
+    "Do not convert POSTED into ACKNOWLEDGED without an actual receiver receipt.",
+    "Do not convert teacher-side GATE-RUN into receiver-side GATE-RUN.",
+    "Do not copy source-domain numeric thresholds or object identities into another domain without receiver evidence.",
+    "Do not use an old receiver checkpoint as proof of post-dispatch implementation.",
+    "Do not call a method ADOPTED or USER-ACCEPTED from producer self-review."
+  ],
+  "requiredEvidence": [
+    "Receiver-specific unique taskId, targetObject, targetDefectOrChange, accepted baseline and baseSha.",
+    "Exact source method package identity and receiver-declared UNKNOWN fields.",
+    "Fresh receiver head delta created after dispatch and bound to the exact commit.",
+    "Negative invariant showing the forbidden target behavior is absent.",
+    "Positive liveness oracle showing the required adjacent behavior still occurs.",
+    "Two paired mutation probes: forbidden behavior re-enabled and adjacent behavior disabled.",
+    "Receiver Delivery Receipt with machine/reference gates and current desktop plus 390x844 browser evidence for visual changes.",
+    "Explicit lifecycle receipts kept separate for POSTED, ACKNOWLEDGED, IMPLEMENTED, GATE-RUN, ADOPTED and USER-ACCEPTED."
+  ],
+  "gateLogic": [
+    "FAIL if any receiver lifecycle state above POSTED is claimed without a receiver-authored or independently verified receipt.",
+    "FAIL if a receiver artifact predates the dispatch or does not bind to its reported head.",
+    "FAIL if only the negative invariant is tested and adjacent required behavior is not proven live.",
+    "FAIL if source-domain constants are copied without a receiver-specific baseline and reference rationale.",
+    "HOLD if targetObject, targetDefectOrChange, accepted baseline, baseSha or referenceSet remains UNKNOWN."
+  ],
+  "appliesTo": [
+    "Any method, observation practice, material rule, clothing rule, geometry rule, animation rule, validation strategy or production protocol transferred between Mothers.",
+    "Current R355 behavior-exclusion dual-oracle teaching package transfer to Motor Mother and Train Mother."
+  ],
+  "active": true
+}
