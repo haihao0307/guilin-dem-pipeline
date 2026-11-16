@@ -143,7 +143,7 @@
     "failIf": "a stored PASS cannot be reproduced, a whole asymmetric assembly is mirrored, exceptions disappear, or a generic helper is reported as implemented rearview-mirror hardware",
     "rollback": "remove this N290 Candidate and learning log; no production Mother, main, R2 OS or global gate changed"
   },
-  "decision": "HOLD_V282_SUBJECT_INTEGRITY_256_UNMANIFESTED_FILES",
+  "decision": "HOLD_V296_FROZEN_MANIFEST_705_UNMANIFESTED_FILES",
   "lifecycle": {
     "POSTED": true,
     "ACKNOWLEDGED": false,
@@ -154,7 +154,7 @@
     "USER_ACCEPTED": false
   },
   "adoption": "NOT_ADOPTED",
-  "currentBoundedQuestion": "Does exact ZX85 checkpoint v282 preserve the v268 final-seal key-set invariant after R270-R274 and handoff additions, or has subject integrity regressed despite the retained build script and passing generic mirror entrypoint?",
+  "currentBoundedQuestion": "Does exact ZX85 checkpoint v296 close N297's 256-unmanifested-file seal failure, or does the archive continue growing behind the byte-identical frozen manifest?",
   "n292V121Observation": {
     "observedAt": "2026-11-15T11:46:54+08:00",
     "targetArtifact": {
@@ -584,6 +584,89 @@
     "routingReceipt": {
       "target": "#91",
       "commentId": 6903448728,
+      "state": "POSTED",
+      "acknowledged": false
+    }
+  },
+  "n298V296Observation": {
+    "observedAt": "2026-11-16T11:49:00+08:00",
+    "targetArtifact": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "296",
+      "modifiedAt": "2026-11-16T11:10:19.785205+08:00",
+      "sizeBytes": 439244483,
+      "sha256": "67f5f99145284d5de7cf3f320dc1b5b69eea8362188075602d557aadebeb0c00",
+      "archiveEntryCount": 5679,
+      "archiveFilesExcludingManifest": 5678
+    },
+    "comparisonToV282": {
+      "archiveFilesExcludingManifestV282": 5229,
+      "archiveFilesExcludingManifestV296": 5678,
+      "archiveFileDelta": 449,
+      "manifestEntriesV282": 4973,
+      "manifestEntriesV296": 4973,
+      "manifestEntryDelta": 0,
+      "unmanifestedFilesV282": 256,
+      "unmanifestedFilesV296": 705,
+      "unmanifestedDelta": 449,
+      "sizeBytesDelta": 16372624,
+      "inference": "all 449 newly added files are outside the byte-identical frozen manifest"
+    },
+    "exactFinalSealAudit": {
+      "checksumsSha256": "f28b24c7ded48a7a0520428a685dcda4cf86937e97e191ee77fe84def53fd861",
+      "sameChecksumsBytesAsV282": true,
+      "actualFilesExcludingManifest": 5678,
+      "manifestEntries": 4973,
+      "missingManifestTargets": 0,
+      "unmanifestedArchiveFiles": 705,
+      "digestMismatches": 0,
+      "keySetEquality": false,
+      "result": "FAIL_FROZEN_MANIFEST_WITH_ARCHIVE_GROWTH"
+    },
+    "unmanifestedDistribution": {
+      "whole-runtime-audits": 336,
+      "zx5a-cab-source-r25": 241,
+      "zx5a-whole-native-r275": 42,
+      "zx5a-live-fetch-r281": 17,
+      "zx5a-whole-interactive-r276": 13,
+      "zx5a-whole-load-r280": 10,
+      "mechanical-increments": 8,
+      "zx5a-publication-preparation-r277": 7,
+      "zx5a-whole-display-audit-r279": 6,
+      "zx5a-publication-preparation-r278": 5,
+      "zx5a-whole-cabin-seat-r274": 5,
+      "RECOVERY_RESET_2040_R270": 3,
+      "zx5a-whole-cabin-seat-r272": 3
+    },
+    "retainedBuildIntent": {
+      "buildScriptSha256": "b0b69022a2579eb5cf9cfd99d0e59aa73b4918b8d49ba321e0eb5d3b3f4901fd",
+      "sameAsV282": true,
+      "containsFinalManifestReopenVerifyAndAtomicReplace": true,
+      "rootCauseCandidate": "the intended sealing script is not the actual final writer, or later R275-R294/overlay/handoff additions bypass it"
+    },
+    "genericMirrorEntrypoint": {
+      "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+      "exitCode": 0,
+      "realPartsMirrored": 0,
+      "result": "PASS_ENTRYPOINT_ONLY_DOES_NOT_REPAIR_SUBJECT_INTEGRITY"
+    },
+    "falsifiableTrial": {
+      "hypothesis": "if the intended final-seal path is the actual final writer, any exact delivered subject will have archive-minus-manifest key-set equality regardless of how many R275-R294 artifacts were produced",
+      "result": "REFUTED_BY_V296",
+      "passIf": "all additions precede the final writer; manifest is regenerated; the exact archive reopens with key-set equality and zero digest mismatch",
+      "failIf": "the archive grows while CHECKSUMS.json remains byte-identical or any post-seal addition remains outside the key set"
+    },
+    "gateStates": {
+      "exactArchiveIntegrity": "FAIL_705_UNMANIFESTED_FILES",
+      "manifestFreshness": "FAIL_BYTE_IDENTICAL_TO_V282_WHILE_ARCHIVE_GREW_449_FILES",
+      "genericMirrorMath": "PASS_SCOPED",
+      "productionPromotion": "HOLD"
+    },
+    "decision": "HOLD_V296_FROZEN_MANIFEST_705_UNMANIFESTED_FILES",
+    "routingReceipt": {
+      "target": "#91",
+      "commentId": 6906730026,
       "state": "POSTED",
       "acknowledged": false
     }
