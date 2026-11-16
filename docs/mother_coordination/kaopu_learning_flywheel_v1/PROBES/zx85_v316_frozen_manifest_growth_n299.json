@@ -1,0 +1,76 @@
+{
+  "schema": "kaopu.machine-probe/1.0",
+  "runId": "N299-ZX85-V316-FROZEN-MANIFEST-GROWTH",
+  "observedAt": "2026-11-16T15:52:11+08:00",
+  "boundedQuestion": "Does exact ZX85 checkpoint v316 close v296's frozen-manifest failure, or do current production additions continue accumulating outside the byte-identical seal?",
+  "subject": {
+    "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+    "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+    "versionId": "316",
+    "modifiedAt": "2026-11-16T15:32:23.286686+08:00",
+    "sizeBytes": 461326172,
+    "sha256": "15a46cc408930f8210f76a3f26672a63c5e71bcb0d3b6cc5449d356ff9b6c11f",
+    "archiveEntryCount": 6287,
+    "archiveFilesExcludingManifest": 6286
+  },
+  "comparisonToV296": {
+    "archiveFilesExcludingManifestV296": 5678,
+    "archiveFilesExcludingManifestV316": 6286,
+    "archiveFileDelta": 608,
+    "manifestEntriesV296": 4973,
+    "manifestEntriesV316": 4973,
+    "manifestEntryDelta": 0,
+    "unmanifestedFilesV296": 705,
+    "unmanifestedFilesV316": 1313,
+    "unmanifestedDelta": 608,
+    "sizeBytesDelta": 22081689,
+    "exactGrowthDistribution": {
+      "whole-runtime-audits": 571,
+      "mechanical-increments": 37
+    },
+    "inference": "all 608 newly added files are outside the byte-identical frozen manifest; growth is concentrated in whole-runtime audit evidence and mechanical increments"
+  },
+  "exactFinalSealAudit": {
+    "checksumsSha256": "f28b24c7ded48a7a0520428a685dcda4cf86937e97e191ee77fe84def53fd861",
+    "sameChecksumsBytesAsV282AndV296": true,
+    "actualFilesExcludingManifest": 6286,
+    "manifestEntries": 4973,
+    "missingManifestTargets": 0,
+    "unmanifestedArchiveFiles": 1313,
+    "digestMismatches": 0,
+    "keySetEquality": false,
+    "result": "FAIL_FROZEN_MANIFEST_WITH_CONTINUED_ARCHIVE_GROWTH"
+  },
+  "unmanifestedDistribution": {
+    "whole-runtime-audits": 907,
+    "zx5a-cab-source-r25": 241,
+    "mechanical-increments": 45,
+    "zx5a-whole-native-r275": 42,
+    "zx5a-live-fetch-r281": 17,
+    "zx5a-whole-interactive-r276": 13,
+    "zx5a-whole-load-r280": 10,
+    "<root>": 9,
+    "zx5a-publication-preparation-r277": 7,
+    "zx5a-whole-display-audit-r279": 6,
+    "zx5a-publication-preparation-r278": 5,
+    "zx5a-whole-cabin-seat-r274": 5,
+    "RECOVERY_RESET_2040_R270": 3,
+    "zx5a-whole-cabin-seat-r272": 3
+  },
+  "retainedBuildIntent": {
+    "buildScriptSha256": "b0b69022a2579eb5cf9cfd99d0e59aa73b4918b8d49ba321e0eb5d3b3f4901fd",
+    "sameAsV282AndV296": true,
+    "containsFinalManifestReopenVerifyAndAtomicReplace": true,
+    "rootCauseCandidate": "the retained final-seal script is still not the actual last writer, or R297-R322 audit/mechanical additions bypass the intended final seal"
+  },
+  "result": "HOLD_V316_FROZEN_MANIFEST_1313_UNMANIFESTED_FILES",
+  "lifecycle": {
+    "POSTED": false,
+    "GATE_RUN": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED_PRODUCTION": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
+
