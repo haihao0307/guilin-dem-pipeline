@@ -1,0 +1,93 @@
+{
+  "schema": "kaopu.learning-probe/1.0",
+  "probeId": "N298-ZX85-V296-FROZEN-MANIFEST-GROWTH",
+  "observedAt": "2026-11-16T11:49:00+08:00",
+  "boundedQuestion": "Does exact ZX85 checkpoint v296 close N297's 256-unmanifested-file seal failure, or does the archive continue growing behind a frozen manifest?",
+  "subject": {
+    "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+    "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+    "versionId": "296",
+    "modifiedAt": "2026-11-16T11:10:19.785205+08:00",
+    "sizeBytes": 439244483,
+    "sha256": "67f5f99145284d5de7cf3f320dc1b5b69eea8362188075602d557aadebeb0c00",
+    "archiveEntryCount": 5679,
+    "archiveFilesExcludingManifest": 5678
+  },
+  "comparisonToV282": {
+    "v282ArchiveFilesExcludingManifest": 5229,
+    "v296ArchiveFilesExcludingManifest": 5678,
+    "archiveFileDelta": 449,
+    "v282ManifestEntries": 4973,
+    "v296ManifestEntries": 4973,
+    "manifestEntryDelta": 0,
+    "v282UnmanifestedFiles": 256,
+    "v296UnmanifestedFiles": 705,
+    "unmanifestedDelta": 449,
+    "sizeBytesDelta": 16372624,
+    "inference": "every newly added file is outside the unchanged manifest"
+  },
+  "exactFinalSealAudit": {
+    "checksumsSha256": "f28b24c7ded48a7a0520428a685dcda4cf86937e97e191ee77fe84def53fd861",
+    "sameChecksumsBytesAsV282": true,
+    "actualFilesExcludingManifest": 5678,
+    "manifestEntries": 4973,
+    "missingManifestTargets": 0,
+    "unmanifestedArchiveFiles": 705,
+    "digestMismatches": 0,
+    "keySetEquality": false,
+    "result": "FAIL_FROZEN_MANIFEST_WITH_ARCHIVE_GROWTH"
+  },
+  "unmanifestedDistribution": {
+    "whole-runtime-audits": 336,
+    "zx5a-cab-source-r25": 241,
+    "zx5a-whole-native-r275": 42,
+    "zx5a-live-fetch-r281": 17,
+    "zx5a-whole-interactive-r276": 13,
+    "zx5a-whole-load-r280": 10,
+    "mechanical-increments": 8,
+    "zx5a-publication-preparation-r277": 7,
+    "zx5a-whole-display-audit-r279": 6,
+    "zx5a-publication-preparation-r278": 5,
+    "zx5a-whole-cabin-seat-r274": 5,
+    "RECOVERY_RESET_2040_R270": 3,
+    "zx5a-whole-cabin-seat-r272": 3
+  },
+  "representativeNewUnmanifested": [
+    "whole-runtime-audits/zx5a-actuator-evidence-r294/EVIDENCE.json",
+    "whole-runtime-audits/zx5a-cab-front-audit-r282/ACTION_MIGRATION.json",
+    "whole-runtime-audits/zx5a-front-glass-r284/QA.json",
+    "whole-runtime-audits/zx5a-front-glass-whole-r285/CABIN_PIXEL_QA.json",
+    "zx5a-whole-native-r275",
+    "zx5a-whole-interactive-r276",
+    "zx5a-publication-preparation-r277",
+    "zx5a-whole-load-r280",
+    "zx5a-live-fetch-r281"
+  ],
+  "retainedBuildIntent": {
+    "buildScriptSha256": "b0b69022a2579eb5cf9cfd99d0e59aa73b4918b8d49ba321e0eb5d3b3f4901fd",
+    "sameAsV282": true,
+    "containsFinalManifestReopenVerifyAndAtomicReplace": true,
+    "inference": "the intended final-seal path is retained but is not the final writer of the delivered subject, or later additions bypass it"
+  },
+  "scopedMirrorReplay": {
+    "command": "node zx5a-cab-source-r25/cabin-complete/parameter-mirror-check.mjs",
+    "exitCode": 0,
+    "storedReceiptSha256": "a47eb46021ba0c45faaff1345eaaae1edd5e7d8eded1b810bf17ad1a6e2af535",
+    "realPartsMirrored": 0,
+    "result": "PASS_GENERIC_ENTRYPOINT_ONLY"
+  },
+  "boundary": {
+    "newRegressionCaseCreated": false,
+    "unmanifestedTechnicalQualityJudged": false,
+    "productionMotherChanged": false,
+    "globalPolicyChanged": false,
+    "exactSubjectEligibleForProductionPromotion": false
+  },
+  "decision": "HOLD_V296_FROZEN_MANIFEST_705_UNMANIFESTED_FILES",
+  "minimalRecheck": [
+    "identify the actual final writer after build-zx5a-checkpoint.py",
+    "move all whole-runtime audits, R275-R294 overlays and handoffs before the final seal",
+    "regenerate CHECKSUMS.json and require key-set equality on the exact final bytes",
+    "rerun clean-extraction entrypoints only after the exact final archive passes integrity"
+  ]
+}
