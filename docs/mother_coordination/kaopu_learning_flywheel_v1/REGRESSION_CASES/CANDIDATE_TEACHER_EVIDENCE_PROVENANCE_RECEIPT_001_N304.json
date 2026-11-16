@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "kaopu-learning-flywheel-candidate-v1",
+  "candidateId": "CANDIDATE_TEACHER_EVIDENCE_PROVENANCE_RECEIPT_001_N304",
+  "createdAt": "2026-11-17T07:37:17+08:00",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "How can KAOPU prove that a later teacher audition still refers to the exact artifact and source revision originally evaluated when its name, URL, file ID, or release tag is mutable?",
+  "productionFailureLink": {
+    "classes": [
+      "STALE_ARTIFACT",
+      "SILENT_SOURCE_REPLACEMENT",
+      "MUTABLE_LOCATOR_TREATED_AS_IDENTITY"
+    ],
+    "observedTrigger": "StrykerJS v10.1.1 explicitly re-released v10.1.0 after a release-process provenance issue, while KAOPU teacher records often cite human-readable locators plus separately recorded hashes without one normalized provenance receipt.",
+    "applicableExistingRules": [
+      "TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE",
+      "R2 source/build identity",
+      "MOTHER-NO-METHOD-INVENTION-001"
+    ]
+  },
+  "currentBestViewBefore": {
+    "covered": [
+      "R2 requires source/build identity and exact base/head evidence for production candidates.",
+      "Teacher screening already requires source/provenance, license, maintenance, reproducibility, and direct relevance.",
+      "Recent auditions manually pinned exact commits and artifact SHA-256 values."
+    ],
+    "unresolved": "Teacher evidence lacked one normalized receipt that separates mutable locator from immutable subject identity, binds source/input revisions, records the claiming builder/run, and states whether the attestation itself was independently verified."
+  },
+  "teacher": {
+    "name": "SLSA Build Provenance v1.2",
+    "officialSpecification": "https://slsa.dev/spec/v1.2/build-provenance",
+    "officialRepository": "https://github.com/slsa-framework/slsa",
+    "approvedReleaseBranch": "releases/v1.2",
+    "sourceCommit": "ae7fc76215004e8fae250c877eff8919bf048e3b",
+    "sourceCommitVerified": true,
+    "activeMainCommit": "dace6e1524c6899ef6e685e2608e69e6f4f21380",
+    "repositoryUpdatedAt": "2026-11-14T02:10:23Z",
+    "repositoryPushedAt": "2026-11-16T13:40:11Z",
+    "specStatus": "APPROVED",
+    "license": {
+      "name": "Community Specification License 1.0",
+      "spdxNoticeInFile": "CC-BY-4.0",
+      "useBoundary": "Specification derivatives require Working Group attribution including material name, version, and source. Implementations of the specification do not require that attribution under section 1.2, but this Candidate preserves attribution anyway."
+    },
+    "reproducibilityEvidence": [
+      "Machine-readable CUE and protobuf schema for provenance",
+      "Repository lint script and GitHub Actions lint workflow",
+      "Pinned approved v1.2 branch and exact Git commit",
+      "Public specification examples and verification guidance"
+    ],
+    "screening": {
+      "sourceProvenance": "PASS_PINNED_APPROVED_SPEC_COMMIT",
+      "recentMaintenanceReleaseIssueActivity": "PASS_ACTIVE_MAIN_AND_APPROVED_V1_2_BRANCH",
+      "runnableCodeTestsData": "PASS_SCHEMA_AND_LINT_WORKFLOW_NO_DATASET",
+      "licenseAndAssetRights": "PASS_WITH_ATTRIBUTION_BOUNDARY",
+      "directRelevance": "PASS_TEACHER_EVIDENCE_AND_STALE_ARTIFACT_PREVENTION",
+      "noveltyOverCurrentBestView": "PASS_NORMALIZED_SUBJECT_DEPENDENCY_BUILDER_RUN_TRUST_BINDING",
+      "dependenciesHardwareCost": "LOW_FOR_HASH_RECEIPT_HIGHER_FOR_SIGNATURE_AND_ATTESTATION_VERIFICATION",
+      "demoOnlyOpaqueClosedOrVersionDead": "NO"
+    },
+    "whatItKnowsBeyondKaopu": "For this bounded problem, SLSA v1.2 supplies a precise separation between output subject identity, resolved dependency identity, build definition, builder identity, invocation metadata, and byproducts. KAOPU already used hashes and commits, but did not yet normalize these fields into one teacher-audition receipt with explicit attestation trust level and mismatch semantics."
+  },
+  "candidateMethod": {
+    "name": "Teacher Evidence Provenance Receipt",
+    "attribution": "Adapted from SLSA Build Provenance v1.2, source https://slsa.dev/spec/v1.2/build-provenance and slsa-framework/slsa@ae7fc76215004e8fae250c877eff8919bf048e3b.",
+    "identityRule": "A URI, filename, Library file ID, branch name, release tag, or marketing version is a locator only. It cannot establish teacher evidence identity.",
+    "requiredFields": [
+      "teacherCandidateId",
+      "sourceLocator",
+      "retrievedAt",
+      "subject.name",
+      "subject.mediaType",
+      "subject.sizeBytes",
+      "subject.digest.sha256",
+      "resolvedDependencies[].uri",
+      "resolvedDependencies[].digest.gitCommitOrSha256",
+      "builder.id",
+      "runDetails.invocationId",
+      "runDetails.startedOn",
+      "runDetails.finishedOn",
+      "license.name",
+      "license.source",
+      "attribution",
+      "attestationTrustTier",
+      "verificationEvidence",
+      "identityDecision"
+    ],
+    "attestationTrustTiers": {
+      "SELF_ASSERTED": "Receipt fields and hashes were produced by the audition process but no trusted signature/signer-builder pair was independently verified.",
+      "VERIFIED_ATTESTATION": "Signature, timestamp, subject digest, and an allowlisted signer-builder pair were independently verified with preserved evidence.",
+      "UNKNOWN": "Required identity or verification evidence is missing."
+    },
+    "decisionSemantics": {
+      "IDENTITY_CONFIRMED": "Subject digest and required dependency digests match the frozen receipt. This does not by itself upgrade SELF_ASSERTED to VERIFIED_ATTESTATION.",
+      "REJECT_SUBJECT_MISMATCH": "Bytes differ from the auditioned subject even if locator, filename, file ID, or release tag is unchanged.",
+      "HOLD_SOURCE_LINEAGE_MISMATCH": "Subject bytes match but claimed source/input revision differs; content may be reusable, but the previous provenance claim cannot be inherited.",
+      "HOLD_PROVENANCE_INCOMPLETE": "Digest, dependency revision, license, builder/run identity, or trust-tier evidence is absent."
+    },
+    "lifecycleRule": "Any changed subject digest creates a new RADAR_FOUND item or new audition candidate. It cannot inherit the old candidate's ACKNOWLEDGED, PROBATION, ACTIVE_TEACHER, or adoption state.",
+    "registryRule": "Teacher Registry/referenceSet entries must point to the frozen receipt and subject digest, not only to a mutable locator.",
+    "deliveryReceiptRule": "A Mother consuming teacher-derived knowledge records the exact teacherCandidateId and subject digest used in its Task Anchor or Delivery Receipt."
+  },
+  "falsifiableHypothesis": "A receipt that binds subject digest, resolved dependency revision, builder identity, invocation identity, license, and trust tier will reject same-locator replacement and hold source-lineage drift that a locator-only record accepts.",
+  "minimalReplay": {
+    "probeId": "TEACHER_EVIDENCE_PROVENANCE_RECEIPT_001_N304",
+    "script": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n304_teacher_evidence_provenance_probe.mjs",
+    "result": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/teacher_evidence_provenance_n304.json",
+    "decision": "SUPPORTED",
+    "observations": [
+      "A locator-only gate accepted original and replaced bytes under the same name, URI, and release tag.",
+      "The subject SHA-256 rejected the same-locator byte replacement.",
+      "The dependency revision held a claim where bytes matched but the claimed source revision changed.",
+      "The probe deliberately does not cryptographically verify builder identity; its attestation trust tier remains SELF_ASSERTED."
+    ]
+  },
+  "applicability": {
+    "inScope": [
+      "external teacher packages, repositories, papers with code, releases, datasets, and Library artifacts",
+      "Teacher Registry/referenceSet identity",
+      "teacher-derived Task Anchor and Delivery Receipt traceability",
+      "detection of stale or silently replaced audition evidence"
+    ],
+    "outOfScope": [
+      "proving scientific correctness or teacher quality",
+      "proving a builder is trustworthy without signature and signer-builder verification",
+      "production Mother implementation",
+      "automatic global OS or gate changes",
+      "retroactively declaring old teacher records invalid without a bounded replay"
+    ]
+  },
+  "decision": "TEACHER_CANDIDATE_AUDITION_SUPPORTED_WITH_SELF_ASSERTED_BOUNDARY",
+  "routing": {
+    "target": "Issue #91 only",
+    "requestedMotherAnswers": [
+      "Is mutable teacher evidence a real risk for the current receiver?",
+      "Does the receiver already bind teacher subject digest and dependency revision in its receipt?",
+      "Which receipt fields are worth adopting locally?",
+      "What is the smallest replay using one real receiver artifact?"
+    ],
+    "motor": "NOT_QUERIED/UNKNOWN",
+    "train": "NOT_QUERIED/UNKNOWN"
+  },
+  "state": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "productionChange": "NONE",
+  "osOrGateChange": "NONE_CANDIDATE_ONLY",
+  "kpi": "UNKNOWN"
+}
