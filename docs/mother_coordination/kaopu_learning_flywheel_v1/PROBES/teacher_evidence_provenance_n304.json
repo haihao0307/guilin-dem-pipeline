@@ -1,0 +1,68 @@
+{
+  "probeId": "TEACHER_EVIDENCE_PROVENANCE_RECEIPT_001_N304",
+  "boundedQuestion": "How can KAOPU prove that a later teacher audition still refers to the exact artifact and source revision originally evaluated when its name, URL, file ID, or release tag is mutable?",
+  "falsifiableHypothesis": "A receipt that binds subject digest, resolved dependency revision, builder identity, and invocation identity rejects same-locator replacement and source drift that locator-only identity accepts.",
+  "provenanceReceipt": {
+    "statementType": "https://in-toto.io/Statement/v1",
+    "predicateType": "https://slsa.dev/provenance/v1",
+    "subject": {
+      "name": "teacher-package.zip",
+      "uri": "library://teacher-package",
+      "releaseTag": "v1",
+      "digest": {
+        "sha256": "9783d3a83b092fe3803aea6dae4961dd40e6ad5d1c293ff4ecd3826cbaa1936d"
+      }
+    },
+    "resolvedDependencies": [
+      {
+        "uri": "git+https://github.com/example/teacher@main",
+        "digest": {
+          "gitCommit": "1111111111111111111111111111111111111111"
+        }
+      }
+    ],
+    "builder": {
+      "id": "kaopu://learning-flywheel/manual-audition/v1"
+    },
+    "invocationId": "N304-probe"
+  },
+  "observations": {
+    "original": {
+      "locatorGate": true,
+      "provenanceGate": {
+        "subjectDigestMatches": true,
+        "dependencyMatches": true,
+        "builderDeclared": true,
+        "invocationDeclared": true,
+        "decision": "IDENTITY_CONFIRMED"
+      }
+    },
+    "sameLocatorReplacedBytes": {
+      "locatorGate": true,
+      "provenanceGate": {
+        "subjectDigestMatches": false,
+        "dependencyMatches": true,
+        "builderDeclared": true,
+        "invocationDeclared": true,
+        "decision": "REJECT_SUBJECT_MISMATCH"
+      }
+    },
+    "sameBytesDifferentSourceRevision": {
+      "locatorGate": true,
+      "provenanceGate": {
+        "subjectDigestMatches": true,
+        "dependencyMatches": false,
+        "builderDeclared": true,
+        "invocationDeclared": true,
+        "decision": "HOLD_SOURCE_LINEAGE_MISMATCH"
+      }
+    }
+  },
+  "assertions": {
+    "originalIdentityConfirmed": true,
+    "locatorFailsToDetectReplacement": true,
+    "subjectDigestRejectsReplacement": true,
+    "dependencyDigestRejectsSourceDrift": true
+  },
+  "decision": "SUPPORTED"
+}
