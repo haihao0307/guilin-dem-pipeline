@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0",
+  "candidateId": "CANDIDATE_BEHAVIOR_EXCLUSION_DUAL_ORACLE_001_N301",
+  "createdAt": "2026-11-16T16:04:11Z",
+  "sourceMainSha": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+  "boundedQuestion": "在耦合动画系统中删除一个显示行为时，怎样同时证明目标行为确已消失、相邻功能没有被一并关闭？",
+  "status": "TEACHER_CANDIDATE",
+  "teacherLifecycle": "AUDITION",
+  "teacherSubject": {
+    "name": "Hitachi85 Functions Animation Learning R355",
+    "libraryFileId": "libfile_923877ca9c188191bd7d30695e0628e3",
+    "sourceFileId": "file_00000000fec081f5a16a3fe64ffa853d",
+    "createdAt": "2026-11-16T10:12:22Z",
+    "sizeBytes": 7426375,
+    "sha256": "d20f6358f68ed31411cf62726e662496dfd3bda649c9d9d9e42f642924c5616d",
+    "freeze": "R355 tested composite, unpublished; production remains R348"
+  },
+  "noveltyAnswer": {
+    "explicitProblem": "partial behavior removal without collateral shutdown",
+    "currentBestViewCoverage": "R2、no-creative-substitute、freshness gates要求规格保真、禁止 silent fallback、要求 regression，但未给出部分行为删除时的成对可执行 oracle。",
+    "addedKnowledge": "把验收拆成同一动作采样下的双侧 oracle：目标负不变量（16个轮节点局部四元数必须逐值保持）加非目标正活性（非轮履带世界矩阵必须出现足够覆盖的变化）；两个 oracle 必须各有能被拒绝的故障注入。",
+    "notClaimed": "包内记录的31组旅程与39866个非轮矩阵精确对照没有随包附带生成器，本 Candidate 不把它算作本轮可复现证据。"
+  },
+  "falsifiableHypothesis": "若一个“删除行为”candidate同时满足目标负不变量和非目标正活性，并且分别能拒绝目标漂移与相邻功能被禁用的 mutant，则它比只检查“目标不动”更能阻止 silent collateral fallback。",
+  "executableGateCandidate": {
+    "subjectBinding": [
+      "exact package SHA-256",
+      "exact target node IDs",
+      "exact adjacent-function object set",
+      "sampled action/input set"
+    ],
+    "targetNegativeInvariant": "all target transforms equal frozen baseline at every sample",
+    "adjacentPositiveLiveness": "changed non-target set satisfies subject-specific expected coverage; R355 audition observed 1040 changed meshes after setTravel(123,321)",
+    "mutationRequirements": [
+      "target-drift mutant must fail targetNegativeInvariant",
+      "adjacent-function-disabled mutant must fail adjacentPositiveLiveness"
+    ],
+    "thresholdRule": "1040 and >1000 are R355-specific observations, not global constants; each Mother must derive and freeze its own expected set/range from an accepted baseline.",
+    "holdStates": [
+      "HOLD_TARGET_BEHAVIOR_STILL_ACTIVE",
+      "HOLD_ADJACENT_FUNCTION_SILENTLY_DISABLED",
+      "HOLD_EXPECTED_SET_UNBOUND",
+      "HOLD_SUBJECT_OR_SAMPLE_UNBOUND"
+    ]
+  },
+  "audition": {
+    "cleanReplay": {
+      "commands": [
+        "node tests/verify.mjs",
+        "node tests/ui-smoke.mjs",
+        "node scripts/export-r355-registry.mjs",
+        "python3 scripts/verify_files.py"
+      ],
+      "results": {
+        "portablePackagePass": true,
+        "uiPass": true,
+        "fileIntegrityPass": true,
+        "fileIntegrityCount": 1965,
+        "meshes": 2260,
+        "clips": 12,
+        "samples": 36,
+        "targetFrozenNodes": 16,
+        "adjacentChangedMeshes": 1040,
+        "resourcesOwnedReleased": "1216/1216"
+      }
+    },
+    "mutationReplay": {
+      "baseline": {
+        "targetFrozen": true,
+        "nonTargetChanged": 1040
+      },
+      "adjacentMotionDisabledMutant": {
+        "targetFrozen": true,
+        "nonTargetChanged": 0,
+        "rejected": true
+      },
+      "targetDriftMutant": {
+        "targetFrozen": false,
+        "rejected": true
+      }
+    }
+  },
+  "teacherScreen": {
+    "sourceProvenance": "Exact Library file identity, bytes, SHA-256, scope, source labels and exclusions recorded. External reference artwork is attributed in-package but not bundled.",
+    "recentMaintenance": "Package created 2026-11-16; no release history or ongoing maintainer activity beyond this frozen subject.",
+    "runnableEvidence": "Offline Node 24 and Python 3 commands replayed successfully; tests, data, manifests and bundled dependencies present.",
+    "licenseAndRights": "Three.js and Node dependency licenses retained. Reference artwork/mesh/texture are excluded. The package records Sketchfab CC BY 4.0 attribution; current source-page verification was inaccessible, so derivative-publication rights remain UNKNOWN. The dual-oracle method does not depend on redistributing that asset.",
+    "directRelevance": "Directly addresses KAOPU silent fallback and collateral behavior loss when removing or freezing one subsystem behavior.",
+    "noveltyRelativeToCurrentBestView": "New executable pairing of a negative invariant with positive liveness plus required mutants; not merely a prose preservation rule.",
+    "dependencyCostRisk": "Node 24, Python 3, bundled jsdom/Three.js, 7.4 MB package. Object-set binding and thresholds are subject-specific and can become stale after topology changes.",
+    "demoReproducibilityClosedRisk": "CPU/DOM replayable, but real browser/WebGL2/GPU/device, physics/OEM correctness and user acceptance are not run. No training-data claim. No external commercial runtime dependency."
+  },
+  "applicability": {
+    "scope": "single-Mother or subsystem-level feature removal/freeze where adjacent behavior must remain live",
+    "exampleDomains": [
+      "animation controller",
+      "physics toggle",
+      "render pass removal",
+      "procedural feature suppression",
+      "UI/control interlock"
+    ],
+    "exclusions": [
+      "does not establish visual quality",
+      "does not prove physical correctness",
+      "does not replace full non-target equivalence when exact preservation is required"
+    ]
+  },
+  "routing": {
+    "target": "ZX85 / animation-control Mother via issue #91",
+    "questionsOnly": [
+      "当前问题是否真实相关？",
+      "现有体系是否已覆盖？",
+      "哪些原理/代码/数据值得学？",
+      "最小可反驳试验是什么？"
+    ],
+    "posted": false,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "rollback": "Candidate-only branch; remove or ignore this file without touching production Mother, R2 OS, assets, Site or public route.",
+  "kpiEffect": "UNKNOWN"
+}
