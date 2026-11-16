@@ -1,0 +1,55 @@
+{
+  "probeId": "RECEIVER_OBLIGATION_KILL_VECTOR_001_N303",
+  "question": "How can adjacent-function liveness be normalized across Mothers without importing receiver-specific topology, scale, count, or duration constants?",
+  "method": "Normalize semantic obligations and mandatory mutant states, not raw receiver measurements: O- target absent, O+ adjacent function live; both paired mutants must be exactly KILLED.",
+  "boundary": "Aggregate mutation score is descriptive only. SURVIVED, NO_COVERAGE, TIMEOUT, errors, ignored, or not-run are HOLD for a mandatory acceptance mutant.",
+  "results": [
+    {
+      "scenarioId": "AGGREGATE_HIGH_BUT_CRITICAL_SURVIVES",
+      "genericMutationScorePercent": 99.01,
+      "aggregateThreshold95WouldPass": true,
+      "obligationKillVector": [
+        { "obligationId": "O_NEG_TARGET_ABSENT", "mutantId": "M_NEG_REENABLE_TARGET", "state": "KILLED" },
+        { "obligationId": "O_POS_ADJACENT_LIVE", "mutantId": "M_POS_DISABLE_ADJACENT", "state": "SURVIVED" }
+      ],
+      "obligationDecision": "HOLD"
+    },
+    {
+      "scenarioId": "BOTH_CRITICAL_MUTANTS_KILLED",
+      "genericMutationScorePercent": 100,
+      "aggregateThreshold95WouldPass": true,
+      "obligationKillVector": [
+        { "obligationId": "O_NEG_TARGET_ABSENT", "mutantId": "M_NEG_REENABLE_TARGET", "state": "KILLED" },
+        { "obligationId": "O_POS_ADJACENT_LIVE", "mutantId": "M_POS_DISABLE_ADJACENT", "state": "KILLED" }
+      ],
+      "obligationDecision": "PASS"
+    },
+    {
+      "scenarioId": "CRITICAL_MUTANT_HAS_NO_COVERAGE",
+      "genericMutationScorePercent": 99.01,
+      "aggregateThreshold95WouldPass": true,
+      "obligationKillVector": [
+        { "obligationId": "O_NEG_TARGET_ABSENT", "mutantId": "M_NEG_REENABLE_TARGET", "state": "KILLED" },
+        { "obligationId": "O_POS_ADJACENT_LIVE", "mutantId": "M_POS_DISABLE_ADJACENT", "state": "NO_COVERAGE" }
+      ],
+      "obligationDecision": "HOLD"
+    },
+    {
+      "scenarioId": "CRITICAL_MUTANT_TIMES_OUT",
+      "genericMutationScorePercent": 100,
+      "aggregateThreshold95WouldPass": true,
+      "obligationKillVector": [
+        { "obligationId": "O_NEG_TARGET_ABSENT", "mutantId": "M_NEG_REENABLE_TARGET", "state": "KILLED" },
+        { "obligationId": "O_POS_ADJACENT_LIVE", "mutantId": "M_POS_DISABLE_ADJACENT", "state": "TIMEOUT" }
+      ],
+      "obligationDecision": "HOLD"
+    }
+  ],
+  "assertions": {
+    "highAggregateCanHideCriticalSurvivor": true,
+    "bothCriticalKilledPasses": true,
+    "noCoverageIsInconclusive": true,
+    "timeoutIsInconclusiveForCriticalAcceptance": true
+  },
+  "probeDecision": "SUPPORTED"
+}
