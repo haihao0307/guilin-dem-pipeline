@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "kaopu-learning-flywheel-candidate-v1",
+  "candidateId": "CANDIDATE_RECEIVER_OBLIGATION_KILL_VECTOR_001_N303",
+  "createdAt": "2026-11-17T03:43:00+08:00",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "How can adjacent-function liveness be normalized across Mothers without importing receiver-specific topology, action-scale, count, or sample-duration constants?",
+  "currentBestViewBefore": {
+    "source": "Issue #91 N302 cross-Mother method-transfer note",
+    "fact": "A receiver must declare a target-negative oracle, adjacent-positive oracle, and paired mutants, but the cross-Mother normalization rule for adjacent liveness remained unresolved."
+  },
+  "teacher": {
+    "name": "StrykerJS mutation result semantics",
+    "repository": "https://github.com/stryker-mutator/stryker-js",
+    "sourceCommit": "8f24ef0be3a2119fc44ac48bfce58930ab2c9032",
+    "sourceCommitVerified": true,
+    "documentation": "https://stryker-mutator.io/docs/mutation-testing-elements/mutant-states-and-metrics/",
+    "latestRelease": "v10.1.1",
+    "latestReleaseUrl": "https://github.com/stryker-mutator/stryker-js/releases/tag/v10.1.1",
+    "latestReleasePublishedAt": "2026-10-23T19:14:24Z",
+    "repositoryUpdatedAt": "2026-11-16T18:08:25Z",
+    "repositoryPushedAt": "2026-11-16T00:03:49Z",
+    "license": "Apache-2.0",
+    "implementationEvidence": [
+      "TypeScript monorepo with unit, integration, and end-to-end tests",
+      "protected master branch requires build/test and e2e checks on Node 22 and 24",
+      "machine-readable mutant states include Killed, Survived, NoCoverage, Timeout, RuntimeError, CompileError, and Ignored"
+    ],
+    "provenanceRisk": "Release v10.1.1 explicitly re-released v10.1.0 because of a release-process provenance issue; pin the exact source commit or tag and do not infer package provenance from the project name.",
+    "runtimeCost": "A full StrykerJS integration requires Node >=22 and can be expensive because tests are repeated across mutants. This Candidate imports only the state semantics and a two-mutant critical-obligation pattern.",
+    "failureRisks": [
+      "Equivalent mutants can survive without indicating a weak oracle.",
+      "Aggregate mutation score can hide a critical surviving mutant.",
+      "Stryker's generic metric counts Timeout as detected, but timeout is inconclusive for a KAOPU acceptance-critical obligation.",
+      "Whole-suite integration would introduce dependency, runtime, and version risks not justified by this audition."
+    ],
+    "screening": {
+      "sourceProvenance": "PASS_WITH_PIN_AND_RELEASE_PROVENANCE_WARNING",
+      "recentMaintenance": "PASS",
+      "runnableCodeTestsData": "PASS_CODE_AND_TESTS",
+      "licenseAndRights": "PASS_APACHE_2_0",
+      "directRelevance": "PASS_TO_CROSS_MOTHER_ORACLE_TRANSFER",
+      "noveltyOverCurrentBestView": "PASS_OBLIGATION_STATE_VECTOR_NOT_RAW_COUNTS",
+      "dependenciesHardwareCost": "BOUNDED_IMPORT_ONLY_NO_FULL_INSTALL",
+      "demoOnlyOpaqueClosedOrVersionDead": "NO"
+    },
+    "whatItKnowsBeyondKaopu": "For this bounded question, StrykerJS supplies an explicit machine state taxonomy and mutation-adequacy model that distinguishes killed, survived, uncovered, timeout, runtime/compile failure, and ignored mutants. KAOPU had paired mutants but no cross-Mother receipt rule that normalized them as an obligation-level state vector."
+  },
+  "candidateMethod": {
+    "name": "receiver obligation kill vector",
+    "normalizationUnit": "semantic obligation plus mandatory mutant terminal state",
+    "obligations": [
+      {
+        "obligationId": "O_NEG_TARGET_ABSENT",
+        "meaning": "The forbidden target behavior is absent under the receiver's declared trigger and observation window.",
+        "mandatoryMutant": "M_NEG_REENABLE_TARGET"
+      },
+      {
+        "obligationId": "O_POS_ADJACENT_LIVE",
+        "meaning": "The receiver's adjacent required function remains observably live under its own declared trigger and observation window.",
+        "mandatoryMutant": "M_POS_DISABLE_ADJACENT"
+      }
+    ],
+    "acceptanceRule": "PASS only when the unmutated receiver baseline passes and every mandatory receiver-specific obligation mutant is exactly KILLED.",
+    "holdStates": [
+      "SURVIVED",
+      "NO_COVERAGE",
+      "TIMEOUT",
+      "RUNTIME_ERROR",
+      "COMPILE_ERROR",
+      "IGNORED",
+      "NOT_RUN",
+      "UNKNOWN"
+    ],
+    "aggregateScoreRule": "Mutation score is descriptive only and cannot authorize GATE-RUN, ADOPTED, or USER-ACCEPTED.",
+    "receiverLocalEvidence": "Topology counts, changed-node counts, travel distance, action magnitude, frame count, and sample duration remain receiver-local evidence. They are not transferred as universal thresholds.",
+    "requiredReceiptFields": [
+      "receiverMother",
+      "exactHeadSha",
+      "acceptedBaselineSha",
+      "targetObject",
+      "targetDefect",
+      "obligationId",
+      "receiverLocalObservable",
+      "triggerAndSampleWindow",
+      "mutantId",
+      "mutationOperator",
+      "expectedGate",
+      "actualMutantState",
+      "evidenceDigest",
+      "runEnvironment",
+      "gateDecision"
+    ]
+  },
+  "falsifiableHypothesis": "Replacing raw cross-Mother counts with a two-obligation mandatory kill vector will reject critical false confidence that an aggregate mutation-score threshold accepts, while allowing each Mother to define its own observable, trigger, and sample window.",
+  "minimalReplay": {
+    "probeId": "RECEIVER_OBLIGATION_KILL_VECTOR_001_N303",
+    "script": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n303_receiver_obligation_kill_vector_probe.mjs",
+    "result": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/receiver_obligation_kill_vector_n303.json",
+    "decision": "SUPPORTED",
+    "observations": [
+      "99.01% aggregate score accepted a case where the adjacent-liveness mutant survived; the obligation vector held it.",
+      "99.01% aggregate score accepted a case where the adjacent-liveness mutant had no coverage; the obligation vector held it.",
+      "100% generic score accepted a timeout because timeout is counted as detected; the KAOPU obligation vector held it as inconclusive.",
+      "The vector passed only when both target-negative and adjacent-positive mandatory mutants were killed."
+    ]
+  },
+  "applicability": {
+    "inScope": [
+      "cross-Mother transfer of behavior-exclusion methods",
+      "feature removal where an adjacent capability must remain live",
+      "receiver-specific Task Anchor, Delivery Receipt, and verifier gate design"
+    ],
+    "outOfScope": [
+      "visual quality",
+      "physical correctness",
+      "user acceptance",
+      "replacing receiver-specific domain thresholds",
+      "automatic global OS or gate changes"
+    ]
+  },
+  "decision": "TEACHER_CANDIDATE_AUDITION_SUPPORTED_WITH_BOUNDARIES",
+  "routing": {
+    "target": "Issue #91 only",
+    "requestedMotherAnswers": [
+      "Is the current receiver problem genuinely relevant?",
+      "Does the receiver already cover this obligation-vector rule?",
+      "Which state semantics and receipt fields are worth learning?",
+      "What is the smallest receiver-specific falsifiable replay?"
+    ],
+    "motor": "NOT_QUERIED/UNKNOWN",
+    "train": "NOT_QUERIED/UNKNOWN"
+  },
+  "state": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "productionChange": "NONE",
+  "osOrGateChange": "NONE_CANDIDATE_ONLY",
+  "kpi": "UNKNOWN"
+}
