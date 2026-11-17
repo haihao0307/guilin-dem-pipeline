@@ -1,0 +1,26 @@
+{
+  "probe": "n309_anchor_exclusion_integrity_probe",
+  "subject": "N308 KaoPuGram declared dependency closure Candidate",
+  "vulnerableReplay": {
+    "baselineClosureRootDigest": "sha256:175cbc27ab70875b0989721c481bed9668c5bfb36254538cb725637a794778c1",
+    "bypassClosureRootDigest": "sha256:175cbc27ab70875b0989721c481bed9668c5bfb36254538cb725637a794778c1",
+    "status": "DEPENDENCY_CLOSURE_VERIFIED",
+    "defect": "excludedInputIds are outside the closure digest and verifier comparison"
+  },
+  "correctedPrototype": {
+    "unchangedAuthorizedExclusion": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    },
+    "afterRunReclassification": {
+      "status": "HOLD_UNAUTHORIZED_EXCLUSION",
+      "detail": [
+        "runtime/material-override"
+      ]
+    },
+    "semanticDependencyChanged": {
+      "status": "HOLD_EXCLUSION_OR_DEPENDENCY_SET_CHANGED"
+    }
+  },
+  "decision": "HOLD_GATE_FAIL",
+  "boundary": "Candidate regression only; no production Mother, main, R2 OS, or universal KaoPuGram service is modified."
+}
