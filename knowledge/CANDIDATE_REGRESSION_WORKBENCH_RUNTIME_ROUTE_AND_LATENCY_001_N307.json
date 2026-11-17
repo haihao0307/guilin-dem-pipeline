@@ -1,0 +1,47 @@
+{
+  "schema": "kaopu.mother-regression-case/2.0-candidate",
+  "caseId": "WORKBENCH-RUNTIME-ROUTE-AND-LATENCY-001",
+  "status": "CANDIDATE",
+  "active": false,
+  "source": "user_correction",
+  "createdAt": "2026-11-17",
+  "failureClass": "RUNTIME_ROUTE_OR_PERFORMANCE_UNPROVEN",
+  "failureDescription": "A workbench may open or eventually render while using a renderer/fallback different from the required route, or may be visibly slow without browser-observed phase evidence identifying the bottleneck.",
+  "deduplication": {
+    "PUBLIC_WEB_DELIVERY_GATE": "Already proves public accessibility, browser startup, and interaction, but not the actual renderer route or phase timing.",
+    "MOTHER-NO-METHOD-INVENTION-001": "Already prohibits unauthorized method changes, but does not define browser-observed runtime evidence.",
+    "TERRAIN-NO-STALE-DELIVERY-001": "Already covers stale or wrong-target lineage, not current-page renderer identity or latency attribution."
+  },
+  "mustNeverRepeat": [
+    "source claims WebGL2 while the observed canvas uses WebGL1 or Canvas2D",
+    "a silent renderer fallback receives browserPassed=true",
+    "producer self-report overrides independent browser observation",
+    "a slow workbench is delivered without first-valid-frame and resource timing evidence",
+    "a universal latency threshold is invented when the Task Anchor has no device/browser budget"
+  ],
+  "requiredEvidence": [
+    "target URL and exact commit/content subject",
+    "required renderer route and allowed fallback policy from Task Anchor",
+    "independently observed canvas context type and constructor",
+    "first valid rendered frame mark",
+    "one required interaction acknowledgement mark",
+    "navigation and resource timing receipt",
+    "declared device/browser/profile",
+    "explicit performance budget or LATENCY_BUDGET_UNKNOWN"
+  ],
+  "gateLogic": [
+    "observedRendererRoute equals requiredRendererRoute",
+    "fallbackUsed=false unless explicitly allowed",
+    "producerClaimConflict=false",
+    "firstValidFrameWithinBudget=true when a budget exists",
+    "interactionAckWithinBudget=true when a budget exists",
+    "missing budget produces UNKNOWN rather than PASS or FAIL"
+  ],
+  "appliesToCandidateTrial": [
+    "engineering machinery workbench",
+    "vehicle/truck workbench",
+    "all browser-delivered 3D Mothers after validation"
+  ],
+  "activationRequirement": "Historical replay plus one affected Mother trial and independent verifier receipt.",
+  "productionMotherModified": false
+}
