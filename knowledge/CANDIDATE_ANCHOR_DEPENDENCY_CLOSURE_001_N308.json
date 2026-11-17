@@ -1,0 +1,158 @@
+{
+  "candidateId": "CANDIDATE_ANCHOR_DEPENDENCY_CLOSURE_001_N308",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "Can a component anchor remain valid when its payload bytes are unchanged but a semantic dependency changes?",
+  "observedAt": "2026-11-17T23:47:59+08:00",
+  "baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+    "r2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "previousCandidates": [
+      "CANDIDATE_COMPONENT_SCOPED_GOLDEN_BASELINE_001_N305",
+      "CANDIDATE_UNIVERSAL_ANCHOR_ENVELOPE_001_N306"
+    ]
+  },
+  "realNeed": {
+    "existingCoverage": "R2 keeps a whole-commit Golden Baseline. N305 tested component payload identity while siblings advance. N306 tested a domain-neutral envelope and explicitly left dependency enumeration to versioned workbench adapters.",
+    "gap": "A component payload digest can stay identical even when a material profile, topology contract, solver configuration, source measurement, or canonicalization adapter that gives the component its meaning changes. N306 says implicit dependencies must not absorb unrelated workbench state but does not yet define or replay a bounded dependency closure.",
+    "relationToN290": "N290-N294 checked whether an archive contains the files needed to replay one mirror gate. N308 addresses a different layer: semantic identity of an anchored component when declared inputs change, including explicit exclusion of unrelated workbench state.",
+    "regressionDecision": "No new regression case. This is candidate evidence for an unresolved protocol gap, not a newly observed user correction. Existing MOTHER-NO-METHOD-INVENTION-001 and TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE remain applicable."
+  },
+  "teacher": {
+    "name": "Bazel Remote Execution API — Action and Merkle input tree",
+    "exactQuestionAnswered": "What must participate in reusable action identity so unchanged output or component bytes are not mistaken for unchanged meaning when inputs, command, or execution contract changes?",
+    "whatItKnowsBeyondCurrentBestView": "The API makes an Action identity depend on a Command digest and an input-root digest; the input root recursively covers directories and content blobs, while command fields carry arguments, environment, outputs, platform, and related execution semantics. KAOPU N305/N306 currently identify component payloads and adapter versions but have not tested a declared, bounded dependency-root digest.",
+    "sources": [
+      {
+        "url": "https://github.com/bazelbuild/remote-apis/blob/main/build/bazel/remote/execution/v2/remote_execution.proto",
+        "blob": "67615206f8386fd412bae02e5b2abe75a87160cc",
+        "fact": "Action contains command_digest and input_root_digest; the input root and every referenced subdirectory and content blob must be present in content-addressable storage."
+      },
+      {
+        "url": "https://github.com/bazelbuild/remote-apis",
+        "commit": "e0c0554bfc8a37abf336c3e78070684367738e1d",
+        "observedAt": "2026-11-17T23:47:59+08:00",
+        "fact": "Official repository is public, unarchived, and remained active on 2026-11-10."
+      },
+      {
+        "url": "https://github.com/bazelbuild/remote-apis/releases/tag/v2.12.0",
+        "publishedAt": "2026-02-12T19:57:42Z",
+        "fact": "Latest published release observed during the audition was v2.12.0."
+      },
+      {
+        "url": "https://github.com/bazelbuild/remote-apis/blob/main/build/bazel/remote/execution/v2/sha256tree_test_vectors.txt",
+        "blob": "d04831795b3e9983e4302eb8ddee13f1f11f1810",
+        "fact": "The repository publishes deterministic digest test vectors."
+      },
+      {
+        "url": "https://github.com/bazelbuild/remote-apis/blob/main/.github/workflows/main.yml",
+        "blob": "41db7be3cfa64214830646949c692c8aa21f32f5",
+        "fact": "CI checks generated code freshness through the repository pre-commit hook."
+      }
+    ],
+    "screening": {
+      "sourceProvenance": "Official bazelbuild/remote-apis repository and protocol source.",
+      "maintenanceReleaseIssueActivity": "Public, not archived; five observed commits include four on 2026-11-10 and one on 2026-10-20; latest release observed was v2.12.0 on 2026-02-12.",
+      "runnableCodeTestsData": "Public protobuf definitions, Bazel build files, CI, pre-commit generation checks, and digest test vectors are present.",
+      "licenseAndAssetRights": "Apache-2.0. This audition transfers a method principle and does not copy third-party assets.",
+      "directRelevance": "Directly relevant to identity of a component plus the inputs and execution contract that determine its meaning.",
+      "noveltyRelativeToCurrentBestView": "Adds a tested dependency-root identity and explicit unrelated-input exclusion beyond N305 payload scope and N306 envelope scope.",
+      "dependencyHardwareCostDataIntegrationRisk": "A local canonical manifest plus SHA-256 is inexpensive; complete semantic dependency declaration is domain work, large binary graphs add storage cost, and runtime/device dependencies may need separate observations.",
+      "demoOpacityClosedVersionRisk": "Not demo-only or closed; protocol, code generation, build files, tests, history, releases, and license are inspectable."
+    }
+  },
+  "candidateMethod": {
+    "name": "KaoPuGram Declared Anchor Dependency Closure",
+    "analogyBoundary": "Use Bazel's identity principle, not its build-system ontology. KAOPU does not claim that a build input tree automatically knows visual, physical, or scientific semantics.",
+    "adapterOwns": [
+      "which inputs materially determine the anchored component's semantics",
+      "domain-specific canonicalization",
+      "dependency roles and versioned inclusion rules",
+      "which workbench state is explicitly unrelated and excluded"
+    ],
+    "universalCoreOwns": [
+      "content descriptors for every declared input",
+      "stable ordering and closure-root hashing",
+      "adapter identity, version, and canonicalization-contract digest",
+      "observed-input receipt",
+      "fail-closed state semantics"
+    ],
+    "requiredFields": [
+      "anchorId",
+      "componentId",
+      "componentDescriptor",
+      "declaredInputs[].inputId",
+      "declaredInputs[].role",
+      "declaredInputs[].mediaType",
+      "declaredInputs[].digest",
+      "declaredInputs[].size",
+      "adapter.id",
+      "adapter.version",
+      "adapter.canonicalizationContractDigest",
+      "environmentConstraints",
+      "excludedInputIds",
+      "closureRootDigest",
+      "observedInputReceipt",
+      "verifierIdentity"
+    ],
+    "stateSemantics": {
+      "DEPENDENCY_CLOSURE_VERIFIED": "Component payload, declared inputs, adapter contract, and closure root match; explicitly excluded unrelated state may advance.",
+      "HOLD_DEPENDENCY_DIGEST_CHANGED": "Component payload is unchanged but at least one declared semantic dependency changed.",
+      "HOLD_UNDECLARED_DEPENDENCY": "A fresh replay observed an input not present in the declared closure or explicit exclusions.",
+      "HOLD_ADAPTER_VERSION_CHANGED": "Adapter identity, version, or canonicalization contract differs from the anchor.",
+      "HOLD_DEPENDENCY_CLOSURE_INCOMPLETE": "Required dependency identity, role, digest, or environment constraint is missing or ambiguous.",
+      "DEPENDENCY_RELEVANCE_UNKNOWN": "The workbench cannot yet justify whether an input is semantic, runtime-only, or unrelated; do not guess."
+    },
+    "producerVerifierBoundary": "A Producer may propose the dependency manifest. An independent verifier recomputes descriptors and closure root and compares observed accesses, but cannot self-certify that the semantic dependency list is complete."
+  },
+  "minimalReplay": {
+    "probe": "knowledge/PROBES/n308_anchor_dependency_closure_probe.mjs",
+    "receipt": "knowledge/PROBES/anchor_dependency_closure_n308.json",
+    "result": "PASS",
+    "findings": [
+      "Changing only unrelated Weather workbench state kept the Garment anchor valid.",
+      "Changing the heavy-coat material profile kept the component payload digest identical but changed the closure root and returned HOLD_DEPENDENCY_DIGEST_CHANGED.",
+      "An observed undeclared runtime material override returned HOLD_UNDECLARED_DEPENDENCY.",
+      "Changing the canonicalization adapter returned HOLD_ADAPTER_VERSION_CHANGED."
+    ]
+  },
+  "boundaries": [
+    "A declared closure proves identity of declared inputs, not completeness of the semantic model.",
+    "Automatic file tracing may observe runtime reads but cannot decide which inputs define domain meaning; the adapter and affected Mother must justify inclusion or exclusion.",
+    "Dynamic network fetches, secrets, device/browser state, nondeterministic solvers, system libraries, generated artifacts, symlinks, LFS payloads, and optional inputs require explicit policy or separate receipts.",
+    "Do not freeze the whole workbench graph. Only dependencies justified for the bounded component enter the closure; unrelated state must be named and excluded.",
+    "A closure digest does not prove visual fidelity, physical correctness, user freezing, adoption, or user acceptance.",
+    "No production service or global gate may adopt this Candidate before one affected Mother performs a historical replay or single-Mother trial."
+  ],
+  "decision": {
+    "teacherStatus": "TEACHER_CANDIDATE",
+    "scope": "Candidate-only; one Garment or other dependency-rich Mother trial before any common KaoPuGram service or OS change.",
+    "globalAdoption": false,
+    "productionMotherModified": false,
+    "rollbackPoint": "Retain R2 whole-commit Golden Baseline plus N305/N306 Candidates without dependency closure if the trial cannot distinguish semantic inputs from unrelated state without excessive false invalidation."
+  },
+  "routing": {
+    "issue": 91,
+    "posted": false,
+    "commentId": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "metrics": {
+    "firstCandidatePassRate": "UNKNOWN",
+    "userCorrectionCount": "UNKNOWN",
+    "sameErrorRecurrenceRate": "UNKNOWN",
+    "rejectedLineageInheritanceCount": "UNKNOWN",
+    "staleDeliveryCount": "UNKNOWN",
+    "acceptedDeltaInternalIterations": "UNKNOWN",
+    "instructionToLegalCandidateTime": "UNKNOWN"
+  }
+}
