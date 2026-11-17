@@ -1,0 +1,133 @@
+{
+  "candidateId": "CANDIDATE_COMPONENT_SCOPED_GOLDEN_BASELINE_001_N305",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "How can an accepted component remain identity-locked while unfinished sibling components continue to advance in later whole-repository snapshots?",
+  "baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+    "r2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5"
+  },
+  "realFailure": {
+    "observation": "A current production correction reported that an older version was opened and edited instead of the designated current version; separately, the user questioned whether whole-version anchoring can accurately preserve already-satisfactory parts.",
+    "existingCoverage": "R2 Golden Baseline plus TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE already prohibit stale or wrong-parent delivery.",
+    "gap": "The current whole-commit anchor cannot express that component A is accepted and protected while component B remains intentionally open for iteration.",
+    "regressionDecision": "Do not create a duplicate stale-delivery regression. Reuse TERRAIN_NO_STALE_DELIVERY_001 for wrong-target lineage and add this component-scope replay as candidate evidence only."
+  },
+  "teacher": {
+    "name": "Git object data model",
+    "exactQuestionAnswered": "Git represents a commit as a snapshot rooted in a tree; tree entries identify child blobs or subtrees, so a component can be identity-checked independently of the whole snapshot.",
+    "whatItKnowsBeyondCurrentBestView": "KAOPU already pins an accepted whole-repository commit. Git's blob/tree/commit separation supplies the missing transferable mechanism for a normalized, path-scoped accepted-component manifest that can remain constant while an unrelated subtree advances.",
+    "sources": [
+      {
+        "url": "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects",
+        "fact": "Tree entries associate filenames with blob or subtree object IDs; commit objects point to a top-level tree snapshot."
+      },
+      {
+        "url": "https://git-scm.com/docs/gitdatamodel",
+        "fact": "Git objects are immutable and have object IDs; blobs, trees, and commits have distinct roles."
+      },
+      {
+        "url": "https://git-scm.com/docs/hash-function-transition",
+        "fact": "Git documents SHA-1 and SHA-256 object naming and SHA-256 repository format transition."
+      },
+      {
+        "url": "https://github.com/git/git",
+        "commit": "e1ec09b23c8e0deb21a0b95ac5996422277395d4",
+        "observedAt": "2026-11-17T11:45:00+08:00",
+        "fact": "Official publish-only mirror remained active with a commit on 2026-11-16T18:20:40Z."
+      }
+    ],
+    "screening": {
+      "sourceProvenance": "Official git-scm.com documentation and git/git publish-only mirror.",
+      "maintenanceActivity": "Active: official mirror commit e1ec09b23c8e0deb21a0b95ac5996422277395d4 dated 2026-11-16T18:20:40Z.",
+      "runnableCodeTestsData": "Source is runnable; git/git t/README documents the core test suite and TAP execution.",
+      "licenseAndRights": "Git source is GPL-2.0-only unless explicitly stated otherwise; this audition transfers a method, not source code or assets.",
+      "directRelevance": "Directly addresses accepted-component identity inside a changing parent snapshot.",
+      "novelty": "Adds component-scoped content identity; does not duplicate the existing whole-commit Golden Baseline.",
+      "dependencyCostRisk": "Manifest hashing is cheap and can use existing repository paths; operational cost is path normalization and explicit component ownership.",
+      "demoOnlyOrOpaqueRisk": "Not demo-only; public implementation, tests, data model, and license are inspectable."
+    }
+  },
+  "candidateMethod": {
+    "name": "Component-Scoped Golden Baseline Manifest",
+    "role": "Complement the whole-commit Golden Baseline; never replace it.",
+    "requiredFields": [
+      "componentId",
+      "protectedPaths",
+      "componentDigestAlgorithm",
+      "componentDigest",
+      "parentWholeCommit",
+      "acceptanceScope",
+      "acceptanceEvidence",
+      "acceptedBy",
+      "acceptedAt",
+      "reopenAuthorization",
+      "allowedSiblingPaths"
+    ],
+    "gateSemantics": {
+      "COMPONENT_BASELINE_CONFIRMED": "Protected component digest matches; unrelated allowed sibling paths may advance.",
+      "HOLD_PROTECTED_COMPONENT_CHANGED": "Protected component digest changed without explicit reopen authorization.",
+      "HOLD_COMPONENT_IDENTITY_UNKNOWN": "Required path, digest, or acceptance evidence is missing or ambiguous.",
+      "REOPENED_BY_USER_OR_COORDINATOR": "The accepted component was explicitly reopened with a new Task Anchor and reason."
+    },
+    "routingFields": {
+      "taskAnchor": [
+        "parentWholeCommit",
+        "protectedComponentManifest",
+        "allowedSiblingPaths",
+        "reopenAuthorization"
+      ],
+      "deliveryReceipt": [
+        "observedWholeCommit",
+        "observedComponentDigest",
+        "componentGateStatus",
+        "verifierIdentity"
+      ],
+      "verifierGate": "Producer may not self-authorize a protected-component digest change."
+    }
+  },
+  "minimalReplay": {
+    "probe": "PROBES/n305_component_scoped_baseline_probe.mjs",
+    "receipt": "PROBES/component_scoped_golden_baseline_n305.json",
+    "result": "PASS",
+    "finding": "Both candidates advance the whole snapshot. The component manifest passes the candidate that changes only the unfinished sibling and holds the candidate that also changes the accepted component."
+  },
+  "boundaries": [
+    "A digest proves identity, not visual or semantic quality.",
+    "Use an explicit SHA-256 payload digest in the manifest; do not treat a legacy Git SHA-1 object ID as a standalone security guarantee.",
+    "Git LFS pointer identity is not the same as the referenced payload identity; hash the payload separately.",
+    "Submodule commit pins, generated outputs, runtime/browser state, device captures, and nondeterministic builds require separate artifact receipts.",
+    "Normalize paths, symlinks, renames, case sensitivity, and file modes before computing a component scope.",
+    "A component may be reopened only through explicit user/coordinator authorization; no silent scope widening."
+  ],
+  "decision": {
+    "scope": "Candidate-only; one-Mother historical replay before any OS or global gate change.",
+    "globalAdoption": false,
+    "productionMotherModified": false,
+    "rollbackPoint": "Keep R2 whole-commit Golden Baseline as sole Current Best View if the component manifest does not reduce protected-part regressions without blocking legitimate sibling iteration."
+  },
+  "routing": {
+    "issue": 91,
+    "posted": false,
+    "commentId": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "metrics": {
+    "firstCandidatePassRate": "UNKNOWN",
+    "userCorrectionCount": "UNKNOWN",
+    "sameErrorRecurrenceRate": "UNKNOWN",
+    "rejectedLineageInheritanceCount": "UNKNOWN",
+    "staleDeliveryCount": "UNKNOWN",
+    "acceptedDeltaInternalIterations": "UNKNOWN",
+    "instructionToLegalCandidateTime": "UNKNOWN"
+  }
+}
