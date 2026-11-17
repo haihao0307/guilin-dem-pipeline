@@ -1,0 +1,193 @@
+{
+  "candidateId": "CANDIDATE_UNIVERSAL_ANCHOR_ENVELOPE_001_N306",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "What is the smallest domain-neutral KaoPuGram envelope that every workbench can emit without letting the universal core guess domain-specific anchor scope or semantics?",
+  "baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+    "r2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+    "previousCandidate": "CANDIDATE_COMPONENT_SCOPED_GOLDEN_BASELINE_001_N305"
+  },
+  "realNeed": {
+    "observation": "The user wants one GitHub-hosted KaoPuGram system callable from every workbench when instructed to anchor the current satisfactory part.",
+    "existingCoverage": "R2 pins whole accepted baselines; N305 demonstrated component-scoped digests inside one candidate model.",
+    "gap": "N305 does not define a domain-neutral transport envelope, adapter boundary, ambiguity behavior, or cross-workbench verification contract.",
+    "regressionDecision": "No new regression case. This is a requested protocol design and audition, not a newly evidenced production failure. Existing stale-delivery and no-method-invention cases remain applicable."
+  },
+  "teacher": {
+    "name": "Open Container Initiative Image Specification — Content Descriptor and Manifest graph",
+    "exactQuestionAnswered": "OCI separates a small interoperable descriptor envelope (mediaType, digest, size, optional artifactType) from the referenced artifact's domain-specific bytes, and manifests link independently typed descriptors in a content-addressed DAG.",
+    "whatItKnowsBeyondCurrentBestView": "KAOPU has exact whole-commit identity and an N305 component-manifest Candidate, but no tested cross-domain envelope whose core can verify bytes while remaining ignorant of terrain, garment, hair, animal, or building semantics.",
+    "sources": [
+      {
+        "url": "https://github.com/opencontainers/image-spec/blob/main/descriptor.md",
+        "blob": "56c76d6e4cd9f266f99c670ff29ccc6a4c313494",
+        "fact": "OCI descriptors require mediaType, digest, and size and optionally carry artifactType and annotations."
+      },
+      {
+        "url": "https://github.com/opencontainers/image-spec/blob/main/manifest.md",
+        "blob": "7a0ef73406543b15c1253d7f0c961b89158dea79",
+        "fact": "OCI manifests link descriptors and can associate an artifact with a subject."
+      },
+      {
+        "url": "https://github.com/opencontainers/image-spec/blob/main/schema/descriptor_test.go",
+        "blob": "94f9f8d4c347c8239773b5e084981a9732fd6c20",
+        "fact": "The repository includes executable positive and negative descriptor-schema tests."
+      },
+      {
+        "url": "https://github.com/opencontainers/image-spec/commit/4feed4a6674e59d301b9294f187ac46acb2de99f",
+        "observedAt": "2026-11-17T15:45:00+08:00",
+        "fact": "The official repository remained active with a 2026-10-22 commit."
+      },
+      {
+        "url": "https://github.com/opencontainers/image-spec/releases/tag/v1.1.1",
+        "publishedAt": "2025-03-03T15:33:34Z",
+        "fact": "Latest published release observed during the audition was v1.1.1."
+      }
+    ],
+    "screening": {
+      "sourceProvenance": "Official opencontainers/image-spec repository and OCI specification site.",
+      "maintenanceActivity": "Repository is not archived; latest observed main commit was 2026-10-22 and latest release was v1.1.1 on 2025-03-03.",
+      "runnableCodeTestsData": "Public Go types, JSON schemas, and executable positive/negative schema tests are present.",
+      "licenseAndRights": "Apache-2.0; this Candidate transfers a descriptor design principle and does not copy container assets.",
+      "directRelevance": "Directly addresses one interoperable envelope for heterogeneous workbench artifacts.",
+      "novelty": "Adds the universal-core-versus-domain-adapter boundary, explicit type/digest/size descriptors, and unknown-domain behavior beyond N305.",
+      "dependencyHardwareCostRisk": "The Candidate needs only canonical serialization and hashing; it does not require containers, a registry, GPU hardware, or OCI runtime integration.",
+      "demoOnlyOpaqueVersionRisk": "Not demo-only or closed: specification, schemas, reference Go types, tests, release artifacts, license, and history are public."
+    }
+  },
+  "candidateMethod": {
+    "name": "KaoPuGram Universal Anchor Envelope",
+    "universalCoreOwns": [
+      "schema version",
+      "artifactType",
+      "subject descriptor",
+      "component descriptors with mediaType, digest, and size",
+      "included and excluded component IDs",
+      "instruction digest",
+      "adapter identity and version",
+      "parent whole commit",
+      "receipt truth states",
+      "independent byte-level verification"
+    ],
+    "workbenchAdapterOwns": [
+      "component discovery",
+      "active-selection resolution",
+      "domain canonicalization",
+      "semantic role",
+      "domain-specific validation",
+      "dependency enumeration",
+      "forbidden scope expansion"
+    ],
+    "universalCoreMustNotOwn": [
+      "guessing what current means",
+      "inventing component boundaries",
+      "declaring visual or physical correctness from a digest",
+      "turning capture into user acceptance",
+      "silently accepting an unknown or stale adapter"
+    ],
+    "requiredEnvelopeFields": [
+      "schema",
+      "artifactType",
+      "subject.mediaType",
+      "subject.digest",
+      "subject.size",
+      "components[].mediaType",
+      "components[].digest",
+      "components[].size",
+      "components[].componentId",
+      "scope.includedComponentIds",
+      "scope.excludedComponentIds",
+      "scope.selectionSource",
+      "scope.instructionDigest",
+      "adapter.id",
+      "adapter.version",
+      "parentWholeCommit",
+      "truth.captured",
+      "truth.independentlyVerified",
+      "truth.frozenByUser",
+      "truth.userAccepted"
+    ],
+    "stateSemantics": {
+      "ANCHOR_CAPTURED_CANDIDATE": "Bytes and explicit scope were captured; this is not independent verification, freezing, adoption, or user acceptance.",
+      "HOLD_ANCHOR_SCOPE_UNRESOLVED": "No explicit component IDs or valid current workbench selection can resolve the request.",
+      "HOLD_ADAPTER_UNKNOWN": "The envelope type is known but no approved adapter can validate its domain semantics.",
+      "HOLD_CONTEXT_STALE": "The adapter resolved against a different parent commit or workbench context than the Task Anchor.",
+      "ANCHOR_DESCRIPTOR_VERIFIED": "An independent verifier recomputed digest and size for every referenced payload.",
+      "HOLD_DESCRIPTOR_MISMATCH": "At least one payload differs from its descriptor.",
+      "REOPENED_BY_USER_OR_COORDINATOR": "A previously frozen component is explicitly reopened under a new Task Anchor."
+    },
+    "taskAnchorFields": [
+      "anchorInstruction",
+      "instructionDigest",
+      "workbenchId",
+      "parentWholeCommit",
+      "explicitComponentIds or activeSelectionReceipt",
+      "approvedAdapterId",
+      "approvedAdapterVersion",
+      "allowedExcludedComponents"
+    ],
+    "deliveryReceiptFields": [
+      "envelopeDigest",
+      "componentDescriptors",
+      "observedParentWholeCommit",
+      "adapterReceipt",
+      "verifierIdentity",
+      "verifierStatus",
+      "frozenByUser",
+      "userAccepted"
+    ],
+    "producerVerifierBoundary": "The Producer may emit an ANCHOR_CAPTURED_CANDIDATE but cannot set independentlyVerified, frozenByUser, or userAccepted."
+  },
+  "minimalReplay": {
+    "probe": "knowledge/PROBES/n306_universal_anchor_envelope_probe.mjs",
+    "receipt": "knowledge/PROBES/universal_anchor_envelope_n306.json",
+    "result": "PASS",
+    "findings": [
+      "One envelope schema carried a terrain tile and a garment pattern piece.",
+      "Each adapter preserved different artifactType, mediaType, semantic role, payload, and excluded components.",
+      "An empty active selection was held instead of guessed.",
+      "Independent descriptor recomputation passed valid bytes and held tampered bytes.",
+      "Capture truth did not claim independent verification, user freezing, or user acceptance."
+    ]
+  },
+  "boundaries": [
+    "OCI is a methodology teacher only; KaoPuGram does not need container images, OCI registries, or OCI runtime semantics.",
+    "A digest and byte size prove payload identity, not visual quality, physics correctness, production readiness, or user satisfaction.",
+    "Workbench active selection is acceptable only when bound to the same parent commit and recorded in the Task Anchor; otherwise explicit component IDs are required.",
+    "Canonicalization rules must be versioned per adapter or equivalent semantic state may hash differently.",
+    "Unknown media types may pass universal syntactic storage but cannot pass domain verification without an approved adapter.",
+    "Large binary, LFS, runtime, browser, device, and generated artifacts require payload-level descriptors rather than pointer-file hashes.",
+    "An anchor graph must not absorb unrelated workbench state through implicit dependencies."
+  ],
+  "decision": {
+    "scope": "Candidate-only; historical terrain plus one Garment Mother trial before any common service or OS change.",
+    "globalAdoption": false,
+    "productionMotherModified": false,
+    "rollbackPoint": "Retain R2 whole-commit Golden Baseline and N305 component manifest Candidate without a universal service if adapters cannot resolve scope deterministically."
+  },
+  "routing": {
+    "issue": 91,
+    "posted": false,
+    "commentId": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "metrics": {
+    "firstCandidatePassRate": "UNKNOWN",
+    "userCorrectionCount": "UNKNOWN",
+    "sameErrorRecurrenceRate": "UNKNOWN",
+    "rejectedLineageInheritanceCount": "UNKNOWN",
+    "staleDeliveryCount": "UNKNOWN",
+    "acceptedDeltaInternalIterations": "UNKNOWN",
+    "instructionToLegalCandidateTime": "UNKNOWN"
+  }
+}
