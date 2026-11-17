@@ -1,0 +1,33 @@
+{
+  "probe": "N305_COMPONENT_SCOPED_GOLDEN_BASELINE",
+  "algorithm": "sha256",
+  "baselineHead": "eb67f28b5f2fd8cea2a17338e5efe29f012a95f569f34ba5bab65859cc1ce499",
+  "protectedPaths": [
+    "cab/console.json"
+  ],
+  "cases": [
+    {
+      "id": "unfinished-only",
+      "headChanged": true,
+      "protected": {
+        "expected": "71dd4023f8229ce558bcc686506ddd9a4396d366c6837eccea612431db87e7ca",
+        "observed": "71dd4023f8229ce558bcc686506ddd9a4396d366c6837eccea612431db87e7ca",
+        "status": "COMPONENT_BASELINE_CONFIRMED"
+      }
+    },
+    {
+      "id": "protected-and-unfinished",
+      "headChanged": true,
+      "protected": {
+        "expected": "71dd4023f8229ce558bcc686506ddd9a4396d366c6837eccea612431db87e7ca",
+        "observed": "7fff657c20ec149c4ce16dfe60315e0d3ede871ea409dc2dc035ccc01e59e96a",
+        "status": "HOLD_PROTECTED_COMPONENT_CHANGED"
+      }
+    }
+  ],
+  "assertions": {
+    "bothCandidatesAdvanceWholeSnapshot": true,
+    "unfinishedOnlyPreservesAcceptedComponent": true,
+    "protectedChangeIsHeld": true
+  }
+}
