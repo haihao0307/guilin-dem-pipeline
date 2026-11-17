@@ -57,4 +57,4 @@ The corrected context roots differed:
 
 Learning branch status: `HOLD_GATE_FAIL`, Candidate regression `CANDIDATE_INACTIVE`, `GATE-RUN=true`.
 
-Routing before post: `POSTED=false`, `ACKNOWLEDGED=false`, production `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI values remain `UNKNOWN`.
+Routing: targeted `POSTED=true` to #91 as comment `6964373040`; `ACKNOWLEDGED=false`, production `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI values remain `UNKNOWN`.
