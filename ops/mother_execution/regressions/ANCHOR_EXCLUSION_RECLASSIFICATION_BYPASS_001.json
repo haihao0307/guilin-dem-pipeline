@@ -1,0 +1,73 @@
+{
+  "regressionId": "ANCHOR_EXCLUSION_RECLASSIFICATION_BYPASS_001",
+  "status": "CANDIDATE_INACTIVE",
+  "discoveredAt": "2026-11-18T02:30:00+08:00",
+  "sourceCandidate": "CANDIDATE_ANCHOR_DEPENDENCY_CLOSURE_001_N308",
+  "sourceBranch": "automation/n308-anchor-dependency-closure-20261117",
+  "sourceProbeBlob": "c61f20595c50abfc5dc76f7cd4d58566f839b940",
+  "taskAnchor": {
+    "taskId": "N309-KAOPUGRAM-EXCLUSION-INTEGRITY",
+    "targetObject": "KaoPuGram declared dependency closure verifier",
+    "targetDefect": "excluded input identities are outside closureRootDigest and verifier comparison, allowing an observed undeclared input to be reclassified as excluded after the run",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "protocolCandidates": [
+        "CANDIDATE_UNIVERSAL_ANCHOR_ENVELOPE_001_N306",
+        "CANDIDATE_ANCHOR_DEPENDENCY_CLOSURE_001_N308"
+      ]
+    },
+    "userLastConstraint": "Universal knowledge transfer must stay effective across workbenches without letting a common core invent domain semantics or self-approve.",
+    "referenceSet": [
+      "R2 Production OS",
+      "REFERENCE_REPLICATION_NO_CREATIVE_SUBSTITUTE_GATE",
+      "TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE",
+      "N306 universal envelope",
+      "N308 dependency closure"
+    ],
+    "unknowns": [
+      "Which real Mother first needs a dependency-rich anchor adapter",
+      "Whether an existing production Task Anchor preauthorizes exclusions",
+      "Complete domain-specific semantic dependency set"
+    ],
+    "forbiddenRoutes": [
+      "post-run producer reclassification of observed inputs as excluded",
+      "unhashed or unsigned exclusion changes",
+      "core inference of semantic irrelevance",
+      "producer self-approval"
+    ],
+    "freshHeadDelta": "Candidate regression, probe, receipt, and learning log only; no production Mother or main change.",
+    "applicableRegressionCases": [
+      "CROSS_MOTHER_METHOD_TRANSFER_REQUIRES_RECEIVER_RECEIPT_001",
+      "MOTHER-NO-METHOD-INVENTION-001",
+      "TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE"
+    ],
+    "gates": {
+      "contract": "FAIL_CURRENT_CANDIDATE",
+      "freshness": "PASS_N309_FRESH_RUN",
+      "referenceFidelity": "PASS_BOUNDED_PROTOCOL_AUDIT",
+      "machine": "PASS_PROBE",
+      "browser": "NOT_APPLICABLE_NONVISUAL"
+    },
+    "currentStatus": "HOLD_GATE_FAIL"
+  },
+  "trigger": "An observed input that was undeclared during replay is added to excludedInputIds without a new authorized adapter contract or Task Anchor.",
+  "expected": "The exclusion policy is bound into the closure root or adapter contract; after-run additions return HOLD_UNAUTHORIZED_EXCLUSION or equivalent and require a new anchor plus independent verification.",
+  "observed": "N308 vulnerable replay returned DEPENDENCY_CLOSURE_VERIFIED while baseline and bypass closureRootDigest were identical.",
+  "rootCause": "excludedInputIds are returned as receipt metadata but omitted from the hashed closure object; verify() neither compares nor authorizes the exclusion set.",
+  "minimumVerification": [
+    "unchanged preauthorized exclusion passes",
+    "after-run exclusion addition is killed",
+    "declared semantic dependency change is killed",
+    "exclusion policy change alters closure identity",
+    "fresh receipt binds exact probe bytes and commit"
+  ],
+  "owner": "Small-Mother coordination owns the common contract; each affected Mother owns and justifies its adapter exclusion policy.",
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "CANDIDATE_PROBE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
