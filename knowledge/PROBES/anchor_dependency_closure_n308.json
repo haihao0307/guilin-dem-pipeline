@@ -1,0 +1,38 @@
+{
+  "probe": "n308_anchor_dependency_closure_probe",
+  "boundedQuestion": "Can a component anchor remain valid when component bytes are unchanged but a semantic dependency changes?",
+  "baseline": {
+    "componentDigest": "sha256:225ff695f6ceeed998de8f24f4055845ffe4f9c05727f27ee06776b105e4bee1",
+    "closureRootDigest": "sha256:0f3abb521505a2f13568d411b580aad15e02d8cb077495a01ebdbd2c1d91e4c7",
+    "declaredInputs": [
+      {
+        "id": "material-profile/heavy-coat",
+        "role": "simulation-input",
+        "digest": "sha256:da5f69ba49c89969bd8efdf248cd5a1aabb48fe6c510db9a339887013fe98286"
+      },
+      {
+        "id": "seam-contract/coat-v3",
+        "role": "geometry-input",
+        "digest": "sha256:7e02ae7fe6d0ae75c65d39e754814a03782d91e14054dc44c6d82ec0acb7d681"
+      }
+    ],
+    "excludedInputIds": ["workbench/weather"],
+    "undeclaredObservedInputIds": [],
+    "adapter": {
+      "id": "garment-anchor-adapter",
+      "version": "1.0.0",
+      "digest": "sha256:7e4f8e04acdc093c9473cbf83b321d6c08da5fc572a83155d76b9b571b9b96c5"
+    }
+  },
+  "cases": {
+    "unrelatedWorkbenchStateChanged": {"status": "DEPENDENCY_CLOSURE_VERIFIED"},
+    "declaredSemanticDependencyChanged": {"status": "HOLD_DEPENDENCY_DIGEST_CHANGED"},
+    "undeclaredRuntimeInputObserved": {"status": "HOLD_UNDECLARED_DEPENDENCY", "detail": ["runtime-fetch/material-override"]},
+    "canonicalizationAdapterChanged": {"status": "HOLD_ADAPTER_VERSION_CHANGED"}
+  },
+  "falsifier": {
+    "componentOnlyDigestStayedEqualAcrossDependencyChange": true,
+    "dependencyClosureDigestChanged": true
+  },
+  "boundary": "This probe checks declared closure identity. It cannot discover all semantic dependencies automatically or prove visual/physical correctness."
+}
