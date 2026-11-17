@@ -1,0 +1,48 @@
+{
+  "probe": "N306_UNIVERSAL_ANCHOR_ENVELOPE",
+  "cases": {
+    "terrain": {
+      "status": "ANCHOR_CAPTURED_CANDIDATE",
+      "schema": "kaopu.gram-anchor-envelope/0.1-candidate",
+      "artifactType": "application/vnd.kaopu.terrain-anchor.v1+json",
+      "componentId": "tile:yangtang-core-03",
+      "componentMediaType": "application/vnd.kaopu.terrain-tile.v1+json",
+      "componentDigest": "sha256:81b9c96f491cbd5a7953b1ac4069b2f2ea23c8b66c9a10d18a814094ec5ee4d3",
+      "componentSize": 109,
+      "excludedComponentIds": ["runtime:weather"],
+      "selectionSource": "workbench-active-selection"
+    },
+    "garment": {
+      "status": "ANCHOR_CAPTURED_CANDIDATE",
+      "schema": "kaopu.gram-anchor-envelope/0.1-candidate",
+      "artifactType": "application/vnd.kaopu.garment-anchor.v1+json",
+      "componentId": "pattern:front-shell",
+      "componentMediaType": "application/vnd.kaopu.garment-pattern.v1+json",
+      "componentDigest": "sha256:5fb6067a6b6b658a44af0be0795fdcc416d693b986a82d5f8e322a5ead2b9f96",
+      "componentSize": 91,
+      "excludedComponentIds": ["collider:body"],
+      "selectionSource": "workbench-active-selection"
+    },
+    "ambiguous": {
+      "status": "HOLD_ANCHOR_SCOPE_UNRESOLVED"
+    },
+    "verification": {
+      "validPayload": "ANCHOR_DESCRIPTOR_VERIFIED",
+      "tamperedPayload": "HOLD_DESCRIPTOR_MISMATCH"
+    }
+  },
+  "truth": {
+    "captured": true,
+    "independentlyVerified": false,
+    "frozenByUser": false,
+    "userAccepted": false
+  },
+  "assertions": {
+    "sameEnvelopeSchemaAcrossDomains": true,
+    "domainSemanticsRemainAdapterSpecific": true,
+    "ambiguousScopeHeld": true,
+    "independentDescriptorVerificationPasses": true,
+    "tamperIsHeld": true,
+    "captureDoesNotClaimAcceptance": true
+  }
+}
