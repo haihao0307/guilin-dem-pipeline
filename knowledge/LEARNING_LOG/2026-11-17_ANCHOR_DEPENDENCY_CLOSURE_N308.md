@@ -62,4 +62,4 @@ The workbench adapter owns semantic dependency classification. The universal cor
 
 Learning branch: `GATE-RUN`.
 
-Routing: pending targeted `POSTED` to #91. `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI values remain `UNKNOWN`.
+Routing: targeted `POSTED` to #91 as comment `6953107314`. `ACKNOWLEDGED=false`, `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI values remain `UNKNOWN`.
