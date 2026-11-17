@@ -1,0 +1,36 @@
+{
+  "probe": "n311_execution_context_integrity_probe",
+  "subject": "N308/N309 KaoPuGram dependency-closure Candidates",
+  "boundedQuestion": "Can an anchor remain verified when a declared execution-context constraint changes outside the closure digest?",
+  "vulnerableReplay": {
+    "baselineClosureRootDigest": "sha256:80c5fa5723cdde675d965e3d3ecff402133c531edcb188d8ff5f16b7dc178f22",
+    "changedContextClosureRootDigest": "sha256:80c5fa5723cdde675d965e3d3ecff402133c531edcb188d8ff5f16b7dc178f22",
+    "status": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    },
+    "defect": "environmentConstraints are required by N308 prose but omitted from the executable closure root and verifier"
+  },
+  "correctedPrototype": {
+    "changedIdentityContext": {
+      "status": "HOLD_EXECUTION_CONTEXT_CHANGED"
+    },
+    "changedObservationOnlyReceiptMetadata": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    },
+    "missingRequiredContext": {
+      "status": "HOLD_EXECUTION_CONTEXT_INCOMPLETE",
+      "detail": [
+        "timezone"
+      ]
+    },
+    "baselineContextRootDigest": "sha256:a80cf9acbbf069565ea8dde22e56e5361ff83c8886384ccdc7d697b563a0ad44",
+    "changedContextRootDigest": "sha256:47c8d8ec529db76b62fb947613b1393a2ed17a3ac8cb88072ecd2e6a5f119f19"
+  },
+  "teacherDecision": {
+    "source": "Bazel Remote Execution API command environment and platform identity",
+    "status": "NO_NOVELTY",
+    "reason": "N308 already recorded this external principle; N311 exposes a local transfer-to-gate failure rather than new teacher knowledge."
+  },
+  "decision": "HOLD_GATE_FAIL",
+  "boundary": "Candidate regression only. The profile must remain bounded and versioned; network inputs, secrets, physical-device acceptance, and semantic relevance need separate policy or receipts."
+}
