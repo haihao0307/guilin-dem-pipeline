@@ -1,0 +1,101 @@
+{
+  "regressionId": "ANCHOR_EXECUTION_CONTEXT_DRIFT_BYPASS_001",
+  "status": "CANDIDATE_INACTIVE",
+  "discoveredAt": "2026-11-18T07:42:39+08:00",
+  "sourceCandidates": [
+    "CANDIDATE_ANCHOR_DEPENDENCY_CLOSURE_001_N308",
+    "ANCHOR_EXCLUSION_RECLASSIFICATION_BYPASS_001"
+  ],
+  "taskAnchor": {
+    "taskId": "N311-KAOPUGRAM-EXECUTION-CONTEXT-INTEGRITY",
+    "targetObject": "KaoPuGram declared dependency-closure verifier",
+    "targetDefect": "N308 requires environmentConstraints in prose, but N308 and N309 omit execution context from the executable closure root and verifier comparison",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "protocolCandidates": [
+        "CANDIDATE_ANCHOR_DEPENDENCY_CLOSURE_001_N308",
+        "ANCHOR_EXCLUSION_RECLASSIFICATION_BYPASS_001",
+        "CANDIDATE_EXCLUSION_POLICY_REVISION_MIGRATION_001_N310"
+      ]
+    },
+    "userLastConstraint": "Learning must become executable Task Anchor, Delivery Receipt, Regression Case, verifier gate, audit rule, automatic check, or explicit state semantics rather than remaining in notes.",
+    "unknowns": [
+      "Which execution-context fields are semantically material for each real Mother",
+      "Whether one current production anchor already records exact runtime, browser, renderer, locale, timezone, and toolchain identity",
+      "Which physical-device capabilities belong in anchor identity versus a separate acceptance receipt"
+    ],
+    "forbiddenRoutes": [
+      "declaring environmentConstraints without hashing or comparing resolved values",
+      "treating mutable latest browser, toolchain, or renderer settings as equivalent to the anchored context",
+      "freezing the entire host machine instead of a bounded versioned context profile",
+      "producer self-approval of context relevance or completeness"
+    ],
+    "currentStatus": "HOLD_GATE_FAIL"
+  },
+  "trigger": "Component bytes, declared inputs, exclusion policy, and adapter remain identical while a declared identity-bearing execution-context value changes.",
+  "expected": "A versioned execution-context profile selects bounded identity fields; resolved values and profile digest participate in closure identity; missing or changed fields fail closed; observation-only receipt metadata may change without invalidating the anchor.",
+  "observed": "Removing the Chromium SwiftShader launch argument left the vulnerable closureRootDigest unchanged and returned DEPENDENCY_CLOSURE_VERIFIED.",
+  "rootCause": "N308 lists environmentConstraints as required but its executable makeAnchor() never accepts or hashes them; N309's corrected closure repeats the omission.",
+  "minimumVerification": [
+    "unchanged identity-bearing execution context passes",
+    "changed runtime, locale, timezone, browser revision or ordered launch arguments is killed when selected by the profile",
+    "missing required context field returns HOLD_EXECUTION_CONTEXT_INCOMPLETE",
+    "observation-only run ID or timestamp can change without invalidating identity",
+    "profile identity and version are themselves bound into the closure",
+    "fresh receipt binds exact probe bytes and commit"
+  ],
+  "candidateCorrection": {
+    "profileFields": [
+      "executionContextProfile.id",
+      "executionContextProfile.version",
+      "executionContextProfile.identityPaths",
+      "executionContextProfile.observationOnlyPaths",
+      "executionContextProfile.digest"
+    ],
+    "receiptFields": [
+      "resolvedExecutionContext.identity",
+      "resolvedExecutionContext.identityDigest",
+      "missingExecutionContextPaths",
+      "observedAt",
+      "verifierIdentity"
+    ],
+    "stateSemantics": {
+      "HOLD_EXECUTION_CONTEXT_CHANGED": "At least one profile-selected identity value differs from the anchored context.",
+      "HOLD_EXECUTION_CONTEXT_INCOMPLETE": "At least one profile-required context value is missing or unobservable.",
+      "HOLD_EXECUTION_CONTEXT_PROFILE_CHANGED": "The selector or canonicalization profile differs from the anchored profile.",
+      "DEPENDENCY_CLOSURE_VERIFIED": "Component, declared dependencies, exclusions, adapter, and bounded execution context all match."
+    }
+  },
+  "deduplication": {
+    "N307": "N307 records the renderer route and phase timing actually observed during a browser run; N311 binds a declared context profile into reusable anchor identity.",
+    "N308": "N308 names environmentConstraints but does not execute or verify them.",
+    "N309": "N309 protects exclusion-set integrity but does not protect execution-context integrity.",
+    "N310": "N310 migrates exclusion-policy revisions and explicitly leaves hidden dependencies as a separate risk."
+  },
+  "teacherDecision": {
+    "source": "Bazel Remote Execution API command environment and platform identity",
+    "status": "NO_NOVELTY",
+    "reason": "The relevant external fact was already captured in N308. This regression is evidence that KAOPU failed to transfer that fact into executable gate logic."
+  },
+  "boundaries": [
+    "The context profile must be domain- and task-bounded; do not hash every host fact.",
+    "Array ordering is preserved because command and browser flag order can be meaningful.",
+    "Network responses remain declared dependencies, not generic environment fields.",
+    "Secret values must not be written into receipts; only approved non-secret descriptors or digests may be used.",
+    "Physical-device and user acceptance remain separate evidence layers.",
+    "This does not prove visual, physical, or scientific correctness."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "CANDIDATE_PROBE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "routing": {
+    "issue": 91,
+    "commentId": null,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  }
+}
