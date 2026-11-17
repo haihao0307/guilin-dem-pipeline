@@ -1,0 +1,150 @@
+{
+  "candidateId": "CANDIDATE_BROWSER_OBSERVED_RUNTIME_ROUTE_RECEIPT_001_N307",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "Can a browser-observed Delivery Receipt prove the actual renderer route and attribute startup latency, instead of accepting source declarations or a boolean browserPassed?",
+  "baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+    "r2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "publicWebDeliveryGateBlob": "bc0fb41b7c61914478ef1a6fa8d2beb77489de2b",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5"
+  },
+  "realFailure": {
+    "observation": "The user reported visibly slow engineering-machinery and truck workbenches and suspected that some content was not actually following the required WebGL2 and KAOPU route.",
+    "existingCoverage": "PUBLIC_WEB_DELIVERY_GATE requires public HTTP, a real browser start, visible 3D, no fatal errors, and one interaction. MOTHER-NO-METHOD-INVENTION prohibits unauthorized replacement routes.",
+    "gap": "The current receipt is boolean at browserPassed and does not require observed canvas context identity, fallback state, first-valid-frame timing, interaction acknowledgement timing, or resource attribution.",
+    "regressionDecision": "Create one deduplicated Candidate regression case. Do not activate it globally until a historical replay and one affected Mother trial pass."
+  },
+  "teacher": {
+    "name": "W3C Performance Timeline and Resource Timing with Web Platform Tests",
+    "exactQuestionAnswered": "The W3C Performance Timeline defines structured browser-generated entries with name, entryType, startTime, and duration; Resource Timing adds initiator type, transfer size, body sizes, status, and render-blocking information for loaded resources.",
+    "whatItKnowsBeyondCurrentBestView": "KAOPU records browserPassed and interaction evidence but does not yet preserve browser-native phase entries that separate navigation, resource loading, first valid frame, and interaction acknowledgement, nor correlate them with an independently observed WebGL context.",
+    "corroboratingRouteStandard": "Khronos WebGL 2.0 defines the WebGL2 canvas rendering context; it is used only to state the renderer contract, not as a performance teacher.",
+    "sources": [
+      {
+        "url": "https://www.w3.org/TR/performance-timeline/",
+        "fact": "PerformanceEntry exposes name, entryType, startTime, and duration, and PerformanceObserver retrieves entries."
+      },
+      {
+        "url": "https://www.w3.org/TR/resource-timing/",
+        "fact": "PerformanceResourceTiming exposes resource initiator and transfer/timing attributes."
+      },
+      {
+        "url": "https://registry.khronos.org/webgl/specs/latest/2.0/",
+        "fact": "WebGL 2.0 is a distinct canvas rendering context derived from OpenGL ES 3.0."
+      },
+      {
+        "url": "https://github.com/w3c/performance-timeline/commit/65cbbebc44784c9c1ba7e5fe9497e92424c01080",
+        "observedAt": "2026-11-17T19:52:00+08:00",
+        "fact": "The official specification repository was active on 2026-11-02."
+      },
+      {
+        "url": "https://github.com/web-platform-tests/wpt/tree/master/performance-timeline",
+        "commit": "537ded8d2f4407075b098569b7c6a4901a51826a",
+        "observedAt": "2026-11-17T19:52:00+08:00",
+        "fact": "The canonical WPT repository contains runnable performance-timeline and resource-timing browser tests and was active on 2026-11-17."
+      }
+    ],
+    "screening": {
+      "sourceProvenance": "Official W3C specifications, W3C repository, Khronos WebGL registry, and canonical Web Platform Tests repository.",
+      "maintenanceActivity": "Performance Timeline editor's draft dated 2026-11-02; official repo commit on 2026-11-02; WPT observed active on 2026-11-17.",
+      "runnableCodeTestsData": "WPT includes runnable cross-browser performance-timeline and resource-timing test suites.",
+      "licenseAndRights": "W3C spec repository uses the W3C Software and Document License; WPT uses the 3-Clause BSD License.",
+      "directRelevance": "Directly measures the user's reported slow startup and supplies independent evidence for resource bottlenecks.",
+      "novelty": "Adds browser-native route/timing evidence rather than another HTTP or browser-start check.",
+      "dependencyHardwareCostRisk": "Uses standard browser APIs and a verifier harness; cross-origin timing detail may require Timing-Allow-Origin. Device/browser profile still affects results.",
+      "demoOnlyOpaqueVersionRisk": "Not demo-only or closed: normative drafts, public issue history, canonical tests, and licenses are available."
+    }
+  },
+  "candidateMethod": {
+    "name": "Browser-Observed Runtime Route and Phase Receipt",
+    "taskAnchorFields": [
+      "targetUrl",
+      "subjectCommitOrContentDigest",
+      "requiredRenderer",
+      "requiredContextConstructor",
+      "allowedFallbacks",
+      "deviceClass",
+      "browserProfile",
+      "maxFirstValidFrameMs or UNKNOWN",
+      "maxInteractionAckMs or UNKNOWN",
+      "requiredInteraction"
+    ],
+    "deliveryReceiptFields": [
+      "observedRenderer",
+      "observedContextConstructor",
+      "contextVersion",
+      "fallbackUsed",
+      "contextAcquisitionMethod",
+      "navigationTiming",
+      "resourceTiming[]",
+      "firstValidFrameMs",
+      "interactionAckMs",
+      "largestDurationResource",
+      "largestTransferResource",
+      "producerSelfReport",
+      "selfReportObservationConflict",
+      "verifierIdentity",
+      "verifierStatus"
+    ],
+    "verifierRule": "An independent browser verifier owns observed renderer, timings, and final gate status. Producer self-report is comparison evidence only.",
+    "stateSemantics": {
+      "RUNTIME_ROUTE_AND_BUDGET_VERIFIED": "Observed renderer matches the Task Anchor, no forbidden fallback occurred, and declared budgets passed.",
+      "HOLD_RUNTIME_ROUTE_MISMATCH": "Observed context or fallback policy differs from the Task Anchor even if the page is fast and interactive.",
+      "HOLD_SELF_REPORT_OBSERVATION_CONFLICT": "Producer-declared renderer conflicts with the independently observed context.",
+      "HOLD_FIRST_VALID_FRAME_BUDGET_EXCEEDED": "Correct route, but the first valid frame exceeded an explicit Task Anchor budget.",
+      "HOLD_INTERACTION_ACK_BUDGET_EXCEEDED": "Required interaction acknowledgement exceeded an explicit Task Anchor budget.",
+      "RUNTIME_ROUTE_VERIFIED_LATENCY_BUDGET_UNKNOWN": "Renderer route verified, but no authorized latency threshold exists; record measurements without inventing pass/fail."
+    }
+  },
+  "minimalReplay": {
+    "probe": "knowledge/PROBES/n307_browser_observed_runtime_receipt_probe.mjs",
+    "receipt": "knowledge/PROBES/browser_observed_runtime_route_receipt_n307.json",
+    "result": "PASS",
+    "findings": [
+      "A correct WebGL2 route within an explicit probe budget passed.",
+      "A faster WebGL1 fallback was held despite successful rendering.",
+      "A false WebGL2 self-report could not override independent observation.",
+      "A correct but slow WebGL2 route was held against the explicit probe budget and attributed to one large resource.",
+      "With no declared budget, the same slow measurement became UNKNOWN rather than an invented failure."
+    ]
+  },
+  "boundaries": [
+    "The probe is a historical synthetic replay, not evidence that the current excavator or truck page has already been inspected.",
+    "Performance entries reveal timing, not visual fidelity, physical correctness, internal algorithm quality, or user acceptance.",
+    "Cross-origin resource details may be reduced without Timing-Allow-Origin; absence of detail must be reported as UNKNOWN.",
+    "GPU vendor strings can be masked for privacy; do not require a specific vendor or model unless the Task Anchor explicitly does so.",
+    "SwiftShader or another software renderer is not automatically a failure unless the Task Anchor forbids it.",
+    "Context loss, OffscreenCanvas, workers, WebGPU, and multi-canvas pages need route-specific adapters.",
+    "Budgets must be bound to a device/browser/profile and authorized in the Task Anchor; no global millisecond KPI is inferred."
+  ],
+  "decision": {
+    "scope": "Candidate regression plus one affected engineering-machinery Mother trial.",
+    "globalAdoption": false,
+    "productionMotherModified": false,
+    "rollbackPoint": "Keep PUBLIC_WEB_DELIVERY_GATE v1.2.0 unchanged if the receipt cannot independently distinguish renderer route or produces unstable measurements across repeated identical profiles."
+  },
+  "routing": {
+    "issue": 91,
+    "posted": false,
+    "commentId": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "metrics": {
+    "firstCandidatePassRate": "UNKNOWN",
+    "userCorrectionCount": "UNKNOWN",
+    "sameErrorRecurrenceRate": "UNKNOWN",
+    "rejectedLineageInheritanceCount": "UNKNOWN",
+    "staleDeliveryCount": "UNKNOWN",
+    "acceptedDeltaInternalIterations": "UNKNOWN",
+    "instructionToLegalCandidateTime": "UNKNOWN"
+  }
+}
