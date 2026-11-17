@@ -1,0 +1,57 @@
+{
+  "probe": "n310_exclusion_policy_migration_probe",
+  "boundedQuestion": "How can an adapter exclusion-policy upgrade avoid silent permission inheritance without forcing unrelated anchors to migrate?",
+  "controls": {
+    "oldPolicyRevision": "garment-exclusions/v1",
+    "oldPolicyDigest": "sha256:58bd6ffff5abce04d0086eedcec7b8aa83e0b0771864c9ee573404fa2931b994",
+    "legacyAnchorReceiptRemainsBoundToOldRevision": true
+  },
+  "cases": {
+    "sameScopeVersionWithAffectedReplay": {
+      "status": "POLICY_REVISION_ACTIVATED",
+      "activeRevision": "garment-exclusions/v2",
+      "activePolicyDigest": "sha256:65b9d45264e84a6947c848d2d32e06343b13c75c9c27c10ec2de749b38e592a1",
+      "impactedAnchorIds": ["garment/front-shell-v7"],
+      "unaffectedAnchorIds": ["terrain/tile-42"],
+      "diff": {
+        "changedRoots": [],
+        "changedRuleIds": ["workbench/weather"],
+        "scopeChanged": false
+      }
+    },
+    "scopeExpansionDisguisedAsPatch": {
+      "status": "HOLD_POLICY_SCOPE_CHANGE_REQUIRES_SNAPSHOT",
+      "activeRevision": "garment-exclusions/v1",
+      "impactedAnchorIds": ["garment/front-shell-v7"],
+      "diff": {
+        "changedRoots": ["runtime/material-override"],
+        "changedRuleIds": ["runtime/material-override"],
+        "scopeChanged": true
+      }
+    },
+    "scopeExpansionSnapshotWithoutReplay": {
+      "status": "HOLD_POLICY_MIGRATION_UNREPLAYED",
+      "activeRevision": "garment-exclusions/v1",
+      "impactedAnchorIds": ["garment/front-shell-v7"],
+      "missingReplayAnchorIds": ["garment/front-shell-v7"],
+      "diff": {
+        "changedRoots": ["runtime/material-override"],
+        "changedRuleIds": ["runtime/material-override"],
+        "scopeChanged": true
+      }
+    },
+    "failedReplayKeepsLastSuccessfulRevision": {
+      "status": "HOLD_POLICY_ACTIVATION_FAILED",
+      "activeRevision": "garment-exclusions/v1",
+      "impactedAnchorIds": ["garment/front-shell-v7"],
+      "failedReplayAnchorIds": ["garment/front-shell-v7"],
+      "diff": {
+        "changedRoots": ["runtime/material-override"],
+        "changedRuleIds": ["runtime/material-override"],
+        "scopeChanged": true
+      }
+    }
+  },
+  "finding": "Only anchors intersecting changed policy rules require replay; unrelated anchors remain pinned to their original immutable policy revision. Scope expansion cannot be a patch.",
+  "boundary": "Candidate protocol replay only. It does not authorize any exclusion, migrate a production anchor, or implement OPA in KAOPU."
+}
