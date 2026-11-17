@@ -1,0 +1,184 @@
+{
+  "candidateId": "CANDIDATE_EXCLUSION_POLICY_REVISION_MIGRATION_001_N310",
+  "status": "TEACHER_CANDIDATE",
+  "lifecycle": "AUDITION",
+  "boundedQuestion": "How can an adapter exclusion-policy upgrade avoid silent permission inheritance without forcing unrelated anchors to migrate?",
+  "observedAt": "2026-11-18T03:41:02+08:00",
+  "baseline": {
+    "repository": "haihao0307/guilin-dem-pipeline",
+    "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+    "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+    "r2Blob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+    "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+    "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+    "trigger": {
+      "candidateRegression": "ANCHOR_EXCLUSION_RECLASSIFICATION_BYPASS_001",
+      "sourceBranch": "automation/n309-anchor-exclusion-integrity-20261118",
+      "sourceCommentId": 6957279681,
+      "sourceState": "HOLD_GATE_FAIL"
+    }
+  },
+  "realFailure": {
+    "observation": "N309 proved that N308 omitted exclusions from closure identity, allowing a Producer to reclassify an observed undeclared input as unrelated after the run.",
+    "n309Correction": "N309 hashes preauthorized exclusion rules and rejects after-run additions, but leaves adapter policy migration unresolved.",
+    "gap": "Without immutable policy revisions, activation receipts, and affected-anchor replay, an adapter upgrade can silently reinterpret an old anchor under new exclusion authority or force an unnecessarily global workbench re-anchor.",
+    "regressionDecision": "Refine the existing inactive N309 regression. Do not create another regression case."
+  },
+  "teacher": {
+    "name": "Open Policy Agent policy bundles, scoped roots, activation status, and decision-log revision binding",
+    "exactQuestionAnswered": "How can a new policy revision be scoped, validated, activated, rolled back, and bound to each decision without overwriting unrelated policy state?",
+    "whatItKnowsBeyondCurrentBestView": "N309 binds exclusion rules into one closure digest but does not define revision migration. OPA adds explicit bundle revisions and owned roots, forbids delta updates from changing roots, activates a new signed/validated bundle only after verification, retains the previous active revision on activation failure, and records the bundle revision used for each decision.",
+    "sources": [
+      {
+        "url": "https://www.openpolicyagent.org/docs/management-bundles",
+        "observedAt": "2026-11-18T03:41:02+08:00",
+        "facts": [
+          "Bundle manifests can declare revision and roots.",
+          "Scoped roots limit which policy/data namespace a bundle owns.",
+          "A delta bundle must keep the original roots and cannot change scope.",
+          "Verification or activation failure keeps the existing bundle active."
+        ]
+      },
+      {
+        "url": "https://www.openpolicyagent.org/docs/management-decision-logs",
+        "repositoryBlob": "c3116a39dac51448519ab7f6c9004a538492db69",
+        "fact": "Decision-log events record the revision of each policy bundle used at evaluation time."
+      },
+      {
+        "url": "https://www.openpolicyagent.org/docs/management-status",
+        "repositoryBlob": "9e3d60e2453241130381b064d6923e0d02d28dc6",
+        "fact": "Status reports active_revision as the last successful activation."
+      },
+      {
+        "url": "https://github.com/open-policy-agent/opa/blob/main/v1/bundle/manifest.schema.json",
+        "blob": "560aacffdab5836de9cb7e87f444ddfa35e6b1b9",
+        "fact": "The public schema requires revision and defines roots."
+      },
+      {
+        "url": "https://github.com/open-policy-agent/opa/blob/main/v1/plugins/bundle/plugin_test.go",
+        "blob": "1d3e34139d45942ef62e7992c10dc246e228a23f",
+        "fact": "The repository contains executable bundle activation and status tests."
+      },
+      {
+        "url": "https://github.com/open-policy-agent/opa/commit/43bb521cde8a4cb3621fc34ed49f01c014edbbf4",
+        "observedAt": "2026-11-18T03:41:02+08:00",
+        "fact": "The official repository was active on 2026-11-17."
+      },
+      {
+        "url": "https://github.com/open-policy-agent/opa/releases/tag/v1.22.4",
+        "publishedAt": "2026-11-12T10:35:24Z",
+        "fact": "Latest observed release was v1.22.4."
+      }
+    ],
+    "screening": {
+      "sourceProvenance": "Official openpolicyagent.org documentation and open-policy-agent/opa repository.",
+      "maintenanceReleaseIssueActivity": "Public and unarchived; multiple commits were observed on 2026-11-17 and release v1.22.4 was published on 2026-11-12.",
+      "runnableCodeTestsData": "Open-source Go implementation, CLI, bundle schemas, signed-bundle test data, activation tests, decision-log tests, and end-to-end tests are present.",
+      "licenseAndAssetRights": "Apache-2.0, LICENSE blob 8f71f43fee3f78649d238238cbde51e6d7055c82. This audition transfers a protocol principle, not third-party assets.",
+      "directRelevance": "Directly answers revisioned exclusion-policy activation, scope control, decision-to-policy binding, and last-known-good rollback.",
+      "noveltyRelativeToCurrentBestView": "Adds immutable policy revisions, scope-preserving patches, exact decision revision, affected-anchor replay, atomic activation, and rollback beyond N309's single closure hash.",
+      "dependencyHardwareCostDataIntegrationRisk": "Full OPA integration is unnecessary and would add a Go policy runtime, Rego, bundle distribution, and signing operations. The Candidate uses only a small JSON receipt and hashes; large anchor registries make impact-set computation and replay cost nontrivial.",
+      "demoOpacityClosedVersionRisk": "Not demo-only, opaque, or closed; implementation, schemas, tests, documentation, releases, license, and history are public."
+    }
+  },
+  "candidateMethod": {
+    "name": "Revision-Pinned Exclusion Policy Migration",
+    "analogyBoundary": "OPA is a method teacher. KAOPU does not adopt Rego, the OPA runtime, its network service, or its policy ontology.",
+    "policyBundleFields": [
+      "policyRevision",
+      "policyDigest",
+      "ownedInputRoots",
+      "exclusionRules[].inputId",
+      "exclusionRules[].role",
+      "exclusionRules[].reason",
+      "authorizedBy",
+      "createdAt"
+    ],
+    "anchorBindingFields": [
+      "anchorId",
+      "policyRevision",
+      "policyDigest",
+      "knownInputIds",
+      "decisionReceiptId"
+    ],
+    "migrationReceiptFields": [
+      "fromPolicyRevision",
+      "fromPolicyDigest",
+      "toPolicyRevision",
+      "toPolicyDigest",
+      "migrationMode",
+      "changedRoots",
+      "changedRuleIds",
+      "impactedAnchorIds",
+      "unaffectedAnchorIds",
+      "replayReceipts",
+      "independentVerifier",
+      "activationStatus",
+      "rollbackPolicyRevision"
+    ],
+    "rules": [
+      "An existing anchor is always interpreted under the exact policy revision and digest recorded when its decision was made.",
+      "A PATCH migration may not add, remove, or widen owned input roots.",
+      "Any scope change requires a new SNAPSHOT-style policy identity plus explicit coordinator authorization.",
+      "Only anchors whose known inputs intersect changed policy rules are replayed; unrelated anchors remain pinned to their original immutable policy revision.",
+      "The new policy becomes active only after all impacted-anchor replay receipts pass and bind the exact target revision and digest.",
+      "Activation failure retains the last successful revision; no fallback is reported as a successful migration.",
+      "Producer cannot approve impact-set completeness, replay results, or activation."
+    ],
+    "stateSemantics": {
+      "POLICY_MIGRATION_CANDIDATE": "A new immutable policy revision and diff exist, but it is not active.",
+      "HOLD_POLICY_SCOPE_CHANGE_REQUIRES_SNAPSHOT": "A patch attempts to change exclusion authority roots.",
+      "HOLD_POLICY_MIGRATION_UNREPLAYED": "At least one impacted anchor lacks a replay bound to the target policy revision.",
+      "HOLD_POLICY_ACTIVATION_FAILED": "Authorization, validation, or replay failed; the last successful revision remains active.",
+      "POLICY_REVISION_ACTIVATED": "All impacted anchors passed independent replay under the exact new policy revision.",
+      "LEGACY_ANCHOR_PINNED": "An unaffected or not-yet-migrated anchor remains valid only under its recorded legacy policy revision."
+    }
+  },
+  "minimalReplay": {
+    "probe": "knowledge/PROBES/n310_exclusion_policy_migration_probe.mjs",
+    "receipt": "knowledge/PROBES/exclusion_policy_migration_n310.json",
+    "result": "PASS",
+    "findings": [
+      "A same-scope policy revision activated only after replaying the affected Garment anchor.",
+      "The unrelated Terrain anchor required no replay and remained pinned to its original policy revision.",
+      "Adding runtime/material-override to policy roots while claiming PATCH returned HOLD_POLICY_SCOPE_CHANGE_REQUIRES_SNAPSHOT.",
+      "A scope-changing snapshot without replay returned HOLD_POLICY_MIGRATION_UNREPLAYED.",
+      "A failed replay returned HOLD_POLICY_ACTIVATION_FAILED and kept garment-exclusions/v1 active."
+    ]
+  },
+  "boundaries": [
+    "Impact-set computation is only as complete as each anchor's recorded known inputs; hidden dependencies remain a separate N308/N309 risk.",
+    "Policy revision identity does not prove that an exclusion is semantically correct or user-authorized.",
+    "Mixed legacy revisions require immutable retrieval of historical policy bundles; deleting an old bundle makes its anchors unverifiable.",
+    "A scope-preserving policy text change can still alter meaning and therefore requires replay of intersecting anchors.",
+    "Large registries may need indexed input-to-anchor traceability; this Candidate does not prescribe a database or service architecture.",
+    "No production adapter, anchor registry, Mother, R2 rule, or public KaoPuGram service changes before a single-Mother trial."
+  ],
+  "decision": {
+    "teacherStatus": "TEACHER_CANDIDATE",
+    "scope": "Candidate-only; one dependency-rich Mother trial after N309 is corrected, with old policy bundle retained as rollback.",
+    "globalAdoption": false,
+    "productionMotherModified": false,
+    "rollbackPoint": "Keep N309 in HOLD_GATE_FAIL and retain every anchor on its recorded policy revision if impact selection or activation replay is incomplete."
+  },
+  "routing": {
+    "issue": 91,
+    "posted": false,
+    "commentId": null,
+    "acknowledged": false,
+    "implemented": false,
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "metrics": {
+    "firstCandidatePassRate": "UNKNOWN",
+    "userCorrectionCount": "UNKNOWN",
+    "sameErrorRecurrenceRate": "UNKNOWN",
+    "rejectedLineageInheritanceCount": "UNKNOWN",
+    "staleDeliveryCount": "UNKNOWN",
+    "acceptedDeltaInternalIterations": "UNKNOWN",
+    "instructionToLegalCandidateTime": "UNKNOWN"
+  }
+}
