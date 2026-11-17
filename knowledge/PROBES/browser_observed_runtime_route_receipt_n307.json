@@ -1,0 +1,51 @@
+{
+  "probe": "N307_BROWSER_OBSERVED_RUNTIME_ROUTE_RECEIPT",
+  "contract": {
+    "requiredRenderer": "webgl2",
+    "requiredConstructor": "WebGL2RenderingContext",
+    "maxFirstValidFrameMs": 2000,
+    "maxInteractionAckMs": 250,
+    "note": "Probe-only explicit budgets; production budgets must come from the Task Anchor."
+  },
+  "results": {
+    "compliant": {
+      "observedRenderer": "webgl2",
+      "firstValidFrameMs": 920,
+      "status": "RUNTIME_ROUTE_AND_BUDGET_VERIFIED"
+    },
+    "wrongFastFallback": {
+      "observedRenderer": "webgl",
+      "firstValidFrameMs": 700,
+      "status": "HOLD_RUNTIME_ROUTE_MISMATCH"
+    },
+    "falseSelfReport": {
+      "claimedRenderer": "webgl2",
+      "observedRenderer": "webgl",
+      "status": "HOLD_SELF_REPORT_OBSERVATION_CONFLICT"
+    },
+    "slowCorrectRoute": {
+      "observedRenderer": "webgl2",
+      "firstValidFrameMs": 4600,
+      "largestResource": {
+        "name": "legacy-large.bin",
+        "initiatorType": "fetch",
+        "duration": 3650,
+        "transferSize": 9100000
+      },
+      "status": "HOLD_FIRST_VALID_FRAME_BUDGET_EXCEEDED"
+    },
+    "noDeclaredBudget": {
+      "observedRenderer": "webgl2",
+      "firstValidFrameMs": 4600,
+      "status": "RUNTIME_ROUTE_VERIFIED_LATENCY_BUDGET_UNKNOWN"
+    }
+  },
+  "assertions": {
+    "compliantPasses": true,
+    "fastWrongRouteStillHeld": true,
+    "producerClaimCannotOverrideObservation": true,
+    "correctButSlowHeldAgainstDeclaredBudget": true,
+    "noInventedThreshold": true,
+    "slowResourceIsAttributed": true
+  }
+}
