@@ -1,0 +1,66 @@
+name: KaoPuGram T07 Guilin DEM
+
+on:
+  push:
+    branches: [integration/kaopugram-t07]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: kaopugram-t07
+    env:
+      KAOPUGRAM_REF: '3b359161e2645fb8083e122be182603f4b773436'
+    steps:
+      - name: Load pinned KaoPuGram
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: haihao0307/KaoPuGram
+          ref: ${{ env.KAOPUGRAM_REF }}
+          path: kaopugram
+          ssh-key: ${{ secrets.KAOPUGRAM_T07_READ_KEY }}
+          persist-credentials: false
+
+      - name: Load pinned domain input and verifier
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 'ad7b81175df8bc9c54cf40effe1029f86696ba76'
+          path: domain
+          lfs: false
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+
+      - name: Verify shared core on Linux
+        working-directory: kaopugram
+        run: npm test
+
+      - name: Install domain measurement dependencies
+        shell: bash
+        run: |
+          python3 -m venv "$RUNNER_TEMP/kaopugram-python"
+          "$RUNNER_TEMP/kaopugram-python/bin/python" -m pip install --disable-pip-version-check numpy==2.4.2 
+          echo "$RUNNER_TEMP/kaopugram-python/bin" >> "$GITHUB_PATH"
+
+      - name: Run domain adapter
+        shell: bash
+        run: |
+          python kaopugram/automation/run-t07.py \
+            --adapter 'guilin-dem' --core-ref "$KAOPUGRAM_REF" \
+            --source "$GITHUB_WORKSPACE/domain" --scratch "$RUNNER_TEMP/kaopugram-trial" \
+            --receipt "$GITHUB_WORKSPACE/proof/receipt.json"
+
+      - name: Save domain receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kaopugram-guilin-dem-receipt
+          path: proof/receipt.json
+          if-no-files-found: error
+          retention-days: 30
