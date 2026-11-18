@@ -1,0 +1,45 @@
+{
+  "probe": "n314_verifier_freshness_probe",
+  "probeSha256": "070aa3d2f11f9f05d8872a995f1b7fbd0a99216b70d2450f980fd789a86a0c4f",
+  "boundedQuestion": "Can a previously valid authorized verifier attestation be replayed after a later dispatch when the content subject is unchanged?",
+  "vulnerableReplay": {
+    "sameSubjectDigest": "sha256:3a491033c2026f4c5a7b4789197fee567b19dc9e63cceb4d969d6baf37169a3c",
+    "oldVerificationRequestId": "vrq:20261118-1540-a",
+    "currentVerificationRequestId": "vrq:20261118-1940-b",
+    "n313Status": "DEPENDENCY_CLOSURE_VERIFIED",
+    "defect": "N313 authenticates authority, subject, predicate type, and context but does not bind the signed observation to the current dispatch or a freshness window."
+  },
+  "freshnessBoundPrototype": {
+    "oldSignedAttestationOnNewDispatch": {
+      "status": "HOLD_VERIFIER_CHALLENGE_MISMATCH"
+    },
+    "oldDispatchSequence": {
+      "status": "HOLD_VERIFIER_DISPATCH_SEQUENCE_ROLLBACK"
+    },
+    "observationBeforeDispatch": {
+      "status": "HOLD_STALE_VERIFIER_ATTESTATION"
+    },
+    "observationPastMaxAge": {
+      "status": "HOLD_STALE_VERIFIER_ATTESTATION"
+    },
+    "futureObservationTime": {
+      "status": "HOLD_VERIFIER_TIME_INVALID"
+    },
+    "freshCurrentChallenge": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED",
+      "acceptedDispatchSequence": 314,
+      "verificationRequestId": "vrq:20261118-1940-b"
+    },
+    "rolledBackDispatchAnchor": {
+      "status": "HOLD_VERIFIER_DISPATCH_SEQUENCE_ROLLBACK"
+    }
+  },
+  "teacherDecision": {
+    "source": "The Update Framework rollback/freeze protections",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "TEACHER_CANDIDATE",
+    "novelty": "A valid authorized signature can still be obsolete. TUF requires monotonic trusted versions, expiry checks against a fixed trusted time, and persisted client state to detect rollback and freeze attacks."
+  },
+  "decision": "HOLD_GATE_FAIL",
+  "boundary": "Synthetic protocol replay only. Trusted clock, persistent sequence state, challenge generation, and one real Mother observer remain unverified."
+}
