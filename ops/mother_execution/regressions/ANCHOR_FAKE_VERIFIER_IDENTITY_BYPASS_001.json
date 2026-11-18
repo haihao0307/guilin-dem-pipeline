@@ -1,0 +1,126 @@
+{
+  "regressionId": "ANCHOR_FAKE_VERIFIER_IDENTITY_BYPASS_001",
+  "status": "CANDIDATE_INACTIVE",
+  "discoveredAt": "2026-11-18T15:47:39+08:00",
+  "sourceCandidate": "ANCHOR_EXECUTION_CONTEXT_SELF_ATTESTATION_BYPASS_001",
+  "taskAnchor": {
+    "taskId": "N313-KAOPUGRAM-VERIFIER-AUTHORITY",
+    "targetObject": "N312 observer-bound execution-context Candidate",
+    "targetDefect": "N312 treats any observerIdentity string unequal to producerIdentity as independent without an authorization policy or cryptographic proof",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+      "r2OsBlob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+      "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+      "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021"
+    },
+    "userLastConstraint": "Producer cannot approve itself; real source, browser, device, production, and user-acceptance evidence layers must remain distinct.",
+    "unknowns": [
+      "Which coordinator owns the real verifier authority policy",
+      "How production verifier keys are issued, protected, rotated, and revoked",
+      "Whether any Mother can provide a truly independent observer rather than a second Producer-controlled process",
+      "Whether threshold greater than one is justified for any specific gate"
+    ],
+    "forbiddenRoutes": [
+      "identity label accepted as authority",
+      "unlisted verifier key accepted",
+      "Producer key accepted for verifier role",
+      "signature verified without exact subject and predicate binding",
+      "signature treated as proof that the underlying observation is true"
+    ],
+    "currentStatus": "HOLD_GATE_FAIL"
+  },
+  "trigger": "Producer chooses a different observerIdentity string, supplies fabricated evidence whose digest matches its own record, and claims the anchored context.",
+  "expected": "A verifier observation is accepted only when its typed statement is bound to the exact subject and predicate, its signature is valid, and the signing key is authorized for the verifier role by the anchored authority policy.",
+  "observed": "N312 returned DEPENDENCY_CLOSURE_VERIFIED for a fabricated observation because it compared identity strings but had no authorized-functionary or signature check.",
+  "rootCause": "N312 conflates declared identity with authenticated and authorized authority.",
+  "minimumVerification": [
+    "unsigned observation returns HOLD_VERIFIER_ATTESTATION_MISSING",
+    "valid signature by an unlisted key returns HOLD_UNAUTHORIZED_VERIFIER",
+    "fake signature relabeled with an authorized keyId returns HOLD_VERIFIER_SIGNATURE_INVALID",
+    "Producer-signed observation returns HOLD_PRODUCER_SELF_ATTESTATION",
+    "authorized signature over another subject returns HOLD_CONTEXT_OBSERVATION_SUBJECT_MISMATCH",
+    "signed payload modified after signing returns HOLD_VERIFIER_SIGNATURE_INVALID",
+    "authorized exact subject/predicate statement passes",
+    "authority-policy digest mismatch returns HOLD_VERIFIER_AUTHORITY_POLICY_CHANGED"
+  ],
+  "candidateCorrection": {
+    "authorityPolicyFields": [
+      "policyId",
+      "version",
+      "threshold",
+      "authorizedFunctionaries[].identity",
+      "authorizedFunctionaries[].keyId",
+      "authorizedFunctionaries[].publicKey",
+      "authorizedFunctionaries[].roles",
+      "authorizedFunctionaries[].allowedPredicateTypes"
+    ],
+    "attestationFields": [
+      "payloadType",
+      "payload._type",
+      "payload.subject[].digest",
+      "payload.predicateType",
+      "payload.predicate.anchorId",
+      "payload.predicate.observedContextDigest",
+      "payload.predicate.observationMethod",
+      "payload.predicate.rawEvidenceDigest",
+      "signatures[].keyId",
+      "signatures[].sig"
+    ],
+    "stateSemantics": {
+      "HOLD_VERIFIER_ATTESTATION_MISSING": "No signed verifier attestation is present.",
+      "HOLD_UNAUTHORIZED_VERIFIER": "Signature key is not listed in the anchored authority policy.",
+      "HOLD_VERIFIER_SIGNATURE_INVALID": "The signature does not authenticate the exact typed payload.",
+      "HOLD_PRODUCER_SELF_ATTESTATION": "Producer key attempted to satisfy the verifier role.",
+      "HOLD_CONTEXT_OBSERVATION_SUBJECT_MISMATCH": "The authenticated statement belongs to another anchor or subject.",
+      "HOLD_VERIFIER_AUTHORITY_POLICY_CHANGED": "Authority policy bytes no longer match the anchored policy digest.",
+      "DEPENDENCY_CLOSURE_VERIFIED": "An authorized functionary signed the exact expected subject and predicate, and the observed context matches."
+    }
+  },
+  "teacherCandidate": {
+    "name": "in-toto Attestation Framework plus layout-authorized functionaries",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "TEACHER_CANDIDATE",
+    "boundedDomain": "authenticating and authorizing an independent verifier statement for an exact content subject",
+    "noveltyAnswer": "N312 records an observerIdentity label. in-toto adds a typed subject/predicate statement, a signature envelope, and a coordinator-owned list of functionary keys authorized for a step, so a different string is not authority.",
+    "screening": {
+      "sourceProvenance": "Official in-toto project website and repositories under github.com/in-toto.",
+      "maintenance": "attestation v1.2.0 released 2026-03-18 and repository commit activity observed through 2026-10-21; Python reference implementation activity observed through 2026-08-27 with v3.1.0 release candidate published 2026-05-04.",
+      "runnableEvidence": "Specification, language bindings, Python reference implementation, tests, DSSE demo fixtures, and official demos are present.",
+      "licenseAndRights": "Apache License 2.0 in both audited repositories; no external assets are required for this protocol trial.",
+      "directRelevance": "Directly closes N312's unauthenticated observer-label bypass.",
+      "noveltyVsCurrentBestView": "Current Best View binds observer metadata and subject digest but lacks cryptographic origin and an anchored verifier-authority registry.",
+      "integrationRisk": "No GPU or training data; low compute cost. Nontrivial key custody, rotation, revocation, threshold, canonicalization, and library-version risks.",
+      "failureRisks": "A valid signature proves origin and integrity, not observation truth or organizational independence. Full in-toto adoption would be excessive for this bounded gate."
+    },
+    "registryState": "NOT_ADDED",
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "deduplication": {
+    "N307": "Requires browser observation but does not authorize the observer cryptographically.",
+    "N312": "Rejects exact Producer identity and binds evidence digests, but a different unauthenticated string passes.",
+    "MOTHER_NO_METHOD_INVENTION_001": "Separates Producer and Verifier roles semantically but has no signed functionary policy."
+  },
+  "boundaries": [
+    "The probe uses public test-fixture Ed25519 keys and is not production key material.",
+    "Key possession does not prove organizational independence or evidence truth.",
+    "Key issuance, custody, revocation, rotation, and threshold policy remain UNKNOWN.",
+    "The Candidate borrows only subject/predicate/signature/functionary principles, not the full in-toto supply-chain ontology or runtime.",
+    "Browser evidence remains separate from physical-device, production, and user-acceptance evidence.",
+    "No production Mother, main, R2 OS, adapter registry, or public KaoPuGram service changes."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "CANDIDATE_PROBE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "routing": {
+    "issue": 91,
+    "commentId": null,
+    "commentUrl": null,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  }
+}
