@@ -1,0 +1,101 @@
+{
+  "regressionId": "ANCHOR_EXECUTION_CONTEXT_SELF_ATTESTATION_BYPASS_001",
+  "status": "CANDIDATE_INACTIVE",
+  "discoveredAt": "2026-11-18T11:42:27+08:00",
+  "sourceCandidates": [
+    "CANDIDATE_BROWSER_OBSERVED_RUNTIME_ROUTE_RECEIPT_001_N307",
+    "ANCHOR_EXECUTION_CONTEXT_DRIFT_BYPASS_001"
+  ],
+  "taskAnchor": {
+    "taskId": "N312-KAOPUGRAM-CONTEXT-ATTESTATION",
+    "targetObject": "N311 execution-context closure correction",
+    "targetDefect": "N311 hashes execution-context values supplied by the caller but does not bind an independent observation, observer identity, raw-evidence digest, or exact subject",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "protocolCandidates": [
+        "CANDIDATE_BROWSER_OBSERVED_RUNTIME_ROUTE_RECEIPT_001_N307",
+        "CANDIDATE_ANCHOR_DEPENDENCY_CLOSURE_001_N308",
+        "ANCHOR_EXECUTION_CONTEXT_DRIFT_BYPASS_001"
+      ]
+    },
+    "userLastConstraint": "Producer cannot approve itself; real source, browser, device, production, and user-acceptance evidence layers must remain distinct.",
+    "unknowns": [
+      "Which real Mother has an independent observer for each selected context field",
+      "Which non-browser context fields can be measured rather than self-reported",
+      "How raw evidence is retained without leaking secrets or private device identifiers"
+    ],
+    "forbiddenRoutes": [
+      "producer-supplied context accepted as independent observation",
+      "observation from another build or anchor reused for the current subject",
+      "missing observation silently treated as matching context",
+      "browser evidence promoted to physical-device or user-acceptance evidence"
+    ],
+    "currentStatus": "HOLD_GATE_FAIL"
+  },
+  "trigger": "Producer submits context values equal to the anchor while the independently observed runtime uses different browser arguments and renderer route.",
+  "expected": "The verifier compares the anchored expectation, Producer claim, and independent observation bound to the same anchor and subject digest. Missing, self-attested, conflicting, or wrong-subject evidence fails closed.",
+  "observed": "N311 returned DEPENDENCY_CLOSURE_VERIFIED from the Producer claim even though the independent observation had a different context digest.",
+  "rootCause": "N311's contextDescriptor() operates on a caller-provided object and its verifier has no provenance or independence check.",
+  "minimumVerification": [
+    "matching independent observation for the exact anchor and subject passes",
+    "Producer claim conflicting with independent observation returns HOLD_CONTEXT_SELF_REPORT_CONFLICT",
+    "missing observation returns HOLD_INDEPENDENT_CONTEXT_OBSERVATION_MISSING",
+    "observer identity equal to Producer returns HOLD_PRODUCER_SELF_ATTESTATION",
+    "observation bound to another subject returns HOLD_CONTEXT_OBSERVATION_SUBJECT_MISMATCH",
+    "observation method and raw-evidence digest are present",
+    "fresh receipt binds exact probe bytes and commit"
+  ],
+  "candidateCorrection": {
+    "observationFields": [
+      "anchorId",
+      "subjectDigest",
+      "observerIdentity",
+      "observationMethod",
+      "profileDigest",
+      "observedContext",
+      "observedContextDigest",
+      "missingObservedPaths",
+      "rawEvidenceDigest",
+      "observedAt"
+    ],
+    "stateSemantics": {
+      "HOLD_CONTEXT_SELF_REPORT_CONFLICT": "Producer claim differs from independent observation for the same subject.",
+      "HOLD_INDEPENDENT_CONTEXT_OBSERVATION_MISSING": "No independent context observation is bound to the candidate.",
+      "HOLD_PRODUCER_SELF_ATTESTATION": "Producer and context observer are the same identity.",
+      "HOLD_CONTEXT_OBSERVATION_SUBJECT_MISMATCH": "Observation belongs to another anchor or content subject.",
+      "HOLD_CONTEXT_OBSERVATION_EVIDENCE_INCOMPLETE": "Observation lacks method or raw-evidence digest.",
+      "DEPENDENCY_CLOSURE_VERIFIED": "Expected, claimed, and independently observed context match for the exact subject."
+    }
+  },
+  "deduplication": {
+    "N307": "N307 already defines independent browser observation and self-report conflict states; N312 transfers that separation into N311 anchor identity.",
+    "N311": "N311 detects changed context only when the changed values are honestly supplied to its descriptor; N312 tests dishonest or stale self-report.",
+    "MOTHER_NO_METHOD_INVENTION_001": "Defines Producer role limits but does not supply context-evidence provenance fields or subject-binding checks."
+  },
+  "teacherDecision": {
+    "source": "N307 browser-observed route receipt and its W3C/WPT method teacher",
+    "status": "NO_NOVELTY",
+    "reason": "Current Best View already requires independent observation. The novelty is a concrete cross-Candidate transfer failure, not a new external method."
+  },
+  "boundaries": [
+    "Observer independence is necessary but not sufficient; a compromised observer can still lie.",
+    "Raw evidence digest proves binding to retained evidence, not the semantic truth of that evidence.",
+    "Some context fields may be unobservable; those remain UNKNOWN or HOLD rather than Producer-certified.",
+    "Secrets and private device identifiers must not enter receipts.",
+    "Browser evidence remains separate from physical-device and user acceptance.",
+    "This synthetic replay does not prove visual or physical correctness."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "CANDIDATE_PROBE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "routing": {
+    "issue": 91,
+    "commentId": null,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  }
+}
