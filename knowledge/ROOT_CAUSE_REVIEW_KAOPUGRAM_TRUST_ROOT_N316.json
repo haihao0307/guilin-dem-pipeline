@@ -1,0 +1,107 @@
+{
+  "reviewId": "ROOT_CAUSE_REVIEW_KAOPUGRAM_TRUST_ROOT_N316",
+  "observedAt": "2026-11-19T02:30:00+08:00",
+  "decision": "STOP_SYNTHETIC_PATCH_LOOP_REQUIRE_REAL_RECEIVER_TRIAL",
+  "currentState": "BLOCKED_VALID",
+  "taskAnchor": {
+    "taskId": "N316-KAOPUGRAM-ROOT-CAUSE-REVIEW",
+    "targetObject": "KaoPuGram N309-N315 trust, observation, authority, and freshness chain",
+    "targetDefect": "Repeated single-process Candidate patches cannot establish an independent durable trust root or prove restart-safe current-task freshness.",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+      "r2OsBlob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+      "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+      "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021"
+    },
+    "userLastConstraint": "The same bounded task may fail internally at most twice; repeated similar failures require ROOT_CAUSE_REVIEW rather than further intuitive patching or worker replacement.",
+    "referenceSet": [
+      "N309 exclusion integrity",
+      "N310 policy migration audition",
+      "N311 execution-context integrity",
+      "N312 context self-attestation",
+      "N313 verifier authority",
+      "N314 verifier freshness",
+      "N315 freshness-root integrity"
+    ],
+    "unknowns": [
+      "first actual Mother willing to receive the trial",
+      "independent verifier execution route",
+      "durable nonvolatile checkpoint owner and recovery route",
+      "trusted-time source",
+      "key custody, rotation, revocation, and equivocation detection"
+    ],
+    "forbiddenRoutes": [
+      "another synthetic single-process trust patch",
+      "fixture key treated as production authority",
+      "in-code constant treated as durable persistence",
+      "caller-provided state or time treated as trusted",
+      "Producer self-approval",
+      "global service or R2 adoption before one actual receiver trial"
+    ],
+    "freshHeadDelta": "Root-cause review, machine gate, receipt, and learning log only; no production Mother or main change.",
+    "applicableRegressionCases": [
+      "ANCHOR_EXCLUSION_RECLASSIFICATION_BYPASS_001",
+      "ANCHOR_EXECUTION_CONTEXT_INTEGRITY_001",
+      "ANCHOR_EXECUTION_CONTEXT_SELF_ATTESTATION_BYPASS_001",
+      "ANCHOR_FAKE_VERIFIER_IDENTITY_BYPASS_001",
+      "ANCHOR_STALE_VERIFIER_ATTESTATION_REPLAY_001",
+      "ANCHOR_FRESHNESS_ROOT_RESET_BYPASS_001",
+      "CROSS_MOTHER_METHOD_TRANSFER_REQUIRES_RECEIVER_RECEIPT_001"
+    ],
+    "gates": {
+      "contract": "PASS_ROOT_CAUSE_REVIEW_TRIGGER",
+      "freshness": "PASS_FRESH_N315_REPLAY_AND_N316_RUN",
+      "referenceFidelity": "PASS_ISSUE_AND_BRANCH_EVIDENCE",
+      "machine": "PASS_ROOT_CAUSE_GATE",
+      "browser": "NOT_APPLICABLE_NONVISUAL"
+    }
+  },
+  "repeatedFailureEvidence": {
+    "sameBlockerClass": "TRUST_BOUNDARY_CALLER_CONTROLLED",
+    "failedCandidates": [
+      "N309",
+      "N311",
+      "N312",
+      "N313",
+      "N314",
+      "N315"
+    ],
+    "count": 6,
+    "latestN315FreshReplay": {
+      "probeBlob": "b5466557ee0ffc6badc7dae9da0d23c2c5b39dbf",
+      "receiptBlob": "5d97ed85b0890a86109737a5dd256bf05cfe2bf8",
+      "exactReceiptMatch": true
+    }
+  },
+  "rootCauses": {
+    "taskAnchorAmbiguity": "The protocol task never fixed a concrete threat model, authority owner, restart model, or first receiver.",
+    "representationLimit": "Single-process fixtures can demonstrate logic but cannot prove organizational independence, durable persistence, or trusted time.",
+    "sharedInputContractGap": "No live Task Anchor, receiver adapter receipt, external verifier receipt, or restart recovery contract exists.",
+    "toolchainBoundary": "In-code fixture keys, clocks, and pins are test data, not independent production roots.",
+    "capabilityLimit": "The learning branch cannot certify real key custody, nonvolatile state, availability, revocation, or non-equivocation."
+  },
+  "finiteMethod": {
+    "owner": "Small-Mother coordinator owns the trial contract and trust-root route; one actual Mother owns its domain adapter and receiver receipt.",
+    "nextAllowedStep": "One bounded actual-Mother trial only.",
+    "minimumVerification": [
+      "exact Task Anchor binds taskId, baseSha, subject, adapter, challenge, and dispatch sequence",
+      "receiver ACK and receiver-specific Delivery Receipt exist",
+      "independent verifier runs outside Producer control and signs exact subject/predicate",
+      "durable checkpoint survives verifier restart",
+      "old complete bundle is rejected after restart",
+      "fresh current bundle passes on the exact commit",
+      "known limitations remain explicit"
+    ]
+  },
+  "unfinishedBoundary": "No actual Mother acknowledgement, no live adapter, no durable trust root, no trusted-time route, no public service, no main/R2 change, and no user acceptance.",
+  "learningQuestion": "What is the smallest deployable independent trust-root and restart-recovery route that can serve one Mother without introducing a global PKI or freezing unrelated workbench state?",
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "ROOT_CAUSE_REVIEW_AND_GATE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  }
+}
