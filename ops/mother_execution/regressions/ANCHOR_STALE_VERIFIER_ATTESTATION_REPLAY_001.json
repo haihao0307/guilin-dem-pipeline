@@ -1,0 +1,119 @@
+{
+  "regressionId": "ANCHOR_STALE_VERIFIER_ATTESTATION_REPLAY_001",
+  "status": "CANDIDATE_INACTIVE",
+  "discoveredAt": "2026-11-18T19:48:25+08:00",
+  "sourceCandidate": "ANCHOR_FAKE_VERIFIER_IDENTITY_BYPASS_001",
+  "taskAnchor": {
+    "taskId": "N314-KAOPUGRAM-VERIFIER-FRESHNESS",
+    "targetObject": "N313 verifier-authority Candidate",
+    "targetDefect": "N313 authenticates the verifier and exact content subject but does not bind the signed observation to the current task dispatch, monotonic dispatch sequence, or freshness window",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+      "r2OsBlob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+      "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+      "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+      "n313ProbeBlob": "c09cead56efb19d31777eb697c4825d475dd0cf5"
+    },
+    "userLastConstraint": "Old artifacts or validation results cannot be presented as current work; no silent fallback; Producer and Verifier remain separate.",
+    "unknowns": [
+      "Which coordinator owns the monotonic dispatch sequence",
+      "Which trusted clock source is acceptable for each execution environment",
+      "How accepted sequence state survives restart without becoming Producer-controlled",
+      "What freshness window is justified for each Mother and evidence type"
+    ],
+    "forbiddenRoutes": [
+      "old valid signature accepted for a later dispatch",
+      "content digest alone treated as validation freshness",
+      "Producer-supplied current time trusted without a clock route",
+      "dispatch sequence rollback accepted after restart",
+      "one global freshness duration imposed without a bounded Mother trial"
+    ],
+    "currentStatus": "HOLD_GATE_FAIL"
+  },
+  "trigger": "A previously authorized and correctly signed verifier attestation is resubmitted after a later dispatch for unchanged content bytes.",
+  "expected": "The signed predicate must answer the current coordinator challenge, carry the current monotonic dispatch sequence, and contain an observation time after dispatch and within the bounded freshness window.",
+  "observed": "N313 returned DEPENDENCY_CLOSURE_VERIFIED for the old authorized attestation because subject, predicate type, signature, authority, and context still matched.",
+  "rootCause": "N313 proves who signed what, but not when or for which dispatch the observation was produced.",
+  "minimumVerification": [
+    "old signed attestation on a new verificationRequestId returns HOLD_VERIFIER_CHALLENGE_MISMATCH",
+    "signed predicate with an old dispatch sequence returns HOLD_VERIFIER_DISPATCH_SEQUENCE_ROLLBACK",
+    "observation time before dispatch returns HOLD_STALE_VERIFIER_ATTESTATION",
+    "observation older than the bounded maximum age returns HOLD_STALE_VERIFIER_ATTESTATION",
+    "observation time beyond allowed future skew returns HOLD_VERIFIER_TIME_INVALID",
+    "fresh signed observation for the current challenge and sequence passes",
+    "a rolled-back task anchor is rejected against persisted trusted sequence state"
+  ],
+  "candidateCorrection": {
+    "taskAnchorFields": [
+      "verificationRequestId",
+      "dispatchSequence",
+      "dispatchTime",
+      "maxAttestationAgeSeconds",
+      "trustedClockRoute",
+      "priorAcceptedSequenceDigest"
+    ],
+    "signedPredicateFields": [
+      "verificationRequestId",
+      "dispatchSequence",
+      "observedAt",
+      "subjectDigest",
+      "observedContextDigest",
+      "observationMethod",
+      "rawEvidenceDigest"
+    ],
+    "stateSemantics": {
+      "HOLD_VERIFIER_CHALLENGE_MISMATCH": "Signed evidence answers a different verification request.",
+      "HOLD_VERIFIER_DISPATCH_SEQUENCE_ROLLBACK": "Dispatch or attestation sequence is not newer than trusted state or does not match the current anchor.",
+      "HOLD_STALE_VERIFIER_ATTESTATION": "Observation predates dispatch or exceeds the bounded freshness window.",
+      "HOLD_VERIFIER_TIME_INVALID": "Observation time is malformed or exceeds allowed future clock skew.",
+      "DEPENDENCY_CLOSURE_VERIFIED": "Authorized evidence is bound to the current challenge, monotonic sequence, exact subject, and valid freshness window."
+    }
+  },
+  "teacherCandidate": {
+    "name": "The Update Framework rollback and freeze protections",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "TEACHER_CANDIDATE",
+    "boundedDomain": "recognizing stale but validly signed metadata through monotonic trusted version state and expiry",
+    "noveltyAnswer": "N313 proves signature authority but treats every still-valid signature as current. TUF explicitly separates authenticity from freshness: clients persist trusted versions, reject rollback, and reject expired metadata against a fixed update-start time.",
+    "screening": {
+      "sourceProvenance": "Official TUF specification, security documentation, and theupdateframework GitHub organization.",
+      "maintenance": "Specification v1.0.37 released 2026-10-08 with repository activity observed through 2026-10-16; python-tuf v7.0.1 released 2026-09-01 with repository activity observed on 2026-11-18.",
+      "runnableEvidence": "Versioned specification, Python reference implementation, repository simulator, generated/repository test data, API tests, examples, and release tooling are present.",
+      "licenseAndRights": "Specification uses Community Specification License 1.0; python-tuf is dual Apache-2.0/MIT. No external assets are required for this protocol trial.",
+      "directRelevance": "Directly models replay of old signed evidence as rollback/freeze rather than a signature failure.",
+      "noveltyVsCurrentBestView": "KAOPU's no-stale gate requires post-dispatch validation, but N313 has no monotonic trusted state, challenge, or signed expiry semantics.",
+      "integrationRisk": "The prototype has no external dependency. Full python-tuf would require Python 3.11+, securesystemslib and urllib3 and would be excessive; real adoption instead needs trusted time, persistent state, challenge generation, crash recovery, and bounded per-Mother windows.",
+      "failureRisks": "TUF cannot guarantee an update under withholding; it detects possible freeze. Trusted-clock failure, lost state, malicious version fast-forward, and copied semantics without persistence can recreate the bypass."
+    },
+    "registryState": "NOT_ADDED",
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  },
+  "deduplication": {
+    "TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE": "Already states that validation must run after dispatch. N314 transfers that rule into signed verifier evidence and supplies executable states.",
+    "TERRAIN_NO_STALE_DELIVERY_001": "Covers stale production artifacts and screenshots; N314 covers cryptographically valid but stale verifier attestations.",
+    "N313": "Authenticates origin and authorization but not dispatch freshness."
+  },
+  "boundaries": [
+    "The verification request IDs and times are synthetic fixtures, not production challenge or clock services.",
+    "Freshness does not prove observation truth, visual correctness, device correctness, or user acceptance.",
+    "A trusted clock and persisted sequence state are required; Producer-controlled values do not close the gate.",
+    "Freshness windows must be selected per bounded evidence type rather than globally imposed.",
+    "The Candidate borrows rollback/freeze principles, not the full TUF updater architecture.",
+    "No production Mother, main, R2 OS, adapter registry, or public KaoPuGram service changes."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "CANDIDATE_PROBE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "routing": {
+    "issue": 91,
+    "commentId": null,
+    "commentUrl": null,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  }
+}
