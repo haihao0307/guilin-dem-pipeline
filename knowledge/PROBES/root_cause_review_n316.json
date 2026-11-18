@@ -1,0 +1,45 @@
+{
+  "probe": "n316_root_cause_review_gate",
+  "boundedQuestion": "May the KaoPuGram trust-chain task continue with another synthetic patch after repeated failures share one blocker?",
+  "rootCause": {
+    "sharedBlocker": "Synthetic single-process probes let the candidate choose or embed the authority, observation, time, and persistence roots used to validate itself.",
+    "sameBlockerFailureCount": 6,
+    "failedCandidateIds": [
+      "N309",
+      "N311",
+      "N312",
+      "N313",
+      "N314",
+      "N315"
+    ],
+    "receiverAcknowledged": false,
+    "realSingleMotherTrial": false,
+    "independentDurableTrustRoot": false
+  },
+  "decisions": {
+    "anotherSyntheticPatch": {
+      "status": "REJECT_REPEATED_PATCH_LOOP",
+      "sameBlockerFailureCount": 6,
+      "failedCandidateIds": [
+        "N309",
+        "N311",
+        "N312",
+        "N313",
+        "N314",
+        "N315"
+      ]
+    },
+    "realTrialWithoutReceiverAck": {
+      "status": "HOLD_RECEIVER_ACK_MISSING"
+    },
+    "acknowledgedButIncompleteTrial": {
+      "status": "HOLD_SINGLE_MOTHER_TRIAL_INCOMPLETE"
+    },
+    "completeTrialContract": {
+      "status": "SINGLE_MOTHER_TRIAL_CONTRACT_COMPLETE_NOT_ADOPTION"
+    }
+  },
+  "currentState": "BLOCKED_VALID",
+  "nextAllowedStep": "One actual Mother trial with an exact Task Anchor, receiver receipt, independent verifier route, durable checkpoint route, restart replay rejection, and fresh-current acceptance.",
+  "boundary": "A complete trial contract only permits the trial. It does not mean IMPLEMENTED, ADOPTED, or USER-ACCEPTED."
+}
