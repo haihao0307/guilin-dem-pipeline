@@ -1,0 +1,47 @@
+{
+  "probe": "n313_verifier_authority_probe",
+  "probeSha256": "29a26cae76510bbe5a5434d2136bf21a5c51f76e3b35d0476acc893e01008d93",
+  "boundedQuestion": "Can a Producer bypass N312 by choosing a different observerIdentity string and fabricating matching raw evidence?",
+  "vulnerableReplay": {
+    "n312Status": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    },
+    "defect": "N312 treats any observerIdentity string different from producerIdentity as independent and authentic."
+  },
+  "authorityBoundPrototype": {
+    "unsignedObservation": {
+      "status": "HOLD_VERIFIER_ATTESTATION_MISSING"
+    },
+    "signedByUnlistedKey": {
+      "status": "HOLD_UNAUTHORIZED_VERIFIER"
+    },
+    "fakeSignatureUnderAuthorizedKeyId": {
+      "status": "HOLD_VERIFIER_SIGNATURE_INVALID"
+    },
+    "producerSignedObservation": {
+      "status": "HOLD_PRODUCER_SELF_ATTESTATION"
+    },
+    "authorizedWrongSubject": {
+      "status": "HOLD_CONTEXT_OBSERVATION_SUBJECT_MISMATCH"
+    },
+    "tamperedAfterSigning": {
+      "status": "HOLD_VERIFIER_SIGNATURE_INVALID"
+    },
+    "authorizedExactStatement": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED",
+      "functionary": "verifier/browser-harness-3",
+      "authorityPolicyDigest": "sha256:36a36446966ffb52120afddfaeee45c7406f7c77d95aedde062f32f10884517a"
+    },
+    "changedAuthorityPolicy": {
+      "status": "HOLD_VERIFIER_AUTHORITY_POLICY_CHANGED"
+    }
+  },
+  "teacherDecision": {
+    "source": "in-toto Attestation Framework plus layout-authorized functionaries",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "TEACHER_CANDIDATE",
+    "novelty": "N312 names an observer; in-toto binds a typed statement to a subject, authenticates it with a signature, and checks the signing key against coordinator-authorized functionaries."
+  },
+  "decision": "HOLD_GATE_FAIL",
+  "boundary": "Fixture signatures prove only protocol behavior. Key custody, revocation, threshold policy, real observer independence, and evidence truth remain unverified."
+}
