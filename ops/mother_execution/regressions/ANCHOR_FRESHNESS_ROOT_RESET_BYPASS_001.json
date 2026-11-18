@@ -1,0 +1,106 @@
+{
+  "regressionId": "ANCHOR_FRESHNESS_ROOT_RESET_BYPASS_001",
+  "status": "CANDIDATE_INACTIVE",
+  "discoveredAt": "2026-11-18T23:52:00+08:00",
+  "sourceCandidate": "ANCHOR_STALE_VERIFIER_ATTESTATION_REPLAY_001",
+  "taskAnchor": {
+    "taskId": "N315-KAOPUGRAM-FRESHNESS-ROOT-INTEGRITY",
+    "targetObject": "N314 verifier-freshness Candidate",
+    "targetDefect": "N314 receives trusted sequence state and trusted current time as ordinary caller parameters, so restart can reset and rewind the freshness root",
+    "acceptedBaseline": {
+      "mainCommit": "ad7b81175df8bc9c54cf40effe1029f86696ba76",
+      "rootAgentsBlob": "251b664646a489e9292748f1d41998ee62a338f5",
+      "r2OsBlob": "d942d44bad0bbd206ea3768d620ad60d5ddeb2bf",
+      "noCreativeSubstituteGateBlob": "8c0a49c71865ef76cbc614f8188239bc808a8278",
+      "noStaleDeliveryGateBlob": "4754a90a94e4a9e7806357b6eb292e5c713e9021",
+      "n314ProbeBlob": "9107bcdeea336f3b5919c249fc9c6cad3d763375"
+    },
+    "userLastConstraint": "Old artifacts or validation results cannot be presented as current work; no silent fallback; Producer and Verifier remain separate.",
+    "unknowns": [
+      "Which independently controlled durable store pins the latest checkpoint",
+      "How a verifier recovers after local state loss without accepting genesis again",
+      "How coordinator checkpoint equivocation is detected",
+      "Which trusted-time source is available in each live Mother environment",
+      "How coordinator key rotation preserves checkpoint lineage"
+    ],
+    "forbiddenRoutes": [
+      "caller-provided state treated as trusted state",
+      "caller-provided time treated as trusted time",
+      "missing persisted state silently interpreted as genesis",
+      "Producer-signed freshness checkpoint",
+      "old valid checkpoint accepted after a newer pin",
+      "global adoption before one live Mother trial"
+    ],
+    "currentStatus": "HOLD_GATE_FAIL"
+  },
+  "trigger": "After verifier restart, the presenter supplies a reset sequence state and rewound current time, then replays the complete old dispatch anchor and its old authorized attestation.",
+  "expected": "Loss or rollback of the freshness root must fail closed; the verifier must use an independently pinned, authenticated, monotonic checkpoint rather than caller inputs.",
+  "observed": "N314 returned DEPENDENCY_CLOSURE_VERIFIED for the entire old bundle when state was reset to sequence zero and now was rewound into the old attestation window.",
+  "rootCause": "N314 describes trusted time and persisted sequence state as boundaries but its executable function does not authenticate their provenance or persistence.",
+  "minimumVerification": [
+    "reset state plus rewound time can reproduce the vulnerable N314 pass",
+    "missing freshness checkpoint fails closed",
+    "older still-valid checkpoint is rejected against the independently pinned sequence",
+    "Producer-signed checkpoint is rejected",
+    "same-sequence checkpoint with wrong previous digest is rejected",
+    "old dispatch bundle is rejected against the current checkpoint",
+    "fresh dispatch and attestation pass against the current checkpoint"
+  ],
+  "candidateCorrection": {
+    "taskAnchorFields": [
+      "freshnessScopeId",
+      "freshnessCheckpointSequence",
+      "freshnessCheckpointDigest",
+      "freshnessCheckpointAuthorityPolicyDigest",
+      "freshnessCheckpointRoute"
+    ],
+    "checkpointFields": [
+      "scopeId",
+      "checkpointSequence",
+      "highestAcceptedDispatchSequence",
+      "trustedTime",
+      "previousCheckpointDigest",
+      "coordinatorKeyId",
+      "signature"
+    ],
+    "stateSemantics": {
+      "HOLD_FRESHNESS_ROOT_MISSING": "An initialized scope has no independently persisted checkpoint; absence is not genesis.",
+      "HOLD_PRODUCER_FRESHNESS_ROOT": "Producer cannot sign or choose the freshness root used to validate its own evidence.",
+      "HOLD_FRESHNESS_CHECKPOINT_ROLLBACK": "Presented checkpoint sequence is older than the independent pin.",
+      "HOLD_FRESHNESS_CHECKPOINT_LINEAGE_MISMATCH": "Checkpoint does not extend the pinned predecessor.",
+      "HOLD_VERIFIER_DISPATCH_SEQUENCE_ROLLBACK": "Replayed dispatch is not newer than the authenticated checkpoint state.",
+      "DEPENDENCY_CLOSURE_VERIFIED": "Current authorized attestation is evaluated against an authenticated checkpoint and its fixed trusted time."
+    }
+  },
+  "teacherDecision": {
+    "name": "The Update Framework rollback and freeze protections",
+    "status": "NO_NOVELTY",
+    "reason": "N314 already captured persisted trusted versions and fixed trusted time. N315 adds no external method; it proves KAOPU failed to transfer that known requirement into the executable prototype."
+  },
+  "deduplication": {
+    "TASK_FRESHNESS_AND_NO_STALE_DELIVERY_GATE": "Defines post-dispatch freshness but not an authenticated restart-safe freshness root.",
+    "TERRAIN_NO_STALE_DELIVERY_001": "Covers stale artifacts; N315 covers stale verifier state accepted after root reset.",
+    "N314": "Rejects stale signed evidence only while its caller-provided state and clock remain honest. N315 tests loss or rollback of that assumption."
+  },
+  "boundaries": [
+    "The replay uses deterministic fixture keys, times, dispatches, and checkpoint state.",
+    "The pinned root is a prototype constant, not a real durable store or transparency service.",
+    "The prototype does not prove checkpoint availability, non-equivocation, crash recovery, trusted hardware, or key rotation.",
+    "No production Mother, main, R2 OS, adapter registry, or public KaoPuGram service changes.",
+    "Candidate remains inactive until an affected Mother acknowledges and a live bounded route proves independent persistence."
+  ],
+  "lifecycle": {
+    "posted": false,
+    "acknowledged": false,
+    "implemented": "CANDIDATE_PROBE_ONLY",
+    "gateRun": true,
+    "adopted": false,
+    "userAccepted": false
+  },
+  "routing": {
+    "issue": 91,
+    "commentId": null,
+    "commentUrl": null,
+    "motherQueryState": "NOT_QUERIED/UNKNOWN"
+  }
+}

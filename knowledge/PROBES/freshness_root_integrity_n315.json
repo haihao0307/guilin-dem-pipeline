@@ -1,0 +1,40 @@
+{
+  "probe": "n315_freshness_root_integrity_probe",
+  "boundedQuestion": "Can N314 be bypassed after restart by resetting its trusted sequence state and rewinding its trusted clock, then replaying the entire old dispatch and attestation bundle?",
+  "vulnerableReplay": {
+    "resetState": {
+      "highestAcceptedDispatchSequence": 0
+    },
+    "rewoundNow": "2026-11-18T15:48:00+08:00",
+    "replayedDispatchSequence": 313,
+    "status": "DEPENDENCY_CLOSURE_VERIFIED",
+    "defect": "N314 accepts state and now as ordinary caller inputs, so its freshness root can be reset and rewound by the same party presenting the replay."
+  },
+  "pinnedRootCandidate": {
+    "missingCheckpoint": {
+      "status": "HOLD_FRESHNESS_ROOT_MISSING"
+    },
+    "oldValidCheckpoint": {
+      "status": "HOLD_FRESHNESS_CHECKPOINT_ROLLBACK"
+    },
+    "producerSignedCheckpoint": {
+      "status": "HOLD_PRODUCER_FRESHNESS_ROOT"
+    },
+    "forkedCheckpointLineage": {
+      "status": "HOLD_FRESHNESS_CHECKPOINT_LINEAGE_MISMATCH"
+    },
+    "oldBundleAgainstCurrentCheckpoint": {
+      "status": "HOLD_VERIFIER_DISPATCH_SEQUENCE_ROLLBACK"
+    },
+    "freshBundleAgainstCurrentCheckpoint": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    }
+  },
+  "teacherDecision": {
+    "source": "The Update Framework rollback/freeze protections already audited in N314",
+    "status": "NO_NOVELTY",
+    "novelty": "None. N314 already states that trusted time and persisted version state must not be Producer-controlled. N315 is a transfer regression proving the prototype still accepts both as caller inputs."
+  },
+  "decision": "HOLD_GATE_FAIL",
+  "boundary": "Synthetic replay and signed-checkpoint prototype only. Real non-volatile pin storage, coordinator availability, crash recovery, checkpoint equivocation detection, key rotation, and one live Mother route remain UNKNOWN."
+}
