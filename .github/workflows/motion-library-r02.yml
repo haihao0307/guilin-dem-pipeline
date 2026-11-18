@@ -1,0 +1,26 @@
+name: Motion Library R02 QA
+on:
+  pull_request:
+    paths:
+      - 'kaopu-unified-human-workbench/motion-architecture/motion-library-r02.mjs'
+      - 'kaopu-unified-human-workbench/tests/motion-library-r02.test.mjs'
+      - 'kaopu-unified-human-workbench/tests/motion-atlas-preview.test.mjs'
+      - 'kaopu-unified-human-workbench/motion-atlas-r03/**'
+      - '.github/workflows/motion-library-r02.yml'
+  push:
+    branches: [work/kaopu-motion-library-r02-cleanup]
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            kaopu-unified-human-workbench/motion-architecture
+            kaopu-unified-human-workbench/motion-atlas-r03
+            kaopu-unified-human-workbench/tests
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test kaopu-unified-human-workbench/tests/motion-library-r02.test.mjs kaopu-unified-human-workbench/tests/motion-atlas-preview.test.mjs
