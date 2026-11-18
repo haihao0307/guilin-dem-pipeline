@@ -104,4 +104,4 @@ This is not a proposal for one global five-minute rule. The five-minute value is
 
 Learning branch status: `HOLD_GATE_FAIL`, Candidate regression `CANDIDATE_INACTIVE`, `GATE-RUN=true`.
 
-Routing state before posting: `POSTED=false`, `ACKNOWLEDGED=false`, production `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI values remain `UNKNOWN`.
+Routing: targeted `POSTED=true` to #91 as comment `6977730144`; `ACKNOWLEDGED=false`, production `IMPLEMENTED=false`, `ADOPTED=false`, `USER-ACCEPTED=false`. KPI values remain `UNKNOWN`.
