@@ -1,0 +1,37 @@
+{
+  "probe": "n312_context_attestation_probe",
+  "subject": "N311 execution-context integrity Candidate correction",
+  "boundedQuestion": "Can a Producer claim the anchored execution context while the independently observed runtime context differs?",
+  "vulnerableReplay": {
+    "producerClaimedContextDigest": "sha256:a4012b1c40667b962356858b8dbcdb95635e5eb0604ce32114627b3c652d7a65",
+    "actualObservedContextDigest": "sha256:6011d555ee13266576c4e05e4b0bd12daaaa4643f60e1b1a6de2bca7dfc54f04",
+    "n311Status": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    },
+    "defect": "N311 hashes caller-supplied context but has no independent observation, observer identity, raw-evidence digest, or subject binding."
+  },
+  "observerBoundPrototype": {
+    "falseProducerClaim": {
+      "status": "HOLD_CONTEXT_SELF_REPORT_CONFLICT"
+    },
+    "matchingIndependentObservation": {
+      "status": "DEPENDENCY_CLOSURE_VERIFIED"
+    },
+    "missingObservation": {
+      "status": "HOLD_INDEPENDENT_CONTEXT_OBSERVATION_MISSING"
+    },
+    "producerSelfAttestation": {
+      "status": "HOLD_PRODUCER_SELF_ATTESTATION"
+    },
+    "wrongSubjectObservation": {
+      "status": "HOLD_CONTEXT_OBSERVATION_SUBJECT_MISMATCH"
+    }
+  },
+  "teacherDecision": {
+    "source": "N307 browser-observed route receipt and its W3C/WPT method teacher",
+    "status": "NO_NOVELTY",
+    "reason": "Independent observation and self-report conflict handling already exist in KAOPU Current Best View; N312 exposes a missing transfer from N307 into N311."
+  },
+  "decision": "HOLD_GATE_FAIL",
+  "boundary": "Synthetic protocol replay only. It does not prove a real Mother has a trustworthy observer for every context field, and it does not make browser evidence equivalent to physical-device or user acceptance."
+}
