@@ -42,3 +42,12 @@ Decision: `CANDIDATE_N318_REFINED_WITH_CONTROL_EVENT_MATRIX_HOLD_PRODUCTION_REPL
 Teacher status: `NO_NOVELTY`. The increment comes from frozen first-party documentation and an executable comparison against the current N318 gap.
 
 No main, R2 OS, production Mother branch or production asset is modified.
+
+## Routing receipt
+
+- `POSTED=true` — issue #91 comment `7025452381`
+- `ACKNOWLEDGED=false`
+- `IMPLEMENTED=candidate regression refinement only`
+- `GATE-RUN=true (fixture only)`
+- `ADOPTED=false`
+- `USER-ACCEPTED=false`
