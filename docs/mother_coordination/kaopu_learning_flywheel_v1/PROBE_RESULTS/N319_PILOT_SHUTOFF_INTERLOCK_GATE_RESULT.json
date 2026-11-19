@@ -1,0 +1,19 @@
+{
+  "caseId": "PILOT-SHUTOFF-INTERLOCK-001-N319",
+  "command": "node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n319_pilot_shutoff_interlock_gate.mjs",
+  "exitCode": 0,
+  "passed": 7,
+  "total": 7,
+  "results": [
+    {"fixture": "locked start with all motion domains inhibited", "pass": true, "holds": []},
+    {"fixture": "engine starts while lever is unlocked", "pass": true, "holds": ["HOLD_PILOT_START_INTERLOCK_BYPASSED"]},
+    {"fixture": "motion occurs while locked", "pass": true, "holds": ["HOLD_PILOT_LOCKED_MOTION"]},
+    {"fixture": "unlock attempted with non-neutral controls", "pass": true, "holds": ["HOLD_PILOT_UNLOCK_WITH_NON_NEUTRAL_CONTROL"]},
+    {"fixture": "neutral actuator motion lacks immediate lock-and-stop receipt", "pass": true, "holds": ["HOLD_NEUTRAL_ACTUATOR_MOTION", "HOLD_PILOT_FAILSAFE_RECEIPT_MISSING"]},
+    {"fixture": "travel omitted from interlock coverage", "pass": true, "holds": ["HOLD_PILOT_INTERLOCK_DOMAIN_INCOMPLETE"]},
+    {"fixture": "verified claim lacks frozen-source page binding", "pass": true, "holds": ["HOLD_PILOT_INTERLOCK_SOURCE_MISSING"]}
+  ],
+  "scope": "candidate fixture semantics only",
+  "productionReplay": "NOT_RUN",
+  "decision": "CANDIDATE_INTERLOCK_CAUSAL_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED"
+}
