@@ -1,0 +1,24 @@
+{
+  "probe": "N321_ZX85_CONTROL_MAPPING_GATE",
+  "runAt": "2026-11-20T03:37:00+08:00",
+  "fixtureOnly": true,
+  "sourcePages": [187, 188, 199],
+  "candidateSha256BeforeLifecycleUpdate": "251dfaeb3a775f129af44bdf1575518fd66dde18a8562b8f09048bff601228bf",
+  "probeSha256": "7068f3a28871efbd2703e05e6a175a9da9aa5f85183f028b2912e2a81827d01c",
+  "passed": 10,
+  "total": 10,
+  "fixtures": [
+    {"name": "canonical mapping passes", "status": "PASS", "holds": []},
+    {"name": "left-forward cannot drive boom", "status": "PASS", "holds": ["HOLD_CONTROL_INPUT_TARGET_MISMATCH"]},
+    {"name": "right-left cannot roll bucket out", "status": "PASS", "holds": ["HOLD_CONTROL_SEMANTIC_DELTA_MISMATCH"]},
+    {"name": "numeric sign requires coordinate frame", "status": "PASS", "holds": ["HOLD_CONTROL_COORDINATE_FRAME_UNDECLARED"]},
+    {"name": "release must stop target function", "status": "PASS", "holds": ["HOLD_CONTROL_NEUTRAL_STOP_MISSING"]},
+    {"name": "travel orientation must be bound", "status": "PASS", "holds": ["HOLD_TRAVEL_ORIENTATION_UNBOUND"]},
+    {"name": "paired-forward cannot translate reverse", "status": "PASS", "holds": ["HOLD_TRAVEL_PAIRING_MISMATCH"]},
+    {"name": "pivot drives exactly one crawler", "status": "PASS", "holds": ["HOLD_PIVOT_ONE_CRAWLER_CONSTRAINT_FAILED"]},
+    {"name": "spin requires opposed crawlers", "status": "PASS", "holds": ["HOLD_SPIN_OPPOSED_CRAWLERS_MISSING"]},
+    {"name": "source pages cannot be omitted", "status": "PASS", "holds": ["HOLD_CONTROL_MAPPING_SOURCE_MISSING"]}
+  ],
+  "productionReplayVerified": false,
+  "decision": "CANDIDATE_CONTROL_MAPPING_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED"
+}
