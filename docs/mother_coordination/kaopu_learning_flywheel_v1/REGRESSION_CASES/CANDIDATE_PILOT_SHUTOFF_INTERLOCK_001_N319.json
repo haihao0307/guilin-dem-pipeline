@@ -1,0 +1,77 @@
+{
+  "caseId": "PILOT-SHUTOFF-INTERLOCK-001-N319",
+  "status": "CANDIDATE",
+  "boundedQuestion": "Can a source-bound causal state contract prevent a ZX85 cab from being accepted when its pilot control shut-off lever is only visual or fails to gate start, travel, swing and front-attachment motion?",
+  "novelty": {
+    "kind": "new_user_correction_plus_new_first_party_source_pages",
+    "relativeToCurrentBestView": "N318 binds LCD screens and controller events, but it does not bind the physical safety interlock that separates engine start from machine motion.",
+    "teacherStatus": "NO_NOVELTY"
+  },
+  "frozenSource": {
+    "documentId": "HITACHI_75U5A_85USB5A_OPERATOR_MANUAL_V0",
+    "title": "655fdf487782bc0d6389e4fd_OM - 75U-5A - 85USB-5A excavator Hitachi.pdf",
+    "libraryFileId": "libfile_fde3_f-ea981e4885448191ae6781020808a2c5_5a3ac42137a48191aa812604eedaad98",
+    "version": 0,
+    "sizeBytes": 9094235,
+    "relevantPdfPages": [179, 184, 187, 188, 199, 200]
+  },
+  "canonicalStateMachine": {
+    "states": [
+      {"id": "ENGINE_OFF_LOCKED", "lockPosition": "LOCK_UP", "engine": "OFF", "motionAuthority": "DENIED"},
+      {"id": "ENGINE_RUNNING_LOCKED", "lockPosition": "LOCK_UP", "engine": "RUNNING", "motionAuthority": "DENIED"},
+      {"id": "ENGINE_RUNNING_UNLOCKED_NEUTRAL", "lockPosition": "UNLOCK_DOWN", "engine": "RUNNING", "motionAuthority": "ENABLED_IF_EXPLICIT_INPUT"},
+      {"id": "FAULT_NEUTRAL_MOTION", "lockPosition": "UNLOCK_DOWN", "controls": "NEUTRAL", "motion": "OBSERVED", "requiredResponse": "IMMEDIATE_LOCK_UP_AND_ENGINE_STOP"}
+    ],
+    "transitions": [
+      {"from": "ENGINE_OFF_LOCKED", "event": "KEY_START", "to": "ENGINE_RUNNING_LOCKED", "sourcePdfPages": [179, 200]},
+      {"from": "ENGINE_RUNNING_LOCKED", "event": "CONFIRM_ALL_CONTROLS_NEUTRAL_THEN_PUSH_LEVER_DOWN", "to": "ENGINE_RUNNING_UNLOCKED_NEUTRAL", "sourcePdfPages": [200]},
+      {"from": "ENGINE_RUNNING_UNLOCKED_NEUTRAL", "event": "UNCOMMANDED_ACTUATOR_MOTION", "to": "FAULT_NEUTRAL_MOTION", "sourcePdfPages": [200]},
+      {"from": "FAULT_NEUTRAL_MOTION", "event": "PULL_LOCK_UP_AND_STOP_ENGINE", "to": "ENGINE_OFF_LOCKED", "sourcePdfPages": [184, 200]}
+    ],
+    "gatedDomains": ["FRONT_ATTACHMENT", "SWING", "TRAVEL"]
+  },
+  "sourceFacts": [
+    {"provenance": "manual", "pdfPages": [179, 200], "fact": "ZX85USB-5A requires LOCK_UP for engine start; the engine will not start in another lever position."},
+    {"provenance": "manual", "pdfPages": [200], "fact": "Before operation, confirm every control and pedal is neutral, then slowly push the lever down to UNLOCK."},
+    {"provenance": "manual", "pdfPages": [200], "fact": "If any actuator moves while controls remain neutral after unlocking, immediately return to LOCK and stop the engine."},
+    {"provenance": "manual", "pdfPages": [199], "fact": "ISO levers map arm roll-out/in and swing right/left on the left lever; boom lower/raise and bucket roll-in/out on the right lever."},
+    {"provenance": "manual", "pdfPages": [187, 188], "fact": "Travel uses levers or pedals; paired forward/back commands and opposed commands define forward, reverse and spin turn."},
+    {"provenance": "user_canonical_correction", "fact": "With the engine running but the pilot lever not pushed down into operating position, the machine must not travel or operate boom, arm or bucket."}
+  ],
+  "minimumReceipt": [
+    "sourcePdfPages",
+    "lockPositionBeforeStart",
+    "engineStartResult",
+    "controlsNeutralBeforeUnlock",
+    "lockTransition",
+    "controlledDomains",
+    "commandedInput",
+    "observedActuatorOrTravelDelta",
+    "uncommandedMotionFailsafeReceipt"
+  ],
+  "holds": [
+    "HOLD_PILOT_START_INTERLOCK_BYPASSED",
+    "HOLD_PILOT_LOCKED_MOTION",
+    "HOLD_PILOT_UNLOCK_WITH_NON_NEUTRAL_CONTROL",
+    "HOLD_NEUTRAL_ACTUATOR_MOTION",
+    "HOLD_PILOT_FAILSAFE_RECEIPT_MISSING",
+    "HOLD_PILOT_INTERLOCK_DOMAIN_INCOMPLETE",
+    "HOLD_PILOT_INTERLOCK_SOURCE_MISSING",
+    "HOLD_PILOT_PRODUCTION_REPLAY_MISSING"
+  ],
+  "decision": "CANDIDATE_INTERLOCK_CAUSAL_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+  "lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate regression only",
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "boundaries": [
+    "The fixture gate validates state semantics, not the production excavator runtime.",
+    "The eight exact ISO joystick directions and travel-turn mappings are source facts but are not fully replayed in this bounded case.",
+    "No Mother branch, production asset, main branch or R2 rule is modified."
+  ],
+  "nextBoundedQuestion": "Bind each left/right joystick and travel lever/pedal direction to the exact actuator delta and stop-on-neutral behavior."
+}
