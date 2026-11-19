@@ -1,0 +1,117 @@
+{
+  "stage": "R09",
+  "status": "research-candidate-draft",
+  "date": "2026-10-25",
+  "sourceBaseline": "Human-Fabric-Workbench@7627ad77eace84e1c7b66cf61b756ee0efdc587c",
+  "sha256": "64c9c5e156fe49589fbab0fbda8635081e180fb7ae29f7f141ae3ae47913b4e0",
+  "implemented": [
+    "layer softness and two-width luster",
+    "correlated yarn radius and surface-attached fuzz",
+    "shared organic ground nodes",
+    "safe optional stitch-flow refinement",
+    "bounded whole-layer fuzz allocation",
+    "geometry reuse by exact affected-layer inputs",
+    "visible R08/R09 same-camera comparison"
+  ],
+  "visualOutcome": "Local improvement only. Turns are smoother, ground is less mechanically regular, and short stitches retain fuzz. Rod-like appearance and local backlight hard highlights remain.",
+  "tests": {
+    "total": 71,
+    "passed": 71,
+    "failed": 0
+  },
+  "browser": {
+    "transport": "HTTP localhost",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "samples": 32,
+    "cameraDistanceCm": "2.614",
+    "baselineCameraDistanceCm": "2.614",
+    "patterns": [
+      "botanical",
+      "rosette",
+      "ribbon"
+    ],
+    "materials": [
+      "cotton",
+      "silk",
+      "fine"
+    ],
+    "views": [
+      "overall",
+      "macro",
+      "fiber",
+      "edge",
+      "back"
+    ],
+    "lighting": [
+      "studio",
+      "raking",
+      "backlight"
+    ],
+    "expectedBudgetErrors": 2,
+    "unexpectedApplicationErrors": 0,
+    "actualSaveLoad": "Downloaded JSON restored fill softness 0.42, fuzz length 1.50 and fiber camera.",
+    "rejectedBuildEditRetention": "Verified softness 0.42, smoke pink and fiber mode 1 survive budget failure; pitch returns to 0.18 mm.",
+    "layerRebuildCheck": "Changing fill fuzz length rebuilt only fill.",
+    "sliderPrecisionCheck": "Silk fuzz density 0.18 is displayed exactly with 0.01 slider step.",
+    "responsiveness": "One concurrent diagnostic/normal-page run timed out; normal preview responded after diagnostic page closed. Multi-page stability not accepted."
+  },
+  "cost": {
+    "layers": {
+      "net": {
+        "r08Fuzz": 3934,
+        "r09Fuzz": 4193,
+        "oldProfileOnR09Geometry": 3934,
+        "fullDensityCap": 16495,
+        "zeroPathCount": 12
+      },
+      "fill": {
+        "r08Fuzz": 14715,
+        "r09Fuzz": 39077,
+        "oldProfileOnR09Geometry": 28225,
+        "fullDensityCap": 39077,
+        "zeroPathCount": 3168
+      },
+      "outline": {
+        "r08Fuzz": 29527,
+        "r09Fuzz": 30071,
+        "oldProfileOnR09Geometry": 29527,
+        "fullDensityCap": 34875,
+        "zeroPathCount": 1
+      },
+      "trim": {
+        "r08Fuzz": 1341,
+        "r09Fuzz": 1684,
+        "oldProfileOnR09Geometry": 1341,
+        "fullDensityCap": 2112,
+        "zeroPathCount": 12
+      }
+    },
+    "r08Fuzz": 49517,
+    "r09Fuzz": 75025,
+    "addedFuzz": 25508,
+    "addedFuzzTriangles": 204064,
+    "r08PrimaryTriangles": 2506320,
+    "r09PrimaryTriangles": 3605264,
+    "r08TotalTriangles": 2902456,
+    "r09TotalTriangles": 4205464
+  },
+  "flow": {
+    "acceptedElements": 652,
+    "rejectedElements": 6,
+    "refinedPaths": 29124,
+    "addedSegments": 68684
+  },
+  "optionalFillShadows": "available for comparison; disabled by default after limited observed gain",
+  "physics": "Existing display bend and attachment constraints only; no garment collision/dynamics solver.",
+  "unverified": [
+    "same-scale real fabric reference appearance",
+    "local backlight highlight calibration",
+    "full motion shimmer and multi-page stability",
+    "actual GPU frame time and mobile/other-device acceptance",
+    "file:// double-click runtime",
+    "named lace craft topology and back-side yarn",
+    "garment gravity/contact/collision/stretch"
+  ],
+  "fileProtocol": "Browser URL policy blocked file:// in this session; no workaround attempted. Embedded dependency checks do not replace runtime gate.",
+  "delivery": "Update existing Draft PRs only; old R05 and R08 remain unchanged."
+}

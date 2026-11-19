@@ -1,0 +1,211 @@
+{
+  "stage": "R11",
+  "status": "research-candidate-draft",
+  "date": "2026-10-25",
+  "sourceBaseline": "Human-Fabric-Workbench@0959b857d5297258e04387b23bed8dca5e141bb5 / R10",
+  "sha256": "370085d554ce8938a36979febc5c347b687c660fb40b773a424f48a585adb4c3",
+  "implemented": [
+    "optional two-band filtered aperiodic yarn surface with exact R10 shader/cache at zero",
+    "endpoint/radius/XY preserving curvature guard for very short cropped stitches",
+    "independent immediate surface edits and full save/load with intermediate guard display",
+    "same-camera three-light raw screenshot comparison and standalone nine-stitch micro-view",
+    "opt-in bounded asynchronous GPU time-query diagnostics"
+  ],
+  "visualOutcome": "Subtle near-view surface variation, but overall rod-like fill remains. Local folding improved explicitly. No real-fabric appearance or closed-solid/craft acceptance.",
+  "surface": {
+    "cotton": 0.8,
+    "silk": 0.12,
+    "fine": 0.4,
+    "netMultiplier": 0.5,
+    "finePitchMicrometers": 15,
+    "fineNominalHeightMicrometers": 1.2,
+    "bundlePitchMicrometers": 60,
+    "bundleNominalHeightMicrometers": 4.5,
+    "maxHeightFractionRadius": 0.08,
+    "scope": "shading relief only; not actual displacement or fibre outline geometry"
+  },
+  "shortStitchGuard": {
+    "coreDefault": 0,
+    "workbenchDefault": 1,
+    "originalDefects": 9,
+    "changedDefaultPaths": 49,
+    "preventivePaths": 40,
+    "maxInteriorZDeltaMm": 0.015482119686352804,
+    "actualSweepMatrix": 21,
+    "defaultBefore": {
+      "inwardNormalSamples": 34,
+      "reversedLongitudinalEdges": 17,
+      "opposedTriangles": 1
+    },
+    "defaultAfter": {
+      "inwardNormalSamples": 0,
+      "reversedLongitudinalEdges": 0,
+      "opposedTriangles": 0
+    },
+    "preserved": [
+      "XY",
+      "both endpoints",
+      "full radius",
+      "seeds",
+      "path/sample/index counts"
+    ],
+    "remaining": "inherited open end faces; intermediate strength does not guarantee removal of every defect"
+  },
+  "cost": {
+    "r10": {
+      "primaryBytes": 173940904,
+      "fuzzBytes": 4203032,
+      "totalGeometryBytes": 178143936,
+      "primaryTriangles": 3605264,
+      "fuzzTriangles": 600200,
+      "totalTriangles": 4205464,
+      "roots": 75025,
+      "flyaways": 5853,
+      "shortStitchChanges": 0
+    },
+    "r11": {
+      "primaryBytes": 173940904,
+      "fuzzBytes": 4203032,
+      "totalGeometryBytes": 178143936,
+      "primaryTriangles": 3605264,
+      "fuzzTriangles": 600200,
+      "totalTriangles": 4205464,
+      "roots": 75025,
+      "flyaways": 5852,
+      "shortStitchChanges": 49
+    }
+  },
+  "tests": {
+    "total": 131,
+    "passed": 131,
+    "failed": 0,
+    "delivery": "every embedded module compared to final saved source"
+  },
+  "browser": {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER (0x00002689) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "transport": "localhost HTTP",
+    "finalFrames": 16,
+    "settledSamples": 32,
+    "patterns": [
+      "botanical",
+      "rosette",
+      "ribbon"
+    ],
+    "materials": [
+      "cotton",
+      "silk",
+      "fine"
+    ],
+    "views": [
+      "overall",
+      "macro",
+      "fiber",
+      "yarn",
+      "edge",
+      "back"
+    ],
+    "lights": [
+      "studio",
+      "raking",
+      "backlight"
+    ],
+    "expectedBudgetErrors": 2,
+    "unexpectedWarningsOrErrors": 0,
+    "actualRoundtrip": {
+      "artifactSha256": "370085d554ce8938a36979febc5c347b687c660fb40b773a424f48a585adb4c3",
+      "camera": "yarn",
+      "distanceCm": "0.871",
+      "guard": 0.4,
+      "revision": "13",
+      "surface": {
+        "fill": 0.43,
+        "net": 0.4,
+        "outline": 0.8,
+        "trim": 0.8
+      },
+      "triangles": 4205464,
+      "bend": 0,
+      "guardSlider": {
+        "step": "0.01",
+        "value": 0.4
+      }
+    },
+    "actualRejectedBuild": {
+      "artifactSha256": "370085d554ce8938a36979febc5c347b687c660fb40b773a424f48a585adb4c3",
+      "guard": 0.4,
+      "revision": "13",
+      "surface": {
+        "fill": 0.43,
+        "net": 0.4,
+        "outline": 0.8,
+        "trim": 0.8
+      },
+      "triangles": 4205464,
+      "pitchMm": 0.18,
+      "message": "当前配方超过 250,000 段的生成预算。请增大间距、缩小布样，或关闭针脚柔弯；配方不会被自动简化。"
+    }
+  },
+  "gpu": {
+    "enabledByDefault": false,
+    "measuredArtifactSha256": "560292f76c011023e5f9876cfcd0615f26ce9f8779f8a34b09e4ea75f6c7470f",
+    "subsequentChange": "guard slider step corrected to .01; draw algorithm unchanged",
+    "scope": "one complete renderer batch including spatial samples, shadows and composition; not display FPS",
+    "groups": [
+      {
+        "look": "r11",
+        "camera": "yarn",
+        "poseCmRadians": [
+          0.6,
+          0,
+          0,
+          -0.2555549833538106,
+          -0.6083882168063491
+        ],
+        "count": 24,
+        "batchSamples": 4,
+        "width": 1840,
+        "height": 796,
+        "medianMs": 10.533888000000001,
+        "p10Ms": 6.755328,
+        "p90Ms": 28.826624
+      },
+      {
+        "look": "r10",
+        "camera": "yarn",
+        "poseCmRadians": [
+          0.6,
+          0,
+          0,
+          -0.2555549833538106,
+          -0.6083882168063491
+        ],
+        "count": 24,
+        "batchSamples": 4,
+        "width": 1840,
+        "height": 796,
+        "medianMs": 10.702848,
+        "p10Ms": 7.143424,
+        "p90Ms": 28.068864
+      }
+    ],
+    "conclusion": "strongly overlapping ranges; no stable speed/FPS or cross-device acceptance"
+  },
+  "unverified": [
+    "same-scale measured real fabric appearance",
+    "overall rod-like fill and material distinction",
+    "closed cut-end surfaces and named craft topology/backside yarn",
+    "complete motion shimmer acceptance",
+    "repeatable GPU benchmark and other devices",
+    "file:// actual double-click runtime",
+    "garment gravity/contact/collision/stretch physics"
+  ],
+  "physics": "observation bend only; no dynamics/contact/stretch solver",
+  "fileProtocol": "Existing browser URL safety policy blocks file://; no bypass attempted. Packaging checks do not satisfy actual double-click acceptance.",
+  "next": [
+    "reduce whole-specimen rod-like fill against real fabric references",
+    "separately handle cut-end openings and explicit craft connections/backside yarn",
+    "motion/cross-device/GPU/file-protocol validation",
+    "garment physics last"
+  ],
+  "delivery": "Standalone HTML and existing Draft PR updates only. Old R05/R08/R09/R10 unchanged; no merge or deployment."
+}

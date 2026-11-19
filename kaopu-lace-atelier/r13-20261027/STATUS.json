@@ -1,0 +1,116 @@
+{
+  "stage": "R13",
+  "status": "research-candidate-draft",
+  "date": "2026-10-27",
+  "sourceBaseline": "Human-Fabric-Workbench@09a01c405e6fe8619991161d7a13e62c1faa4649 / R12",
+  "sha256": "a3d7f654a148f101e201196e32d8cff717d32283af0918f941e241d85ba7a629",
+  "tests": {
+    "total": 174,
+    "passed": 174,
+    "failed": 0
+  },
+  "completedSteps": [
+    {
+      "id": "needle-groups",
+      "default": 0.65,
+      "coverageBotanical": {
+        "changed": 27914,
+        "total": 30576
+      },
+      "effect": "Motif-coherent interior direction variation, endpoints/Z/radii/sample counts retained; cropped motifs held."
+    },
+    {
+      "id": "fiber-continuity",
+      "cottonFill": 0.8,
+      "silk": 0.2,
+      "fine": 0.3,
+      "effect": "Softer rough cotton response, small directional silk/fine changes; shading proxy, no measured BSDF acceptance."
+    },
+    {
+      "id": "source-cut-caps",
+      "default": 1,
+      "botanicalCaps": 2117,
+      "addedTriangles": 15560,
+      "effect": "Closes explicitly clipped tube ends only; natural openings and craft topology remain inherited."
+    },
+    {
+      "id": "controls-and-evidence",
+      "effect": "Full UI roundtrip, safe over-budget restoration, current frame matrix, real source reference dialog and standalone comparisons."
+    }
+  ],
+  "visualOutcome": "Whole-cloth repeated needle-bar read reduced through coherent fill bends. Still visibly procedural. Cotton softer, silk directional bright regions retained, fine open holes retained. Studio cotton/silk distinction modest; raking cotton can brighten. No real-fabric visual acceptance.",
+  "geometryCostBotanicalCotton": {
+    "r12": {
+      "caps": 0,
+      "capTriangles": 0,
+      "primaryBytes": 173936728,
+      "fuzzBytes": 4204600,
+      "totalGeometryBytes": 178141328,
+      "primaryTriangles": 3605168,
+      "fuzzTriangles": 600424,
+      "totalTriangles": 4205592,
+      "roots": 75053,
+      "flyaways": 5878,
+      "shortStitchChanges": 60
+    },
+    "r13": {
+      "caps": 2117,
+      "capTriangles": 15560,
+      "primaryBytes": 175231912,
+      "fuzzBytes": 4238872,
+      "totalGeometryBytes": 179470784,
+      "primaryTriangles": 3620728,
+      "fuzzTriangles": 605320,
+      "totalTriangles": 4226048,
+      "roots": 75665,
+      "flyaways": 5989,
+      "shortStitchChanges": 60
+    }
+  },
+  "geometryBufferIncreasePercent": 0.7462928535033608,
+  "geometryCostScope": "Retained typed buffers/submitted triangles, not total VRAM or FPS",
+  "browser": {
+    "finalFrames": 32,
+    "staticSamples": 32,
+    "intentionalErrors": 1,
+    "unexpectedErrors": 0,
+    "roundtrip": true,
+    "rejectedPitchMm": 0.08,
+    "retainedPitchMm": 0.18,
+    "movingSamples": 4,
+    "stoppedSamples": 32,
+    "temporalAcceptance": false
+  },
+  "gpu": "24 actual complete batch queries per on/off group; inconclusive, no stable cost or FPS claim",
+  "delivery": {
+    "standalone": true,
+    "coreNetworkDependenciesStatic": 0,
+    "httpRenderAndInteractions": true,
+    "fileProtocol": "blocked by browser URL safety policy; unverified",
+    "merged": false,
+    "deployed": false
+  },
+  "remaining": [
+    "Continue stitch density, connected fill and craft-informed organization against real examples",
+    "Same-scale same-light cotton/silk/fine-net real-fabric calibration",
+    "Temporal shimmer, zoom stability and cross-device performance/quality",
+    "True reverse-side construction and contact/compaction, then drape/collision physics"
+  ],
+  "evidence": [
+    "qa/compare.html",
+    "qa/material-summary.png",
+    "qa/cut-end-compare.html",
+    "qa/browser-frames.json",
+    "qa/r13-stitch-grouping.json",
+    "qa/r13-cut-ends.json",
+    "qa/r13-continuity-diagnosis.json",
+    "qa/r13-browser-roundtrip-result.json",
+    "qa/r13-browser-budget.json",
+    "qa/r13-geometry-cost.json",
+    "qa/gpu-summary.json",
+    "qa/standalone-integrity.json",
+    "qa/test-results.txt"
+  ],
+  "sourceCommit": "a8ee9ee352521830103719eb7eaceae4dcf54db9",
+  "evidenceSelection": "Full source/tools/process/fixtures in linked source repository"
+}

@@ -1,0 +1,856 @@
+{
+  "candidate": "R12 finishFocus 1",
+  "reference": "same final R12 material controls with finishFocus=0; isolates azimuth change",
+  "measure": "Angular phase densities per outgoing solid angle, before material Fresnel/sheen and actual incident RGB. These are not image luminance or a measured BSDF.",
+  "diagnosis": [
+    "Full bundleScatter retains specularIntensity through material.specularColor and F_Schlick; it does not discard that control.",
+    "R11 reflection azimuth has only the first harmonic, so even a narrow silk lusterWidth remains broad around the yarn axis.",
+    "R12 redistributes that reflection azimuth using a normalized cos^8(phi/2) density mixed by live finishFocus * anisotropy * (1-lusterWidth)^2.",
+    "Footprint Gaussian convolution damps harmonics without changing their constant term. Longitudinal filtering, transmission, opacity, lights and shadow handling are unchanged."
+  ],
+  "denominator": {
+    "rawIntegral": "35*pi/64",
+    "normalization": "64/(35*pi)",
+    "integrationGrid": {
+      "mu": 512,
+      "phi": 128
+    }
+  },
+  "limitations": [
+    "Phase normalization does not prove the complete renderer is an energy-conserving BSDF; this remains an artistic yarn proxy.",
+    "No silhouette, radius or spacing change. Uniform rod geometry can remain visible despite finish redistribution.",
+    "Diffuse and environment contributions stay unchanged. A broad environment may dilute the direct highlight distinction.",
+    "No new self-transmission solution; the existing opaque shadow attenuation remains.",
+    "Shader source and CPU tests do not establish GPU compile or visible improvement; main thread must inspect matched studio/raking/backlit renders."
+  ],
+  "records": [
+    {
+      "profile": "cotton",
+      "layer": "net",
+      "controls": {
+        "roughness": 0.82,
+        "specular": 0.25,
+        "sheen": 0.16,
+        "anisotropy": 0.18,
+        "softness": 0.7,
+        "lusterWidth": 0.76,
+        "finishFocus": 0.25
+      },
+      "effectiveMixture": 0.0025919999999999997,
+      "oldPeak": 0.16116512477206996,
+      "newPeak": 0.16204207533612752,
+      "peakRatio": 1.0054413171912833,
+      "oldOpposite": 0.11199610365516728,
+      "newOpposite": 0.11170580975449307,
+      "oppositeRatio": 0.9974079999999999,
+      "peakAtVariance03": 0.1617662557981337,
+      "peakAtVariance2": 0.16131497583883003,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000001461587817
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000001461587753
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000001461587869
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000004342888404
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000004342888626
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000004342888598
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000001461587567
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.000000146158816
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000001461587735
+        }
+      ]
+    },
+    {
+      "profile": "cotton",
+      "layer": "fill",
+      "controls": {
+        "roughness": 0.86,
+        "specular": 0.14,
+        "sheen": 0.28,
+        "anisotropy": 0.34,
+        "softness": 0.94,
+        "lusterWidth": 0.88,
+        "finishFocus": 0.25
+      },
+      "effectiveMixture": 0.001224,
+      "oldPeak": 0.14891092073953086,
+      "newPeak": 0.1493401916958511,
+      "peakRatio": 1.0028827365661859,
+      "oldOpposite": 0.12432012648896612,
+      "newOpposite": 0.12416795865414365,
+      "oppositeRatio": 0.9987760000000002,
+      "peakAtVariance03": 0.14920991028984548,
+      "peakAtVariance2": 0.14899675139607066,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000001486986958
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000001486986776
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000001486986858
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000004367821163
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000004367821238
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.000000436782105
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000001486987071
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000001486987158
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000001486986736
+        }
+      ]
+    },
+    {
+      "profile": "cotton",
+      "layer": "outline",
+      "controls": {
+        "roughness": 0.76,
+        "specular": 0.25,
+        "sheen": 0.42,
+        "anisotropy": 0.24,
+        "softness": 0.82,
+        "lusterWidth": 0.74,
+        "finishFocus": 0.25
+      },
+      "effectiveMixture": 0.004056000000000001,
+      "oldPeak": 0.1707234381419246,
+      "newPeak": 0.17215015054587696,
+      "peakRatio": 1.0083568631201436,
+      "oldOpposite": 0.11500616544288642,
+      "newOpposite": 0.11453970043585007,
+      "oppositeRatio": 0.995944,
+      "peakAtVariance03": 0.17169868547284822,
+      "peakAtVariance2": 0.17096002445823957,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000001792323636
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.000000179232367
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.000000179232363
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000004167095435
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000004167095295
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000004167095486
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000001792323707
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000001792323956
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000001792323647
+        }
+      ]
+    },
+    {
+      "profile": "cotton",
+      "layer": "trim",
+      "controls": {
+        "roughness": 0.76,
+        "specular": 0.26,
+        "sheen": 0.4,
+        "anisotropy": 0.28,
+        "softness": 0.8,
+        "lusterWidth": 0.72,
+        "finishFocus": 0.25
+      },
+      "effectiveMixture": 0.0054880000000000016,
+      "oldPeak": 0.17515098474489377,
+      "newPeak": 0.17709500434245173,
+      "peakRatio": 1.0110991074380165,
+      "oldOpposite": 0.11435477516402157,
+      "newOpposite": 0.11372719615792141,
+      "oppositeRatio": 0.994512,
+      "peakAtVariance03": 0.17647607327357379,
+      "peakAtVariance2": 0.1754634140921157,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000001901933981
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000001901934272
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000001901934032
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000004121483133
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000004121483028
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.000000412148293
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000001901934246
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.000000190193399
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000001901934006
+        }
+      ]
+    },
+    {
+      "profile": "silk",
+      "layer": "net",
+      "controls": {
+        "roughness": 0.68,
+        "specular": 0.32,
+        "sheen": 0.18,
+        "anisotropy": 0.35,
+        "softness": 0.28,
+        "lusterWidth": 0.28,
+        "finishFocus": 1
+      },
+      "effectiveMixture": 0.18144,
+      "oldPeak": 0.25579060268370335,
+      "newPeak": 0.3195944791041856,
+      "peakRatio": 1.2494379220779217,
+      "oldOpposite": 0.07640498521721009,
+      "newOpposite": 0.06254206469939948,
+      "oppositeRatio": 0.8185599999999998,
+      "peakAtVariance03": 0.29611449115927035,
+      "peakAtVariance2": 0.2576978942738529,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000003423128971
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000003423129058
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.000000342312909
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000003723095745
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000003723095743
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000003723096091
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.000000342312909
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000003423128878
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000003423129316
+        }
+      ]
+    },
+    {
+      "profile": "silk",
+      "layer": "fill",
+      "controls": {
+        "roughness": 0.36,
+        "specular": 0.65,
+        "sheen": 0.58,
+        "anisotropy": 0.82,
+        "softness": 0.22,
+        "lusterWidth": 0.18,
+        "finishFocus": 1
+      },
+      "effectiveMixture": 0.5513680000000001,
+      "oldPeak": 0.46833952002446966,
+      "newPeak": 0.79486415805159,
+      "peakRatio": 1.6971964228217602,
+      "oldOpposite": 0.11164750167765994,
+      "newOpposite": 0.05008864197265193,
+      "oppositeRatio": 0.4486319999999999,
+      "peakAtVariance03": 0.670289184097488,
+      "peakAtVariance2": 0.46646682406759243,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000021580162424
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000021580162466
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000021580162477
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.000000045124707
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000000451247248
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000000451247302
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000021580162397
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000021580162368
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000021580162146
+        }
+      ]
+    },
+    {
+      "profile": "silk",
+      "layer": "outline",
+      "controls": {
+        "roughness": 0.42,
+        "specular": 0.62,
+        "sheen": 0.56,
+        "anisotropy": 0.76,
+        "softness": 0.24,
+        "lusterWidth": 0.22,
+        "finishFocus": 1
+      },
+      "effectiveMixture": 0.462384,
+      "oldPeak": 0.41145491718613897,
+      "newPeak": 0.6601776501344019,
+      "peakRatio": 1.6044957115817933,
+      "oldOpposite": 0.10773109819069253,
+      "newOpposite": 0.05791796208488736,
+      "oppositeRatio": 0.537616,
+      "peakAtVariance03": 0.5666593173037119,
+      "peakAtVariance2": 0.4136500354343431,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000015674188634
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000015674188785
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000015674188707
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000000627006633
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000000627006531
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000000627006653
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000015674188583
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000015674188323
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.00000156741887
+        }
+      ]
+    },
+    {
+      "profile": "silk",
+      "layer": "trim",
+      "controls": {
+        "roughness": 0.43,
+        "specular": 0.6,
+        "sheen": 0.54,
+        "anisotropy": 0.72,
+        "softness": 0.25,
+        "lusterWidth": 0.24,
+        "finishFocus": 1
+      },
+      "effectiveMixture": 0.41587199999999996,
+      "oldPeak": 0.39455992263672524,
+      "newPeak": 0.6126948322622446,
+      "peakRatio": 1.5528562256596905,
+      "oldOpposite": 0.10806418263298843,
+      "newOpposite": 0.06312331487304226,
+      "oppositeRatio": 0.584128,
+      "peakAtVariance03": 0.5312667950604726,
+      "peakAtVariance2": 0.39803895492315744,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000014249130698
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000014249130653
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000014249130602
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.00000007258138
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000000725813736
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000000725814011
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000014249130778
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000014249130995
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000014249130504
+        }
+      ]
+    },
+    {
+      "profile": "fine",
+      "layer": "net",
+      "controls": {
+        "roughness": 0.76,
+        "specular": 0.24,
+        "sheen": 0.12,
+        "anisotropy": 0.25,
+        "softness": 0.62,
+        "lusterWidth": 0.66,
+        "finishFocus": 0.4
+      },
+      "effectiveMixture": 0.011559999999999999,
+      "oldPeak": 0.18312776822426236,
+      "newPeak": 0.1871797468203133,
+      "peakRatio": 1.0221265110984632,
+      "oldOpposite": 0.10870931261121551,
+      "newOpposite": 0.10745263295742985,
+      "oppositeRatio": 0.9884399999999999,
+      "peakAtVariance03": 0.18586552316799204,
+      "peakAtVariance2": 0.18371526651594638,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000001950435322
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000001950435253
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000001950435216
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000004086968157
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.000000408696832
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000004086968357
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000001950435462
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000001950435329
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000001950435133
+        }
+      ]
+    },
+    {
+      "profile": "fine",
+      "layer": "fill",
+      "controls": {
+        "roughness": 0.58,
+        "specular": 0.34,
+        "sheen": 0.38,
+        "anisotropy": 0.5,
+        "softness": 0.64,
+        "lusterWidth": 0.6,
+        "finishFocus": 0.4
+      },
+      "effectiveMixture": 0.03200000000000001,
+      "oldPeak": 0.23739507673554594,
+      "newPeak": 0.2511692086604216,
+      "peakRatio": 1.0580219780219782,
+      "oldOpposite": 0.12782811824221701,
+      "newOpposite": 0.12373761845846606,
+      "oppositeRatio": 0.968,
+      "peakAtVariance03": 0.24661640101333293,
+      "peakAtVariance2": 0.2391673607290968,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000005134358254
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000005134358276
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000005134358363
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000002934077656
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000002934077876
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000002934077863
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000005134357994
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000005134358274
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000005134358083
+        }
+      ]
+    },
+    {
+      "profile": "fine",
+      "layer": "outline",
+      "controls": {
+        "roughness": 0.63,
+        "specular": 0.37,
+        "sheen": 0.5,
+        "anisotropy": 0.4,
+        "softness": 0.58,
+        "lusterWidth": 0.56,
+        "finishFocus": 0.4
+      },
+      "effectiveMixture": 0.030976,
+      "oldPeak": 0.22636449347044943,
+      "newPeak": 0.23863337704674104,
+      "peakRatio": 1.0541996820622985,
+      "oldOpposite": 0.11403324107157979,
+      "newOpposite": 0.11050094739614655,
+      "oppositeRatio": 0.9690240000000001,
+      "peakAtVariance03": 0.23452582600283228,
+      "peakAtVariance2": 0.22780528879428175,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000003872424439
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.000000387242423
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000003872424368
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000003489708953
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000003489708924
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000003489708833
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000003872424874
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.000000387242441
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.000000387242438
+        }
+      ]
+    },
+    {
+      "profile": "fine",
+      "layer": "trim",
+      "controls": {
+        "roughness": 0.64,
+        "specular": 0.36,
+        "sheen": 0.45,
+        "anisotropy": 0.4,
+        "softness": 0.58,
+        "lusterWidth": 0.56,
+        "finishFocus": 0.4
+      },
+      "effectiveMixture": 0.030976,
+      "oldPeak": 0.2244269749532577,
+      "newPeak": 0.23659084564192773,
+      "peakRatio": 1.0541996820622987,
+      "oldOpposite": 0.11305719790878394,
+      "newOpposite": 0.10955513814636145,
+      "oppositeRatio": 0.969024,
+      "peakAtVariance03": 0.2325184523035666,
+      "peakAtVariance2": 0.22585543809735364,
+      "integrations": [
+        {
+          "muI": -0.95,
+          "variance": 0,
+          "value": 1.0000003737631387
+        },
+        {
+          "muI": -0.95,
+          "variance": 0.3,
+          "value": 1.0000003737631389
+        },
+        {
+          "muI": -0.95,
+          "variance": 2,
+          "value": 1.0000003737631447
+        },
+        {
+          "muI": 0,
+          "variance": 0,
+          "value": 1.0000003543102698
+        },
+        {
+          "muI": 0,
+          "variance": 0.3,
+          "value": 1.0000003543102869
+        },
+        {
+          "muI": 0,
+          "variance": 2,
+          "value": 1.0000003543102758
+        },
+        {
+          "muI": 0.95,
+          "variance": 0,
+          "value": 1.0000003737631395
+        },
+        {
+          "muI": 0.95,
+          "variance": 0.3,
+          "value": 1.0000003737631706
+        },
+        {
+          "muI": 0.95,
+          "variance": 2,
+          "value": 1.0000003737631338
+        }
+      ]
+    }
+  ]
+}

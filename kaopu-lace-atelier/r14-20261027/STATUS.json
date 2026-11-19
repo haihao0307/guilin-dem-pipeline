@@ -1,0 +1,75 @@
+{
+  "stage": "R14",
+  "status": "research-candidate-draft",
+  "date": "2026-10-27",
+  "sourceBaseline": "Human-Fabric-Workbench a8ee9ee352521830103719eb7eaceae4dcf54db9 / experiments/lace-visual-r13-20261027",
+  "sha256": "55811eaae3d2983db097a540210e25ca7679e11b8335f0801fa7b0abf130425b",
+  "tests": {
+    "total": 207,
+    "passed": 207,
+    "failed": 0
+  },
+  "completedSteps": [
+    {
+      "id": "reference-atlas",
+      "effect": "Five public-domain/CC0 museum images selectable beside the cloth; observation references, not rendering textures."
+    },
+    {
+      "id": "filament-relief",
+      "effect": "Per-layer optical relief; cotton, silk and fine-mesh fill presets differ. Shading only, pixel-footprint filtered."
+    },
+    {
+      "id": "leaf-interlace-study",
+      "effect": "Optional sparse/dense visual crossing for complete leaves; cropped or ambiguous leaves retained. 12 x 12 cm test: 52 accepted, 17 held. Thread ends and true craft topology unresolved."
+    },
+    {
+      "id": "hex-ground",
+      "effect": "Optional open hexagonal centre-line graph and explicit edge-length controls; not twisted bobbinet reconstruction."
+    },
+    {
+      "id": "recipe-and-controls",
+      "effect": "R14 round trip and R13 migration checked in browser; unsupported ranges or budget failures restore the previous successful specimen."
+    }
+  ],
+  "visualEvidence": {
+    "interlaceComparison": "qa/r14-interlace-comparison.png",
+    "threeMaterialComparison": "qa/r14-weave-materials.png",
+    "referenceAtlas": "qa/r14-atlas-desktop.png",
+    "defaultView": "qa/r14-current-desktop.png"
+  },
+  "geometryChecks": {
+    "sweepMatrixCases": 144,
+    "sweepMatrixNewDefectPaths": 0,
+    "detailExtremeCases": 12,
+    "largeSpecimenMaterialCases": 3,
+    "hexBoundaryCases": 18,
+    "limits": "Sweep checks are bounded and do not validate finite-radius contact, complete craft topology, dynamic stability, or calibrated appearance."
+  },
+  "budget": {
+    "limitSegments": 250000,
+    "smallDiamondBaseline": 85454,
+    "smallDiamondDenseInterlace": 210280,
+    "smallHexDenseInterlace": 220275,
+    "fullDefaultInterlace": "rejected without silent density change"
+  },
+  "heldStudies": [
+    "leaf ties",
+    "leaf openwork",
+    "stitch density",
+    "single-direction cross threads"
+  ],
+  "remaining": [
+    "connect interlaced yarn ends; improve local density and petal structures",
+    "calibrate cotton and silk with same-scale real samples",
+    "improve hex junctions and reduce geometry cost; test dynamic stability and lower-end devices",
+    "craft back side and cloth physics after visual work"
+  ],
+  "singleFile": {
+    "staticDependencyAudit": "passed",
+    "httpRendering": "passed",
+    "fileProtocol": "blocked_by_browser_url_policy_not_verified"
+  },
+  "publication": "draft candidate; not merged or deployed",
+  "sourceCommit": "a18329b2fc1f86124c2be6356bdca378e7578c13",
+  "sourceUrl": "https://github.com/haihao0307/Human-Fabric-Workbench/tree/a18329b2fc1f86124c2be6356bdca378e7578c13/experiments/lace-visual-r14-20261027"
+}
