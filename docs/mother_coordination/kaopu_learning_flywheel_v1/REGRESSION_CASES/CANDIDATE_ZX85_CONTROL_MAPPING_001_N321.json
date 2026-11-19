@@ -1,0 +1,90 @@
+{
+  "caseId": "ZX85-CONTROL-MAPPING-001-N321",
+  "status": "CANDIDATE",
+  "boundedQuestion": "Can a source-bound input-to-motion contract prevent a visually complete ZX85 cab from being accepted when joystick directions, travel pairing, pivot/spin behavior, neutral stop, or machine orientation are wrong?",
+  "novelty": {
+    "kind": "new_first_party_source_to_executable_directional_contract",
+    "relativeToCurrentBestView": "N319 proves the pilot shut-off lever gates motion authority, but deliberately does not prove that each authorized input drives the correct actuator or crawler in the correct direction.",
+    "teacherStatus": "NO_NOVELTY"
+  },
+  "frozenSource": {
+    "documentId": "HITACHI_75U5A_85USB5A_OPERATOR_MANUAL_V0",
+    "title": "655fdf487782bc0d6389e4fd_OM - 75U-5A - 85USB-5A excavator Hitachi.pdf",
+    "libraryFileId": "libfile_fde3_f-ea981e4885448191ae6781020808a2c5_5a3ac42137a48191aa812604eedaad98",
+    "version": 0,
+    "sizeBytes": 9094235,
+    "relevantPdfPages": [187, 188, 199]
+  },
+  "canonicalMappings": {
+    "isoJoysticks": [
+      {"inputDevice": "LEFT_JOYSTICK", "inputDirection": "FORWARD", "expectedTarget": "ARM", "expectedSemanticDelta": "ROLL_OUT", "sourcePdfPages": [199]},
+      {"inputDevice": "LEFT_JOYSTICK", "inputDirection": "BACKWARD", "expectedTarget": "ARM", "expectedSemanticDelta": "ROLL_IN", "sourcePdfPages": [199]},
+      {"inputDevice": "LEFT_JOYSTICK", "inputDirection": "RIGHT", "expectedTarget": "UPPER_STRUCTURE", "expectedSemanticDelta": "SWING_RIGHT", "sourcePdfPages": [199]},
+      {"inputDevice": "LEFT_JOYSTICK", "inputDirection": "LEFT", "expectedTarget": "UPPER_STRUCTURE", "expectedSemanticDelta": "SWING_LEFT", "sourcePdfPages": [199]},
+      {"inputDevice": "RIGHT_JOYSTICK", "inputDirection": "FORWARD", "expectedTarget": "BOOM", "expectedSemanticDelta": "LOWER", "sourcePdfPages": [199]},
+      {"inputDevice": "RIGHT_JOYSTICK", "inputDirection": "BACKWARD", "expectedTarget": "BOOM", "expectedSemanticDelta": "RAISE", "sourcePdfPages": [199]},
+      {"inputDevice": "RIGHT_JOYSTICK", "inputDirection": "LEFT", "expectedTarget": "BUCKET", "expectedSemanticDelta": "ROLL_IN", "sourcePdfPages": [199]},
+      {"inputDevice": "RIGHT_JOYSTICK", "inputDirection": "RIGHT", "expectedTarget": "BUCKET", "expectedSemanticDelta": "ROLL_OUT", "sourcePdfPages": [199]}
+    ],
+    "neutralBehavior": {"event": "RELEASE_ANY_JOYSTICK", "requiredState": "NEUTRAL", "requiredMotion": "TARGET_FUNCTION_STOPPED", "sourcePdfPages": [199]},
+    "travel": {
+      "requiredOrientationBinding": "FRONT_IDLERS_FRONT_TRAVEL_MOTORS_REAR",
+      "orientationWarning": "If travel motors are at the front, pedal/lever control actions are reversed; the receipt must bind actual undercarriage orientation before judging forward/reverse.",
+      "paired": [
+        {"left": "FORWARD", "right": "FORWARD", "expectedMotion": "TRANSLATE_FORWARD", "sourcePdfPages": [187]},
+        {"left": "BACKWARD", "right": "BACKWARD", "expectedMotion": "TRANSLATE_REVERSE", "sourcePdfPages": [187]}
+      ],
+      "pivot": {"constraint": "EXACTLY_ONE_CRAWLER_DRIVEN", "sourcePdfPages": [188]},
+      "spin": {"constraint": "BOTH_CRAWLERS_DRIVEN_IN_OPPOSITE_DIRECTIONS", "sourcePdfPages": [188]},
+      "neutral": {"constraint": "TRAVEL_BRAKES_AUTOMATICALLY_APPLIED", "sourcePdfPages": [187]}
+    }
+  },
+  "coordinateFrameRule": "Semantic motion is frozen by the manual. A production numeric sign is valid only when the receipt declares actuator axis, positive direction and machine frame; an undeclared numeric sign is UNKNOWN, not a guessed failure or pass.",
+  "minimumReceipt": [
+    "sourcePdfPages",
+    "inputDevice",
+    "inputDirection",
+    "machineOrientation",
+    "expectedTarget",
+    "expectedSemanticDelta",
+    "declaredCoordinateFrame",
+    "observedSignedDelta",
+    "neutralStopObserved",
+    "sourceHead",
+    "observedReplayReceipt"
+  ],
+  "holds": [
+    "HOLD_CONTROL_MAPPING_SOURCE_MISSING",
+    "HOLD_CONTROL_INPUT_TARGET_MISMATCH",
+    "HOLD_CONTROL_SEMANTIC_DELTA_MISMATCH",
+    "HOLD_CONTROL_COORDINATE_FRAME_UNDECLARED",
+    "HOLD_CONTROL_NEUTRAL_STOP_MISSING",
+    "HOLD_TRAVEL_ORIENTATION_UNBOUND",
+    "HOLD_TRAVEL_PAIRING_MISMATCH",
+    "HOLD_PIVOT_ONE_CRAWLER_CONSTRAINT_FAILED",
+    "HOLD_SPIN_OPPOSED_CRAWLERS_MISSING",
+    "HOLD_CONTROL_PRODUCTION_REPLAY_MISSING"
+  ],
+  "decision": "CANDIDATE_CONTROL_MAPPING_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+  "lifecycle": {
+    "POSTED": false,
+    "POSTED_RECEIPT": null,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate regression only",
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "dedupRouting": {
+    "N319": "APPLICABLE_PREREQUISITE_ONLY: motion authority interlock; not duplicated here.",
+    "N318": "NOT_APPLICABLE: LCD screen and controller state contract.",
+    "existingDirectionalCaseSearch": "No joystick/travel/pivot/spin input-to-motion regression found in the current learning branch search."
+  },
+  "boundaries": [
+    "The fixture gate validates contract semantics, not the production excavator runtime.",
+    "The manual freezes semantic directions; production numeric axis signs remain UNKNOWN until a coordinate frame is declared.",
+    "This case does not reopen the pilot shut-off interlock or LCD state machine.",
+    "No Mother branch, production asset, main branch or R2 rule is modified."
+  ],
+  "nextAction": "ZX85 Cabin/Control Mother should replay one source-bound control matrix on a fresh head and return signed deltas in a declared coordinate frame."
+}
