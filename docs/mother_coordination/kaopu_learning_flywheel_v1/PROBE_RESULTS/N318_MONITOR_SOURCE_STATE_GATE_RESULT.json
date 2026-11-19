@@ -1,0 +1,18 @@
+{
+  "caseId": "MONITOR-SOURCE-STATE-001-N318",
+  "command": "node docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n318_monitor_source_state_gate.mjs",
+  "exitCode": 0,
+  "passed": 6,
+  "total": 6,
+  "results": [
+    {"fixture": "source-backed state graph", "pass": true, "holds": []},
+    {"fixture": "static icon without behavior", "pass": true, "holds": ["HOLD_MONITOR_STATIC_ICON_ONLY"]},
+    {"fixture": "invented screen without source", "pass": true, "holds": ["HOLD_MONITOR_SCREEN_SOURCE_MISSING"]},
+    {"fixture": "optional camera treated as standard", "pass": true, "holds": ["HOLD_MONITOR_OPTIONALITY_CONTRADICTION"]},
+    {"fixture": "alarm transition without current-alarm guard", "pass": true, "holds": ["HOLD_MONITOR_STATE_TRANSITION_CONTRADICTION"]},
+    {"fixture": "interactive screen without controller events", "pass": true, "holds": ["HOLD_MONITOR_TRIGGER_UNBOUND"]}
+  ],
+  "scope": "candidate fixture semantics only",
+  "productionReplay": "NOT_RUN",
+  "decision": "CANDIDATE_SOURCE_STATE_CONTRACT_DEFINED_HOLD_PRODUCTION_FUNCTIONAL_REPLAY_UNVERIFIED"
+}
