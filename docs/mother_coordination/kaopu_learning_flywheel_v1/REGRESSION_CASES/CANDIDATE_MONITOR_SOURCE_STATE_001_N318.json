@@ -14,7 +14,10 @@
       "libraryFileId": "libfile_fde3_f-7afb69993bbc8191b49593a0fae2e265_5a3ac42137a48191aa812604eedaad98",
       "version": 0,
       "sizeBytes": 8809678,
-      "relevantPdfPages": [2, 4],
+      "relevantPdfPages": [
+        2,
+        4
+      ],
       "sourceFacts": [
         "The cab has a 7-inch high-resolution multifunction monitor and a multifunction controller.",
         "The controller selects and adjusts menu items including maintenance support, attachment flow and optional rear-view monitor functions."
@@ -26,13 +29,38 @@
       "libraryFileId": "libfile_fde3_f-ea981e4885448191ae6781020808a2c5_5a3ac42137a48191aa812604eedaad98",
       "version": 0,
       "sizeBytes": 9094235,
-      "relevantPdfPageRangeReadThisRound": [63, 129]
+      "relevantPdfPageRangeReadThisRound": [
+        63,
+        129
+      ]
     }
   ],
   "minimumContract": {
-    "perScreen": ["screenId", "sourceDocumentId", "sourcePdfPages", "entryEvents", "exitEvents", "availabilityGuard", "visibleFields", "initialValuesOrUnknown"],
-    "perTransition": ["fromScreen", "event", "guard", "toScreen", "sourcePdfPages", "observedReplayReceipt"],
-    "controllerBinding": ["returnPrevious", "returnBasic", "selectorKnobPush", "selectorKnobRotate", "numericKeypadWhenApplicable"],
+    "perScreen": [
+      "screenId",
+      "sourceDocumentId",
+      "sourcePdfPages",
+      "entryEvents",
+      "exitEvents",
+      "availabilityGuard",
+      "visibleFields",
+      "initialValuesOrUnknown"
+    ],
+    "perTransition": [
+      "fromScreen",
+      "event",
+      "guard",
+      "toScreen",
+      "sourcePdfPages",
+      "observedReplayReceipt"
+    ],
+    "controllerBinding": [
+      "returnPrevious",
+      "returnBasic",
+      "selectorKnobPush",
+      "selectorKnobRotate",
+      "numericKeypadWhenApplicable"
+    ],
     "firstSourceBackedStates": [
       "STARTUP_TO_ACC_OR_BASIC",
       "BASIC_TO_MAIN_MENU",
@@ -44,15 +72,99 @@
     ]
   },
   "sourceFacts": [
-    {"pdfPages": [63, 65], "fact": "The monitor is not a single picture: the manual enumerates six menus, thirteen submenus, and sixteen fields on the basic screen."},
-    {"pdfPages": [66], "fact": "ACC/ON starts a roughly two-second startup state; ACC shows hour, clock and radio, while ON enters the basic screen; the alternator alarm persists until generation begins."},
-    {"pdfPages": [71, 72], "fact": "The optional password flow has a three-failure buzzer state and configurable validity duration."},
-    {"pdfPages": [73, 74], "fact": "Alarm List exists in the main menu only when a current alarm exists and lists only current alarms."},
-    {"pdfPages": [90, 91], "fact": "Auto Shut-Down has a timed warning, buzzer phases, idle reduction, stop transition and a pilot-lever abort condition."},
-    {"pdfPages": [96, 97], "fact": "Rear-view camera monitoring is optional; when enabled its image is continuously shown on the basic screen and remains only an aid."},
-    {"pdfPages": [105, 106], "fact": "With rear camera off, the under-meter area can be OFF, Logo or Operation Information."},
-    {"pdfPages": [109, 123], "fact": "Information contains Operation, Maintenance and Monitoring with resettable hours, maintenance notice/interval behavior and engine-speed monitoring."},
-    {"pdfPages": [124, 128], "fact": "The physical switch panel defines controller actions and state-changing switches; ECO is the engine-start default and work lights cause night mode."}
+    {
+      "pdfPages": [
+        63,
+        65
+      ],
+      "fact": "The monitor is not a single picture: the manual enumerates six menus, thirteen submenus, and sixteen fields on the basic screen."
+    },
+    {
+      "pdfPages": [
+        66
+      ],
+      "fact": "ACC/ON starts a roughly two-second startup state; ACC shows hour, clock and radio, while ON enters the basic screen; the alternator alarm persists until generation begins."
+    },
+    {
+      "pdfPages": [
+        71,
+        72
+      ],
+      "fact": "The optional password flow has a three-failure buzzer state and configurable validity duration."
+    },
+    {
+      "pdfPages": [
+        73,
+        74
+      ],
+      "fact": "Alarm List exists in the main menu only when a current alarm exists and lists only current alarms."
+    },
+    {
+      "pdfPages": [
+        90,
+        91
+      ],
+      "fact": "Auto Shut-Down has a timed warning, buzzer phases, idle reduction, stop transition and a pilot-lever abort condition."
+    },
+    {
+      "pdfPages": [
+        96,
+        97
+      ],
+      "fact": "Rear-view camera monitoring is optional; when enabled its image is continuously shown on the basic screen and remains only an aid."
+    },
+    {
+      "pdfPages": [
+        105,
+        106
+      ],
+      "fact": "With rear camera off, the under-meter area can be OFF, Logo or Operation Information."
+    },
+    {
+      "pdfPages": [
+        109,
+        123
+      ],
+      "fact": "Information contains Operation, Maintenance and Monitoring with resettable hours, maintenance notice/interval behavior and engine-speed monitoring."
+    },
+    {
+      "pdfPages": [
+        124,
+        128
+      ],
+      "fact": "The physical switch panel defines controller actions and state-changing switches; ECO is the engine-start default and work lights cause night mode."
+    },
+    {
+      "refinementId": "N322_CONTROL_EVENT_MATRIX",
+      "pdfPages": [
+        124,
+        125
+      ],
+      "fact": "Return-previous, return-basic and selector-knob input types are distinct: selector push opens/confirms while rotate moves the cursor."
+    },
+    {
+      "refinementId": "N322_CONTROL_EVENT_MATRIX",
+      "pdfPages": [
+        98,
+        99
+      ],
+      "fact": "Brightness adjustment requires an ordered selector path; clockwise brightens and counterclockwise darkens; day and night brightness are independently adjustable."
+    },
+    {
+      "refinementId": "N322_CONTROL_EVENT_MATRIX",
+      "pdfPages": [
+        99,
+        128
+      ],
+      "fact": "Work-light position 2 enters monitor night mode with the night mark; numeric key 0 can activate the daytime screen while lights remain on."
+    },
+    {
+      "refinementId": "N322_CONTROL_EVENT_MATRIX",
+      "pdfPages": [
+        128
+      ],
+      "fact": "The selected passage does not explicitly bind monitor mode for work-light position 1 or OFF; those transitions remain UNKNOWN rather than inferred."
+    }
   ],
   "holds": [
     "HOLD_MONITOR_SCREEN_SOURCE_MISSING",
@@ -60,9 +172,15 @@
     "HOLD_MONITOR_STATIC_ICON_ONLY",
     "HOLD_MONITOR_OPTIONALITY_CONTRADICTION",
     "HOLD_MONITOR_STATE_TRANSITION_CONTRADICTION",
-    "HOLD_MONITOR_FUNCTIONAL_REPLAY_RECEIPT_MISSING"
+    "HOLD_MONITOR_FUNCTIONAL_REPLAY_RECEIPT_MISSING",
+    "HOLD_MONITOR_CONTROL_EVENT_SOURCE_MISSING",
+    "HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH",
+    "HOLD_MONITOR_BRIGHTNESS_PATH_MISMATCH",
+    "HOLD_MONITOR_DAY_NIGHT_BRIGHTNESS_COLLAPSED",
+    "HOLD_MONITOR_LIGHT_POSITION_MODE_UNSUPPORTED",
+    "HOLD_MONITOR_CONTROL_EVENT_REPLAY_MISSING"
   ],
-  "decision": "CANDIDATE_SOURCE_STATE_CONTRACT_DEFINED_HOLD_PRODUCTION_FUNCTIONAL_REPLAY_UNVERIFIED",
+  "decision": "CANDIDATE_N318_REFINED_WITH_CONTROL_EVENT_MATRIX_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
   "lifecycle": {
     "POSTED": true,
     "POSTED_RECEIPT": "#91 comment 7008131520",
@@ -80,5 +198,73 @@
   ],
   "dedupRouting": {
     "hydraulicHoseCorrection": "NO_NEW_CASE; route to CANDIDATE_GEOMETRY_TIME_NOT_RELATION_GRAPH_001 because it is a parent/subordinate/transmission relation error, not a monitor-state error."
+  },
+  "n322Refinement": {
+    "refinementId": "N322_CONTROL_EVENT_MATRIX",
+    "boundedQuestion": "Can the existing N318 regression reject a ZX85 night-display implementation when selector-knob press/rotate semantics, return buttons, brightness navigation, work-light night mode or numeric-key override are wired incorrectly?",
+    "sourcePdfPages": [
+      98,
+      99,
+      124,
+      125,
+      128
+    ],
+    "eventContract": {
+      "RETURN_PREVIOUS_PRESS": "PREVIOUS_SCREEN",
+      "RETURN_BASIC_PRESS": "BASIC_SCREEN",
+      "SELECTOR_PRESS_ON_BASIC": "OPEN_MAIN_MENU",
+      "SELECTOR_PRESS_IN_MENU": "CONFIRM_SELECTION",
+      "SELECTOR_ROTATE_IN_MENU": "MOVE_CURSOR",
+      "BRIGHTNESS_ROTATE_CLOCKWISE": "BRIGHTER",
+      "BRIGHTNESS_ROTATE_COUNTERCLOCKWISE": "DARKER",
+      "WORK_LIGHT_POSITION_2": "NIGHT_MODE_WITH_MARK_8",
+      "NUMERIC_KEY_0_WHILE_LIGHT_ON": "DAYTIME_SCREEN_OVERRIDE"
+    },
+    "sourceUnknownTransitions": {
+      "WORK_LIGHT_POSITION_1_MONITOR_MODE": "UNKNOWN",
+      "WORK_LIGHT_OFF_MONITOR_MODE": "UNKNOWN"
+    },
+    "requiredBrightnessPath": [
+      "SELECTOR_PRESS_ON_BASIC",
+      "SELECTOR_ROTATE_TO_SETTING_MENU",
+      "SELECTOR_PRESS_CONFIRM_SETTING_MENU",
+      "SELECTOR_ROTATE_TO_BRIGHTNESS",
+      "SELECTOR_PRESS_CONFIRM_BRIGHTNESS",
+      "SELECTOR_ROTATE_ADJUST_BRIGHTNESS"
+    ],
+    "minimumReplayReceipt": [
+      "sourceHead",
+      "sourcePdfPages",
+      "initialScreen",
+      "physicalControlId",
+      "inputEventType",
+      "inputDirectionOrPosition",
+      "orderedEventTrace",
+      "resultScreen",
+      "resultVisibleFields",
+      "dayBrightnessState",
+      "nightBrightnessState",
+      "unknownTransitions"
+    ],
+    "holds": [
+      "HOLD_MONITOR_CONTROL_EVENT_SOURCE_MISSING",
+      "HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH",
+      "HOLD_MONITOR_BRIGHTNESS_PATH_MISMATCH",
+      "HOLD_MONITOR_DAY_NIGHT_BRIGHTNESS_COLLAPSED",
+      "HOLD_MONITOR_LIGHT_POSITION_MODE_UNSUPPORTED",
+      "HOLD_MONITOR_CONTROL_EVENT_REPLAY_MISSING"
+    ],
+    "fixtureResult": "12/12 PASS",
+    "productionReplay": "NOT_RUN",
+    "decision": "CANDIDATE_N318_REFINED_WITH_CONTROL_EVENT_MATRIX_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+    "lifecycle": {
+      "POSTED": false,
+      "POSTED_RECEIPT": null,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": "candidate regression refinement only",
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
   }
 }
