@@ -1,0 +1,24 @@
+{
+  "caseId": "MONITOR-SOURCE-STATE-001-N318",
+  "refinementId": "N322_CONTROL_EVENT_MATRIX",
+  "runAt": "2026-11-20T07:41:50+08:00",
+  "passed": 12,
+  "total": 12,
+  "fixtureOnly": true,
+  "productionReplay": "NOT_RUN",
+  "results": [
+    {"fixture": "source-backed control matrix passes", "pass": true, "holds": []},
+    {"fixture": "selector rotate cannot confirm", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH"]},
+    {"fixture": "selector press cannot only move cursor", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH"]},
+    {"fixture": "return basic cannot act as previous", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH"]},
+    {"fixture": "brightness navigation cannot skip confirmation", "pass": true, "holds": ["HOLD_MONITOR_BRIGHTNESS_PATH_MISMATCH"]},
+    {"fixture": "clockwise brightness cannot darken", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH"]},
+    {"fixture": "work-light position 2 must enter night mode with mark", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH"]},
+    {"fixture": "numeric 0 daytime override cannot be ignored", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_EFFECT_MISMATCH"]},
+    {"fixture": "day and night brightness cannot share one state", "pass": true, "holds": ["HOLD_MONITOR_DAY_NIGHT_BRIGHTNESS_COLLAPSED"]},
+    {"fixture": "position 1 night-mode claim remains unknown", "pass": true, "holds": ["HOLD_MONITOR_LIGHT_POSITION_MODE_UNSUPPORTED"]},
+    {"fixture": "production event trace is mandatory", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_REPLAY_MISSING"]},
+    {"fixture": "every event requires exact source pages", "pass": true, "holds": ["HOLD_MONITOR_CONTROL_EVENT_SOURCE_MISSING"]}
+  ],
+  "decision": "CANDIDATE_N318_REFINED_WITH_CONTROL_EVENT_MATRIX_HOLD_PRODUCTION_REPLAY_UNVERIFIED"
+}
