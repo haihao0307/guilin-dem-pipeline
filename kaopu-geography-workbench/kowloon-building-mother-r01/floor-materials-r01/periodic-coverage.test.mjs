@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {periodicBox1D,periodicBox2D} from './periodic-coverage.mjs';
+const ref=(u,s,g,w)=>{const p=s+g;let a=u-w/2,b=u+w/2,sum=0;for(let k=Math.floor(a/p)-1;k<=Math.floor(b/p)+1;k++)sum+=Math.max(0,Math.min(b,(k+1)*p-g/2)-Math.max(a,k*p+g/2));return sum/w;};
+test('exact periodic finite-box area matches independent interval enumeration',()=>{for(let i=0;i<4000;i++){let u=31*Math.sin(i*3.7),w=.001+Math.abs(Math.cos(i*.31))*1.3;let a=periodicBox1D(u,.048,.003,w);assert.ok(Math.abs(a.coverage-ref(u,.048,.003,w))<1e-10);}});
+test('whole periods retain true tile fraction rather than fading towards a quarter',()=>{const q=periodicBox2D([-.173,.011],[.198,.048],.003,[.201*37,.051*21]);assert.ok(Math.abs(q.coverage-(.198/.201)*(.048/.051))<1e-12);assert.ok(Math.hypot(...q.gradient)<1e-10);});
+test('finite-box derivative is the height derivative, not an unrelated dark line',()=>{for(let i=1;i<500;i++){const u=i*.001371,w=.0173,e=1e-8,a=periodicBox1D(u,.048,.003,w),d=(periodicBox1D(u+e,.048,.003,w).coverage-periodicBox1D(u-e,.048,.003,w).coverage)/(2*e);assert.ok(Math.abs(a.derivative-d)<2e-6);}});
+test('periodic phase works for negative metre coordinates and tiny resolved samples',()=>{for(let k=-30;k<30;k++){assert.equal(periodicBox1D((k+.5)*.051,.048,.003,1e-8).coverage,1);assert.equal(periodicBox1D(k*.051,.048,.003,1e-8).coverage,0);}});

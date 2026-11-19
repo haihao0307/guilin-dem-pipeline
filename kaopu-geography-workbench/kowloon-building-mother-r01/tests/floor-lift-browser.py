@@ -1,0 +1,45 @@
+import asyncio,json,sys,argparse,hashlib
+from pathlib import Path
+from playwright.async_api import async_playwright
+from importlib.util import spec_from_file_location,module_from_spec
+spec=spec_from_file_location('frozen',str(Path(__file__).with_name('floor-study-browser.py')));m=module_from_spec(spec);exec(spec.loader.get_source('frozen').split('async def main():')[0],m.__dict__)
+async def main():
+ ap=argparse.ArgumentParser();ap.add_argument('--output',required=True);args=ap.parse_args();out=Path(args.output);out.mkdir(parents=True,exist_ok=True);base='http://127.0.0.1:8765/kaopu-geography-workbench/kowloon-building-mother-r01/';r={'passed':False,'errors':[],'views':{}};save=lambda:(out/'lift.json').write_text(json.dumps(r,indent=2))
+ async with async_playwright() as pw:
+  browser=await pw.chromium.launch(headless=True,args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']);page=await browser.new_page(viewport={'width':1100,'height':850});page.on('pageerror',lambda e:r['errors'].append(str(e)))
+  async def capture(name,**options):
+   v=await asyncio.wait_for(page.evaluate('o=>probe.draw(o)',options),90);r['views'][name]=v;await page.locator('#view').screenshot(path=str(out/(name+'.png')));save();print('CAPTURE',name,v['stats']['wallMs'],v['ids'],flush=True);assert v['error']==0;assert not v['status'].get('3',0);return v
+  try:
+   r['hashes']={}
+   for path,expected in m.EXPECTED_RUNTIME.items():
+    response=await page.request.get(base+path);assert response.status==200;actual=hashlib.sha256(await response.body()).hexdigest();assert actual==expected,path;r['hashes'][path]=actual
+   await page.goto(base+'tests/floor-lift-probe.html');await page.wait_for_function('typeof probe?.setup==="function"');r['setup']=await page.evaluate('probe.setup()');r['fit']=await page.evaluate('probe.binding.fit');save();print('REAL LIFT GLSL COMPILE PASSED',flush=True)
+   r['cold']=await page.evaluate('probe.draw({width:32})');await page.evaluate("probe.camera('shaft')");await capture('lift-shaft-lower-closed',clip=True)
+   r['raysClosed']=await asyncio.wait_for(page.evaluate('probe.dynamicFixtures()'),90)
+   await page.evaluate("probe.camera('lower')");await capture('lift-lower-doors-closed')
+   r['openLower']=await page.evaluate("probe.act({action:{kind:'hall',floor:probe.binding.floors[0].id,direction:1},seconds:2})");assert r['openLower']['state']['carDoor']==1;await capture('lift-lower-doors-open')
+   r['raysOpen']=await asyncio.wait_for(page.evaluate('probe.dynamicFixtures()'),90)
+   r['trip']=await page.evaluate("(()=>{const history=[];probe.act({action:{kind:'car',floor:probe.binding.floors[1].id}});for(let i=0;i<1200;i++){const a=probe.act({seconds:.02});history.push({state:a.state.state,y:a.state.y,v:a.state.v,doors:[a.state.carDoor,...Object.values(a.state.landingDoors)],locked:a.state.carLock&&Object.values(a.state.locks).every(Boolean),edges:a.edges});if(a.state.motion&&a.state.y>1.4){const denied=probe.act({action:{kind:'door',value:'open'}});return{history,denied,state:denied.state};}}throw Error('Lift never moved');})()")
+   assert r['trip']['denied']['accepted']==False
+   for t in r['trip']['history']:
+    if t['v']!=0:assert all(x==0 for x in t['doors'])and t['locked']and not any(e['enabled'] for e in t['edges'] if e['type']=='boardsLift')
+   await page.evaluate("probe.camera('shaft')");movingView=await capture('lift-mid-travel-doors-locked',clip=True);closedView=r['views']['lift-shaft-lower-closed'];assert movingView['hitSha256']!=closedView['hitSha256'] and movingView['rgbaSha256']!=closedView['rgbaSha256'];assert any(int(k)>=3523 and int(k)<=3539 for k in movingView['ids']);r['movingVisible']={'sameCamera':movingView['stats']['camera']==closedView['stats']['camera'],'differentHitAndPixels':True,'visibleCarIDs':[k for k in movingView['ids'] if 3523<=int(k)<=3539]};assert r['movingVisible']['sameCamera']
+   r['arrived']=await page.evaluate("(()=>{for(let i=0;i<1200;i++){const a=probe.act({seconds:.02});if(a.state.current===probe.binding.floors[1].id&&a.state.carDoor===1)return a;}throw Error('No arrival');})()")
+   assert r['arrived']['state']['y']==3;await page.evaluate("probe.camera('upper')");await capture('lift-upper-arrived-open')
+   await page.evaluate("probe.camera('inside')");await capture('lift-car-upper-interior')
+   r['noRecompile']=await page.evaluate('({revision:probe.renderer.revision,programs:probe.renderer.compileStats})');assert sum(c['name']=='host-bound-elevator' for c in r['noRecompile']['programs'])==1;assert r['noRecompile']['revision']==1
+   r['cullParity']={}
+   for name in ['lower','inside','upper']:
+    await page.evaluate('name=>probe.camera(name)',name);a=await page.evaluate('probe.draw({width:160,cullTiles:true})');b=await page.evaluate('probe.draw({width:160,cullTiles:false})');assert a['hitSha256']==b['hitSha256']and a['rgbaSha256']==b['rgbaSha256'];r['cullParity'][name]={'culled':a,'all':b}
+   save();await page.goto(base+'whole-building-floor-study-r01.html');await page.wait_for_function('wholeBuilding?.ready||wholeBuilding?.error',timeout=180000);assert not await page.evaluate('wholeBuilding.error');await page.evaluate('wholeBuilding.enableStudyLift()');r['appClosed']=await page.evaluate('({fields:wholeBuilding.getBoundFields().length,state:wholeBuilding.getBoundLift(),stats:wholeBuilding.lastStats})');await page.evaluate("wholeBuilding.boundCommand({kind:'hall',floor:'evidence-plan',direction:1},{seconds:2})");await page.evaluate("wholeBuilding.walkBound('enter',.8)");await page.evaluate('wholeBuilding.enterBound()');await page.screenshot(path=str(out/'app-board-lower.png'))
+   r['appMoving']=await page.evaluate("wholeBuilding.boundCommand({kind:'car',floor:'evidence-upper-reference'},{seconds:6})");assert r['appMoving']['state']['motion'];r['appOpenDenied']=await page.evaluate("wholeBuilding.boundCommand({kind:'door',value:'open'})");assert r['appOpenDenied']['accepted']==False
+   r['appPlayback']=await asyncio.wait_for(page.evaluate('async()=>{const start=wholeBuilding.frames.length,t=performance.now();await wholeBuilding.playBound();return{wallMs:performance.now()-t,frames:wholeBuilding.frames.slice(start).map(f=>({state:f.boundLift,stats:{wallMs:f.wallMs,width:f.width,height:f.height}}))}}'),180);assert len(r['appPlayback']['frames'])>=3;assert any(f['state']['motion'] for f in r['appPlayback']['frames']);r['appArrived']=await page.evaluate('wholeBuilding.getBoundLift()');assert r['appArrived']['current']=='evidence-upper-reference';assert r['appArrived']['carDoor']==1;await page.evaluate("wholeBuilding.walkBound('exit',.6)");await page.evaluate('wholeBuilding.exitBound()');await page.screenshot(path=str(out/'app-exit-upper.png'))
+   await page.evaluate('wholeBuilding.returnBound(.5)');await page.screenshot(path=str(out/'app-return-stair-midlanding.png'));await page.evaluate('wholeBuilding.returnBound(1)');r['closedLoop']=await page.evaluate('({passenger:wholeBuilding.studyPassenger,pose:wholeBuilding.stairPose,view:wholeBuilding.view,stats:wholeBuilding.lastStats,sourceHash:wholeBuilding.sourceHash})');assert r['closedLoop']['passenger']=='lower';assert abs(r['closedLoop']['pose']['foot'][1])<1e-8
+   assert not await page.evaluate('wholeBuilding.errors.length');save();await page.close()
+   context=await browser.new_context(viewport={'width':390,'height':844},device_scale_factor=3,is_mobile=True,has_touch=True);page=await context.new_page();page.on('pageerror',lambda e:r['errors'].append(str(e)));await page.goto(base+'whole-building-floor-study-r01.html');await page.wait_for_function('wholeBuilding?.ready||wholeBuilding?.error',timeout=180000);assert not await page.evaluate('wholeBuilding.error');await page.locator('#boundLiftEnable').tap();await page.wait_for_function('wholeBuilding.studyLiftEnabled&&!wholeBuilding.renderer.busy&&wholeBuilding.frames.at(-1)?.intent===wholeBuilding.latestIntent.number',timeout=120000);await page.locator('#boundLiftLower').tap();await page.wait_for_function('wholeBuilding.getBoundLift()?.carDoor===1&&!wholeBuilding.renderer.busy',timeout=120000);await page.locator('#boundLiftEnter').tap();await page.wait_for_function('wholeBuilding.studyPassenger==="car"&&!wholeBuilding.renderer.busy',timeout=120000);await page.locator('#view').scroll_into_view_if_needed();r['mobile']=await page.evaluate('({state:wholeBuilding.getBoundLift(),stats:wholeBuilding.lastStats,sampling:wholeBuilding.sampling,passenger:wholeBuilding.studyPassenger})');assert r['mobile']['stats']['dynamicLiftFields']==40;assert r['mobile']['stats']['width']>=390;await page.screenshot(path=str(out/'mobile-real-touch-car.png'));assert not r['errors'];r['passed']=True
+  except Exception as e:
+   r['failure']=str(e);print('FAIL',repr(e),flush=True)
+   try:await page.screenshot(path=str(out/'failure.png'),timeout=10000)
+   except Exception as e:r['screenshotFailure']=str(e)
+  finally:save();await browser.close();sys.exit(0 if r['passed'] else 1)
+asyncio.run(main())
