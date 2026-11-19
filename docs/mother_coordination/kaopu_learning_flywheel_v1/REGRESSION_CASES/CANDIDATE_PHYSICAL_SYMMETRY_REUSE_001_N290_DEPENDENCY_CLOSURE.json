@@ -15,7 +15,11 @@
     "remeasuring or independently redrawing an actually symmetric mate and introducing drift",
     "mirroring a visually similar but physically asymmetric assembly",
     "treating a stored PASS JSON as a current gate run when its test dependency is absent",
-    "claiming a user-named mirror pair implemented when only a generic helper exists"
+    "claiming a user-named mirror pair implemented when only a generic helper exists",
+    "misclassifying an interior multifunction display as a physical exterior rear-view mirror",
+    "using the geometric operation name mirror as evidence for a component's functional role",
+    "accepting a visible display with no parent/support attachment path",
+    "inventing monitor mount fixings when the source records them as UNKNOWN"
   ],
   "taskAnchorFields": [
     "symmetryPairId",
@@ -45,7 +49,16 @@
     "mirrorVisibilityWitnessSet",
     "mirrorVisibilityEnvelope",
     "mirrorVisibilityReplay",
-    "mirrorSourcePageAndDigest"
+    "mirrorSourcePageAndDigest",
+    "sourceRole",
+    "functionalRole",
+    "interiorExteriorDomain",
+    "expectedParentObjectId",
+    "supportEdge",
+    "displayMode",
+    "roleSourceLocator",
+    "roleSourceDigest",
+    "roleSourceUnknowns"
   ],
   "auditRules": [
     "mirror or parameter reuse requires explicit source and target object IDs plus physical symmetry evidence; category labels or visual similarity alone are insufficient",
@@ -66,7 +79,12 @@
     "a concrete rear-view mirror pair cannot pass on reflection math alone; from a calibrated operator-eye anchor, the installed pair must replay the source-backed visibility witness envelope before whole integration is eligible for promotion",
     "ZX85USB-5A overall width 2260 mm is explicitly specified excluding back mirrors; it may constrain the machine body envelope but must not be used to infer mirror span, mount position, mirror surface dimensions or complete-machine width including mirrors",
     "the operator manual visibility rule constrains functional coverage, not mirror shape or mounting geometry; those remain UNKNOWN until model-specific measured or dimensioned evidence exists",
-    "any modification that can restrict operator visibility invalidates the prior mirror visibility receipt and requires the visual-field replay to be rerun"
+    "any modification that can restrict operator visibility invalidates the prior mirror visibility receipt and requires the visual-field replay to be rerun",
+    "the lexical token mirror in geometry, parity or left/right reuse code cannot establish the semantic role rear-view mirror",
+    "a physical rear-view mirror must be in the exterior domain, have concrete object and mount IDs, and satisfy the existing operator visibility replay; an interior display remains CAB-MONITOR even when it shows an optional rear-view camera feed",
+    "an interior display candidate must bind sourceRole, functionalRole, interior/exterior domain, expected parent/support edge and source locator before it can be promoted",
+    "a visible component with no replayable parent/support edge fails HOLD_COMPONENT_PARENT_BINDING_MISSING; visual plausibility or a better screen position is insufficient",
+    "when source evidence says mount fixings or exact display-body geometry are unknown, the candidate must preserve UNKNOWN and may not invent a door bracket or floating placement as source fact"
   ],
   "n290FreshObservation": {
     "observedAt": "2026-11-14T23:38:43+08:00",
@@ -143,7 +161,7 @@
     "failIf": "a stored PASS cannot be reproduced, a whole asymmetric assembly is mirrored, exceptions disappear, or a generic helper is reported as implemented rearview-mirror hardware",
     "rollback": "remove this N290 Candidate and learning log; no production Mother, main, R2 OS or global gate changed"
   },
-  "decision": "HOLD_NO_CONCRETE_MIRROR_PAIR_ADD_SOURCE_BACKED_VISIBILITY_GATE_CANDIDATE",
+  "decision": "CANDIDATE_GATE_RUN_PASS_HOLD_PRODUCTION_MONITOR_ROLE_AND_PARENT_BINDING_UNVERIFIED",
   "lifecycle": {
     "POSTED": true,
     "ACKNOWLEDGED": false,
@@ -154,7 +172,7 @@
     "USER_ACCEPTED": false
   },
   "adoption": "NOT_ADOPTED",
-  "currentBoundedQuestion": "Does exact ZX85 checkpoint v268 implement a concrete rear-view mirror pair with symmetryPairId, object IDs and whole binding; if not, does its newly retained manufacturer manual add a source-backed functional acceptance constraint without authorizing invented mirror geometry?",
+  "currentBoundedQuestion": "Can exact ZX85 checkpoint v319 and source-backed role contracts prevent the cabin multifunction display from being accepted as an exterior rear-view mirror or as a floating component?",
   "n292V121Observation": {
     "observedAt": "2026-11-15T11:46:54+08:00",
     "targetArtifact": {
@@ -497,6 +515,78 @@
       "target": "#91",
       "commentId": 6900215394,
       "state": "POSTED",
+      "acknowledged": false
+    }
+  },
+  "n317V319MonitorMirrorRoleObservation": {
+    "observedAt": "2026-11-19T11:39:00+08:00",
+    "targetArtifact": {
+      "filename": "zx85usb-5a-functional-whole-checkpoint-20261113-r01.zip",
+      "libraryFileId": "libfile_841f9900a5ec81918f2df377bf8e292f",
+      "versionId": "319",
+      "modifiedAt": "2026-11-16T16:44:02.174617+08:00",
+      "sizeBytes": 466345860,
+      "sha256": "d7defe7024c467c028ce2bd48150f6e1f9186a45fcc0a9188ec4c720ebed12e8"
+    },
+    "realUserFeedback": {
+      "observedAt": "2026-11-19",
+      "facts": [
+        "the black screen is an interior display above/left of the driver, not a rear-view mirror",
+        "all physical mirrors are exterior",
+        "the moved display location is directionally better but the component must connect to a door/support and must not float",
+        "rear engine-compartment volume and side-hole defects remain unresolved"
+      ],
+      "boundedScope": "only monitor-versus-mirror role and support binding are tested here; engine-compartment and side-hole defects remain separate unresolved production items"
+    },
+    "sourceBackedRoleEvidence": {
+      "structurePath": "zx5a-cab-source-r25/cabin-complete/official-interior-reference-r255-private/OBSERVED_STRUCTURE_R255.json",
+      "sourceRoleId": "CAB-MONITOR",
+      "observedClaim": "separate mounted display and surrounding support near the cab front; brochure text states seven-inch colour screen",
+      "unknowns": [
+        "bezel dimensions",
+        "mount fixings",
+        "exact screen/body geometry"
+      ],
+      "manualSeparationFacts": [
+        "manufacturer materials refer separately to mirrors and the monitor in the cab",
+        "a rear-view camera/monitor is an optional display function and does not make the display a physical mirror",
+        "physical rear-view mirrors have exterior placement and a separate operator-visibility acceptance constraint"
+      ],
+      "rightsBoundary": "evidence-only/private source; no redistribution or asset reuse claim"
+    },
+    "lexicalCollisionEvidence": {
+      "path": "zx5a-cab-source-r25/cabin-complete/CONSOLE_MIRROR_QA_R261.json",
+      "fact": "mirror is used for left/right geometric parity of console controls; this operation name does not establish a rear-view-mirror component role"
+    },
+    "failureMechanism": "SEMANTIC_ROLE_LABEL_COLLISION_AND_PARENTLESS_PLACEMENT",
+    "exactArtifactAssessment": {
+      "concreteExteriorMirrorObjectIds": 0,
+      "monitorMountFixingsKnown": false,
+      "postUserCorrectionCheckpointAvailable": false,
+      "productionCorrectionVerified": false
+    },
+    "falsifiableCandidateGate": {
+      "hypothesis": "binding source role, physical domain and parent/support edge will reject both a CAB-MONITOR relabelled as a rear-view mirror and a visually plausible but floating display",
+      "probePath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/n317_monitor_mirror_role_gate.mjs",
+      "resultPath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBE_RESULTS/N317_MONITOR_MIRROR_ROLE_GATE_RESULT.json",
+      "fixtureCount": 5,
+      "passed": 5,
+      "exitCode": 0,
+      "passBoundary": "status semantics passed on synthetic contract fixtures only",
+      "productionBoundary": "does not prove correct v319 monitor geometry, real support attachment, exterior mirrors, Mother implementation, adoption or user acceptance"
+    },
+    "gateStates": {
+      "sourceRoleClassification": "CAB-MONITOR",
+      "interiorExteriorDomain": "INTERIOR_DISPLAY_VS_EXTERIOR_MIRROR_SEPARATED",
+      "supportBinding": "HOLD_SOURCE_MOUNT_FIXINGS_UNKNOWN_AND_PRODUCTION_BINDING_UNVERIFIED",
+      "exteriorMirrorIntegration": "HOLD_ZERO_CONCRETE_OBJECT_IDS",
+      "candidateFixtureReplay": "PASS_5_OF_5",
+      "productionImplementation": "NOT_VERIFIED"
+    },
+    "decision": "CANDIDATE_GATE_RUN_PASS_HOLD_PRODUCTION_MONITOR_ROLE_AND_PARENT_BINDING_UNVERIFIED",
+    "routingReceipt": {
+      "target": "#91",
+      "state": "NOT_POSTED_YET",
       "acknowledged": false
     }
   }
