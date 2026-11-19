@@ -48,7 +48,7 @@
 
 状态：
 
-- POSTED：待 #91 定向路由后更新
+- POSTED：true（#91 comment 6999066300）
 - ACKNOWLEDGED：false
 - IMPLEMENTED：candidate regression only
 - GATE-RUN：true
