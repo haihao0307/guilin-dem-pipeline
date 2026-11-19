@@ -47,7 +47,7 @@ This is fixture evidence only. No current ZX85 production head was replayed, so 
 
 Decision: `CANDIDATE_CONTROL_MAPPING_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED`.
 
-- `POSTED=false` before the targeted issue receipt
+- `POSTED=true` — #91 comment `7020232283`
 - `ACKNOWLEDGED=false`
 - `IMPLEMENTED=candidate regression only`
 - `GATE-RUN=true (fixture only)`
