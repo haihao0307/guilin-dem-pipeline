@@ -41,4 +41,4 @@ Radio channel/recording and rights, air-conditioning implementation, sound fidel
 
 `CANDIDATE_N321_REFINED_WITH_SINGLE_RUN_CAUSAL_TRACE_HOLD_PRODUCTION_REPLAY_UNVERIFIED`
 
-Lifecycle before routing: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle after targeted routing: `POSTED=true` — #91 comment `7053424000`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
