@@ -1,0 +1,142 @@
+{
+  "caseId": "ZX85-TRACK-CONFIGURATION-001-N323",
+  "status": "CANDIDATE",
+  "boundedQuestion": "Can an explicit, mutually exclusive track-shoe configuration contract prevent ZX85 rubber and grouser variants from being collapsed into a material-only swap or from incorrectly carrying shared rollers, sprockets and axles inside the swappable variant?",
+  "novelty": {
+    "kind": "new_user_correction_plus_first_party_configuration_table",
+    "relativeToCurrentBestView": "N321 binds travel inputs to crawler motion, but it does not define which track-shoe configuration is installed or separate the swappable ground-contact variant from shared undercarriage running gear.",
+    "teacherStatus": "NO_NOVELTY"
+  },
+  "frozenSource": {
+    "documentId": "HITACHI_75U5A_85USB5A_OPERATOR_MANUAL_V0",
+    "title": "655fdf487782bc0d6389e4fd_OM - 75U-5A - 85USB-5A excavator Hitachi.pdf",
+    "libraryFileId": "libfile_fde3_f-ea981e4885448191ae6781020808a2c5_5a3ac42137a48191aa812604eedaad98",
+    "version": 0,
+    "sizeBytes": 9094235,
+    "relevantPdfPages": [342, 344]
+  },
+  "userCanonicalCorrection": "The metal axles and running gear belong to the undercarriage. The track is a separate replaceable configuration; the rubber/plastic-looking track and iron/steel track must not be merged into one object or shown as simultaneous variants.",
+  "sharedUndercarriageScope": [
+    "TRACK_FRAME",
+    "FRONT_IDLER",
+    "SPROCKET",
+    "LOWER_ROLLERS",
+    "UPPER_ROLLERS",
+    "AXLES_AND_MOUNTS"
+  ],
+  "swappableScope": "TRACK_SHOE_OR_CRAWLER_GROUND_CONTACT_SET",
+  "sourceConfigurations": [
+    {
+      "variantId": "GROUSER_450_STANDARD",
+      "sourceName": "450 mm Grouser shoe",
+      "application": "ORDINARY_GROUND",
+      "optionality": "STANDARD",
+      "shoeWidthMm": 450,
+      "operatingWeightKg": 8550,
+      "baseMachineWeightKg": 7130,
+      "cabHeightMm": 2530,
+      "minimumGroundClearanceMm": 360,
+      "undercarriageLengthMm": 2920,
+      "undercarriageWidthMm": 2200,
+      "groundPressureKPa": 37
+    },
+    {
+      "variantId": "GROUSER_600_OPTION",
+      "sourceName": "600 mm Grouser shoe",
+      "application": "WEAK_FOOTING",
+      "optionality": "OPTION",
+      "shoeWidthMm": 600,
+      "operatingWeightKg": 8730,
+      "baseMachineWeightKg": 7310,
+      "cabHeightMm": 2530,
+      "minimumGroundClearanceMm": 360,
+      "undercarriageLengthMm": 2920,
+      "undercarriageWidthMm": 2350,
+      "groundPressureKPa": 28
+    },
+    {
+      "variantId": "PAD_CRAWLER_450_OPTION",
+      "sourceName": "450 mm Pad Crawler Shoe",
+      "application": "PAVED_ROAD",
+      "optionality": "OPTION",
+      "shoeWidthMm": 450,
+      "operatingWeightKg": 8600,
+      "baseMachineWeightKg": 7180,
+      "cabHeightMm": 2560,
+      "minimumGroundClearanceMm": 410,
+      "undercarriageLengthMm": 2980,
+      "undercarriageWidthMm": 2200,
+      "groundPressureKPa": 37
+    },
+    {
+      "variantId": "RUBBER_CRAWLER_450_OPTION",
+      "sourceName": "450 mm Rubber Crawler Shoe",
+      "application": "PAVED_ROAD",
+      "optionality": "OPTION",
+      "shoeWidthMm": 450,
+      "operatingWeightKg": 8570,
+      "baseMachineWeightKg": 7150,
+      "cabHeightMm": 2540,
+      "minimumGroundClearanceMm": 390,
+      "undercarriageLengthMm": 2940,
+      "undercarriageWidthMm": 2200,
+      "groundPressureKPa": 37
+    }
+  ],
+  "sourceFacts": [
+    {"pdfPages": [342], "fact": "The standard ZX85USB-5A specification identifies a 450 mm grouser shoe and gives a 2920 mm undercarriage length and 2200 mm undercarriage width."},
+    {"pdfPages": [344], "fact": "The manual enumerates four distinct shoe configurations: 450 mm grouser standard, 600 mm grouser option, 450 mm pad crawler option and 450 mm rubber crawler option."},
+    {"pdfPages": [344], "fact": "The four configurations have different weights, clearances, undercarriage lengths or widths, ground pressures and intended applications; they are not a color/material-only switch."},
+    {"pdfPages": [344], "fact": "The 600 mm grouser, 450 mm pad crawler and 450 mm rubber crawler configurations should not be used on gravel or rocky ground."}
+  ],
+  "minimumReceipt": [
+    "sourceHead",
+    "sourcePdfPages",
+    "activeVariantId",
+    "activeVariantCount",
+    "sharedUndercarriageObjectIds",
+    "swappableTrackObjectIds",
+    "removedVariantObjectIds",
+    "installedVariantObjectIds",
+    "shoeWidthMm",
+    "undercarriageLengthMm",
+    "undercarriageWidthMm",
+    "operatingWeightKg",
+    "intendedGroundApplication",
+    "geometryAndMassDelta",
+    "observedConfigurationReplay"
+  ],
+  "holds": [
+    "HOLD_TRACK_VARIANT_SOURCE_MISSING",
+    "HOLD_TRACK_ACTIVE_VARIANT_MISSING",
+    "HOLD_TRACK_MULTIPLE_ACTIVE_VARIANTS",
+    "HOLD_TRACK_VARIANT_UNSUPPORTED",
+    "HOLD_TRACK_VARIANT_DIMENSION_MISMATCH",
+    "HOLD_TRACK_VARIANT_WEIGHT_MISMATCH",
+    "HOLD_TRACK_MATERIAL_ONLY_SUBSTITUTE",
+    "HOLD_TRACK_SHARED_RUNNING_GEAR_INSIDE_VARIANT",
+    "HOLD_TRACK_APPLICATION_CONTRADICTION",
+    "HOLD_TRACK_CONFIGURATION_REPLAY_MISSING"
+  ],
+  "decision": "CANDIDATE_TRACK_CONFIGURATION_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+  "lifecycle": {
+    "POSTED": false,
+    "POSTED_RECEIPT": null,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate regression only",
+    "GATE-RUN": true,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  },
+  "dedupRouting": {
+    "N321": "APPLICABLE_MOTION_PREREQUISITE_ONLY: travel input mapping does not define installed track configuration.",
+    "PHYSICAL_SYMMETRY_REUSE": "NOT_DUPLICATE: left/right reuse does not prove mutually exclusive configuration identity or configuration-specific dimensions.",
+    "existingTrackConfigurationSearch": "No matching rubber/grouser mutually exclusive configuration regression was found in the current learning-branch search."
+  },
+  "boundaries": [
+    "The fixture gate validates configuration semantics, not the current production undercarriage geometry.",
+    "Manufacturer source names are preserved; the candidate does not replace 'rubber crawler shoe' with the informal word 'plastic'.",
+    "The candidate does not assert unobserved exact materials for every shared roller, axle or mount.",
+    "No main, R2 OS, production Mother branch or production asset is modified."
+  ]
+}
