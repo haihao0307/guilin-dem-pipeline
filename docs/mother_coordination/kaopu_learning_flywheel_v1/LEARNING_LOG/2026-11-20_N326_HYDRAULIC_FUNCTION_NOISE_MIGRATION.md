@@ -44,6 +44,6 @@ Only ZX85 Front Attachment / Hydraulic Mother should answer:
 3. What measured centerline, radius-profile and endpoint tolerances preserve the four accepted direct hoses?
 4. Can one fresh-head mutation replace a function/noise hose with baked geometry while keeping a visually similar mesh, and does the gate reject it?
 
-Lifecycle before posting: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle: `POSTED=true` — issue #91 comment `7043856391`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
 
 No main, R2 OS, production Mother branch, public Site or production asset is modified.
