@@ -64,7 +64,7 @@
     "A broad relationship-verified label requires resolved references and negative controls for every claimed layer.",
     "UNKNOWN physical attachment remains UNKNOWN and is not silently promoted or used to invalidate a bounded logical-graph candidate.",
     "A hydraulic hose is connected only by resolved endpoint-to-port topology; visual proximity, overlap, intersection, or shared screen-space position is not connectivity evidence.",
-    "Already accepted direct hoses are protected invariants and must remain digest-identical while the side-pair defect is repaired."
+    "Already accepted direct hoses remain digest-identical during ordinary side-pair repair; under an explicitly user-authorized function/noise method migration, implementation bytes may change only when the specified route is proven and centerline, radius-profile and endpoint-topology invariants remain within declared tolerances."
   ],
   "decisionTable": [
     {
@@ -142,7 +142,19 @@
     "explicitJunctionIds",
     "routeSampleHash",
     "protectedHoseDigestSet",
-    "observedPortGraphReplay"
+    "observedPortGraphReplay",
+    "userDirectiveDigest",
+    "generatorRoute",
+    "generatorModuleDigest",
+    "generatorInvocationDigest",
+    "centerlineFunctionDigest",
+    "crossSectionFunctionDigest",
+    "noiseProfile",
+    "deterministicReplayDigest",
+    "previousMeshDigest",
+    "currentMeshDigest",
+    "centerlineShapeTolerance",
+    "radiusProfileTolerance"
   ],
   "scopeBoundary": "Does not reject the package, alter the train asset, certify engineering or physical attachment, or require a global OS change. It only prevents broad relationship claims from inheriting geometry/time evidence. N325 does not identify the speech-transcribed component, invent hidden hydraulic routing, modify geometry, or set a production endpoint tolerance without measurement.",
   "route": "Vehicle/Mechanical Mother via issue #91",
@@ -155,7 +167,8 @@
     "USER_ACCEPTED": false
   },
   "scopeExtensions": [
-    "N325 ZX85 side-hose pair to upper-pipe endpoint connectivity"
+    "N325 ZX85 side-hose pair to upper-pipe endpoint connectivity",
+    "N326 all-hose function/noise extrusion migration with observable-invariant protection"
   ],
   "n325HydraulicRefinement": {
     "refinementId": "N325_ZX85_HYDRAULIC_PORT_CONNECTIVITY",
@@ -214,6 +227,71 @@
       "ADOPTED": false,
       "USER-ACCEPTED": false,
       "POSTED_RECEIPT": "#91 comment 7033574819"
+    }
+  },
+  "n326ProceduralMigrationRefinement": {
+    "refinementId": "N326_HYDRAULIC_FUNCTION_NOISE_MIGRATION",
+    "boundedQuestion": "When the user requires every hydraulic hose to be rebuilt by function/noise extrusion, how can the four already-correct direct hoses change implementation bytes without losing their accepted centerlines, radius profiles, endpoint topology or port bindings?",
+    "triggeringObservation": {
+      "kind": "USER_SPECIFIED_GENERATION_ROUTE",
+      "date": "2026-11-20",
+      "canonicalTruth": [
+        "All hydraulic hoses must be extruded by a function/noise route.",
+        "The four already-correct direct hoses must not lose their accepted observable shape or connection semantics."
+      ],
+      "sourceBoundary": "No production hose IDs, exact port IDs, tolerance or generator invocation is inferred from the conversation."
+    },
+    "counterexample": "N325 ordinary-repair byte-digest freezing becomes over-strong during an authorized method migration: it can block the specified route or reward an unchanged baked mesh with a false procedural label.",
+    "teacherStatus": "NO_NOVELTY",
+    "routeSemantics": {
+      "ordinaryRepair": "protected hose mesh digests remain identical",
+      "authorizedMethodMigration": "implementation digest may change only with generator provenance, deterministic replay and protected observable invariants"
+    },
+    "minimumReceipt": [
+      "sourceHead",
+      "userDirectiveDigest",
+      "requiredHoseIds",
+      "generatorRoute",
+      "generatorModuleDigest",
+      "generatorInvocationDigest",
+      "centerlineFunctionDigest",
+      "crossSectionFunctionDigest",
+      "noiseProfile",
+      "endpointPinning",
+      "endpointTolerance",
+      "centerlineShapeTolerance",
+      "radiusProfileTolerance",
+      "previousMeshDigest",
+      "currentMeshDigest",
+      "deterministicReplayDigest",
+      "observedPortGraphReplay"
+    ],
+    "holds": [
+      "HOLD_HYDRAULIC_MIGRATION_RECEIPT_MISSING",
+      "HOLD_HYDRAULIC_METHOD_MIGRATION_UNAUTHORIZED",
+      "HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE",
+      "HOLD_HYDRAULIC_SPECIFIED_FUNCTION_ROUTE_UNPROVEN",
+      "HOLD_HYDRAULIC_GENERATOR_PROVENANCE_INCOMPLETE",
+      "HOLD_HYDRAULIC_NOISE_PARAMETERS_UNBOUND",
+      "HOLD_HYDRAULIC_ENDPOINT_PINNING_UNPROVEN",
+      "HOLD_HYDRAULIC_ENDPOINT_TOPOLOGY_UNOBSERVED",
+      "HOLD_HYDRAULIC_ENDPOINT_DRIFT_EXCEEDS_TOLERANCE",
+      "HOLD_HYDRAULIC_ACCEPTED_SHAPE_REGRESSION",
+      "HOLD_HYDRAULIC_FUNCTION_REPLAY_NONDETERMINISTIC",
+      "HOLD_HYDRAULIC_SPECIFIED_ROUTE_NO_IMPLEMENTATION_DELTA"
+    ],
+    "fixtureResult": "12/12 PASS",
+    "productionReplay": "NOT_RUN",
+    "productionEvidenceState": "UNKNOWN",
+    "decision": "CANDIDATE_REPLACE_BYTE_FREEZE_WITH_AUTHORIZED_ROUTE_PLUS_OBSERVABLE_INVARIANTS",
+    "route": "ZX85 Front Attachment / Hydraulic Mother only via issue #91",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": "candidate regression refinement only",
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
     }
   }
 }
