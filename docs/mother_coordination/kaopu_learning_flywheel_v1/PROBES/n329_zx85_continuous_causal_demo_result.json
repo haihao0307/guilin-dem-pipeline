@@ -1,0 +1,31 @@
+{
+  "probe": "N329_ZX85_CONTINUOUS_CAUSAL_DEMO_GATE",
+  "fixtureOnly": true,
+  "passed": 19,
+  "total": 19,
+  "results": [
+    {"name": "canonical mapping still passes", "status": "PASS", "holds": []},
+    {"name": "wrong actuator target still holds", "status": "PASS", "holds": ["HOLD_CONTROL_INPUT_TARGET_MISMATCH"]},
+    {"name": "wrong semantic delta still holds", "status": "PASS", "holds": ["HOLD_CONTROL_SEMANTIC_DELTA_MISMATCH"]},
+    {"name": "missing coordinate frame still holds", "status": "PASS", "holds": ["HOLD_CONTROL_COORDINATE_FRAME_UNDECLARED"]},
+    {"name": "neutral stop still required", "status": "PASS", "holds": ["HOLD_CONTROL_NEUTRAL_STOP_MISSING"]},
+    {"name": "travel orientation still required", "status": "PASS", "holds": ["HOLD_TRAVEL_ORIENTATION_UNBOUND"]},
+    {"name": "paired travel still checked", "status": "PASS", "holds": ["HOLD_TRAVEL_PAIRING_MISMATCH"]},
+    {"name": "pivot still checks one crawler", "status": "PASS", "holds": ["HOLD_PIVOT_ONE_CRAWLER_CONSTRAINT_FAILED"]},
+    {"name": "spin still checks opposed crawlers", "status": "PASS", "holds": ["HOLD_SPIN_OPPOSED_CRAWLERS_MISSING"]},
+    {"name": "source pages still required", "status": "PASS", "holds": ["HOLD_CONTROL_MAPPING_SOURCE_MISSING"]},
+    {"name": "one uninterrupted causal demo passes", "status": "PASS", "holds": []},
+    {"name": "producer cannot shrink authority action inventory", "status": "PASS", "holds": ["HOLD_DEMO_ACTION_COVERAGE_INCOMPLETE", "HOLD_DEMO_CAUSAL_ORDER_INVALID"]},
+    {"name": "unanchored action is rejected", "status": "PASS", "holds": ["HOLD_DEMO_UNANCHORED_ACTION_ID"]},
+    {"name": "stitched segment is rejected", "status": "PASS", "holds": ["HOLD_DEMO_RUN_FRAGMENTED_OR_STITCHED"]},
+    {"name": "clock reset is rejected", "status": "PASS", "holds": ["HOLD_DEMO_NON_MONOTONIC_OR_RESET_CLOCK", "HOLD_DEMO_CAUSAL_ORDER_INVALID"]},
+    {"name": "pre-recorded video is rejected", "status": "PASS", "holds": ["HOLD_DEMO_NOT_LIVE_3D_RUNTIME", "HOLD_DEMO_MEDIA_SUBSTITUTE"]},
+    {"name": "engine sound and vibration cannot precede ignition", "status": "PASS", "holds": ["HOLD_DEMO_NON_MONOTONIC_OR_RESET_CLOCK", "HOLD_DEMO_CAUSAL_ORDER_INVALID", "HOLD_DEMO_ENGINE_FEEDBACK_CAUSALITY_MISSING"]},
+    {"name": "motion needs input-to-observable lineage", "status": "PASS", "holds": ["HOLD_DEMO_INPUT_TO_OBSERVABLE_LINEAGE_MISSING"]},
+    {"name": "inventory subject substitution is rejected", "status": "PASS", "holds": ["HOLD_DEMO_INVENTORY_SUBJECT_MISMATCH"]}
+  ],
+  "productionReplayVerified": false,
+  "productionSourceHead": "UNKNOWN",
+  "teacherStatus": "NO_NOVELTY",
+  "decision": "CANDIDATE_N321_REFINED_WITH_SINGLE_RUN_CAUSAL_TRACE_HOLD_PRODUCTION_REPLAY_UNVERIFIED"
+}
