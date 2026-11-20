@@ -40,6 +40,6 @@ Teacher status: `NO_NOVELTY`. R2 already separates Task Anchor authority from Pr
 
 This correction belongs to the Learning Flywheel method side first. It does not authorize Hydraulic Mother implementation until an independent production inventory is frozen.
 
-Lifecycle before posting: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate gate correction only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle: `POSTED=true` — issue #91 comment `7049046393`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate gate correction only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
 
 No main, R2 OS, production Mother branch, public Site or production asset is modified.
