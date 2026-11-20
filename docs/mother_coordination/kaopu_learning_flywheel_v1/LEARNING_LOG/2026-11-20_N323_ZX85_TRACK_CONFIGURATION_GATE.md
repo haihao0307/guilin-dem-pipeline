@@ -46,3 +46,12 @@ Decision: `CANDIDATE_TRACK_CONFIGURATION_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY
 Teacher status: `NO_NOVELTY`. The increment comes from a frozen first-party configuration table plus a user correction.
 
 No main, R2 OS, production Mother branch or production asset is modified.
+
+## Routing receipt
+
+- `POSTED=true` — issue #91 comment `7029725286`
+- `ACKNOWLEDGED=false`
+- `IMPLEMENTED=candidate regression only`
+- `GATE-RUN=true (fixture only)`
+- `ADOPTED=false`
+- `USER-ACCEPTED=false`
