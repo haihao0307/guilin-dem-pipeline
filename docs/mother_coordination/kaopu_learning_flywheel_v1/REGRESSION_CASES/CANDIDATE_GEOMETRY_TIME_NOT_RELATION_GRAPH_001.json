@@ -154,7 +154,12 @@
     "previousMeshDigest",
     "currentMeshDigest",
     "centerlineShapeTolerance",
-    "radiusProfileTolerance"
+    "radiusProfileTolerance",
+    "taskAnchor.expectedHoseIds",
+    "taskAnchor.authoritativeInventoryDigest",
+    "taskAnchor.sourceHead",
+    "receipt.observedHoseIds",
+    "receipt.observedInventoryDigest"
   ],
   "scopeBoundary": "Does not reject the package, alter the train asset, certify engineering or physical attachment, or require a global OS change. It only prevents broad relationship claims from inheriting geometry/time evidence. N325 does not identify the speech-transcribed component, invent hidden hydraulic routing, modify geometry, or set a production endpoint tolerance without measurement.",
   "route": "Vehicle/Mechanical Mother via issue #91",
@@ -168,7 +173,8 @@
   },
   "scopeExtensions": [
     "N325 ZX85 side-hose pair to upper-pipe endpoint connectivity",
-    "N326 all-hose function/noise extrusion migration with observable-invariant protection"
+    "N326 all-hose function/noise extrusion migration with observable-invariant protection",
+    "N328 authority-owned expected hose inventory versus Producer-observed inventory"
   ],
   "n325HydraulicRefinement": {
     "refinementId": "N325_ZX85_HYDRAULIC_PORT_CONNECTIVITY",
@@ -280,7 +286,7 @@
       "HOLD_HYDRAULIC_FUNCTION_REPLAY_NONDETERMINISTIC",
       "HOLD_HYDRAULIC_SPECIFIED_ROUTE_NO_IMPLEMENTATION_DELTA"
     ],
-    "fixtureResult": "12/12 PASS",
+    "fixtureResult": "12/12 PASS_BUT_CONTRACT_INCOMPLETE",
     "productionReplay": "NOT_RUN",
     "productionEvidenceState": "UNKNOWN",
     "decision": "CANDIDATE_REPLACE_BYTE_FREEZE_WITH_AUTHORIZED_ROUTE_PLUS_OBSERVABLE_INVARIANTS",
@@ -293,6 +299,54 @@
       "ADOPTED": false,
       "USER-ACCEPTED": false,
       "POSTED_RECEIPT": "#91 comment 7043856391"
+    },
+    "verifierStatus": "HOLD_GATE_FAIL_N327_SELF_DECLARED_REQUIRED_SET_CAN_SHRINK"
+  },
+  "n328AuthorityInventoryRefinement": {
+    "refinementId": "N328_HYDRAULIC_AUTHORITY_INVENTORY",
+    "boundedQuestion": "Can N326 reject a Producer that deletes one hose from both its declared required set and its observed payload, instead of truthfully reporting incomplete all-hose migration coverage?",
+    "triggeringFailure": {
+      "source": "#91 comment 7047614562",
+      "candidateHead": "4d94b9393110bfbeedca47d40ae710a3c3a24500",
+      "mutation": "delete side_right from both Producer requiredHoseIds and hoses",
+      "expected": "HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE",
+      "actual": [],
+      "verdict": "FALSE_ACCEPT"
+    },
+    "currentBestViewComparison": "N326 bound route, provenance, topology and observable invariants but let the Producer define its own completeness boundary. N328 moves the expected inventory to a separate Task Anchor/authority input and limits the receipt to observed inventory.",
+    "teacherStatus": "NO_NOVELTY",
+    "authorityContract": {
+      "anchorFields": [
+        "expectedHoseIds",
+        "authoritativeInventoryDigest",
+        "sourceHead",
+        "authorityRef"
+      ],
+      "receiptFields": [
+        "observedHoseIds",
+        "observedInventoryDigest",
+        "sourceHead"
+      ],
+      "comparison": "exact set equality plus subject identity"
+    },
+    "holds": [
+      "HOLD_HYDRAULIC_AUTHORITY_INVENTORY_MISSING",
+      "HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE",
+      "HOLD_HYDRAULIC_UNANCHORED_HOSE_ID",
+      "HOLD_HYDRAULIC_INVENTORY_SUBJECT_MISMATCH"
+    ],
+    "fixtureResult": "13/13 PASS",
+    "productionReplay": "NOT_RUN",
+    "productionEvidenceState": "UNKNOWN",
+    "decision": "CANDIDATE_AUTHORITY_OWNED_EXPECTED_INVENTORY_REJECTS_PRODUCER_SCOPE_SHRINK",
+    "route": "Learning Flywheel method side first; Hydraulic Mother trial remains blocked until independent production inventory exists",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": "candidate gate correction only",
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
     }
   }
 }

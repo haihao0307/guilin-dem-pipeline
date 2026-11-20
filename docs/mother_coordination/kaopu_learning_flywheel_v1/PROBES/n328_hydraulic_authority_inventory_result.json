@@ -1,0 +1,33 @@
+{
+  "schema": "kaopu.candidate.hydraulic-function-noise-migration-result/1",
+  "caseId": "CANDIDATE_GEOMETRY_TIME_NOT_RELATION_GRAPH_001",
+  "refinementId": "N328_HYDRAULIC_AUTHORITY_INVENTORY",
+  "passed": 13,
+  "total": 13,
+  "fixtureOnly": true,
+  "productionReplay": "NOT_RUN",
+  "decision": "CANDIDATE_AUTHORITY_OWNED_EXPECTED_INVENTORY_REJECTS_PRODUCER_SCOPE_SHRINK",
+  "results": [
+    {"name":"authorized migration changes bytes while preserving topology and shape","expected":[],"actual":[],"passed":true},
+    {"name":"missing receipt","expected":["HOLD_HYDRAULIC_MIGRATION_RECEIPT_MISSING"],"actual":["HOLD_HYDRAULIC_MIGRATION_RECEIPT_MISSING"],"passed":true},
+    {"name":"missing source head","expected":["HOLD_HYDRAULIC_SOURCE_HEAD_MISSING"],"actual":["HOLD_HYDRAULIC_SOURCE_HEAD_MISSING"],"passed":true},
+    {"name":"migration not authorized","expected":["HOLD_HYDRAULIC_METHOD_MIGRATION_UNAUTHORIZED"],"actual":["HOLD_HYDRAULIC_METHOD_MIGRATION_UNAUTHORIZED"],"passed":true},
+    {"name":"one hose omitted from route coverage","expected":["HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE"],"actual":["HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE"],"passed":true},
+    {"name":"baked mesh mislabeled as acceptable route","expected":["HOLD_HYDRAULIC_SPECIFIED_FUNCTION_ROUTE_UNPROVEN"],"actual":["HOLD_HYDRAULIC_SPECIFIED_FUNCTION_ROUTE_UNPROVEN"],"passed":true},
+    {"name":"generator invocation provenance missing","expected":["HOLD_HYDRAULIC_GENERATOR_PROVENANCE_INCOMPLETE"],"actual":["HOLD_HYDRAULIC_GENERATOR_PROVENANCE_INCOMPLETE"],"passed":true},
+    {"name":"noise seed unbound","expected":["HOLD_HYDRAULIC_NOISE_PARAMETERS_UNBOUND"],"actual":["HOLD_HYDRAULIC_NOISE_PARAMETERS_UNBOUND"],"passed":true},
+    {"name":"noise moves endpoint beyond tolerance","expected":["HOLD_HYDRAULIC_ENDPOINT_DRIFT_EXCEEDS_TOLERANCE"],"actual":["HOLD_HYDRAULIC_ENDPOINT_DRIFT_EXCEEDS_TOLERANCE"],"passed":true},
+    {"name":"accepted direct-hose shape regresses","expected":["HOLD_HYDRAULIC_ACCEPTED_SHAPE_REGRESSION"],"actual":["HOLD_HYDRAULIC_ACCEPTED_SHAPE_REGRESSION"],"passed":true},
+    {"name":"function replay changes output","expected":["HOLD_HYDRAULIC_FUNCTION_REPLAY_NONDETERMINISTIC"],"actual":["HOLD_HYDRAULIC_FUNCTION_REPLAY_NONDETERMINISTIC"],"passed":true},
+    {"name":"claimed migration has no implementation delta","expected":["HOLD_HYDRAULIC_SPECIFIED_ROUTE_NO_IMPLEMENTATION_DELTA"],"actual":["HOLD_HYDRAULIC_SPECIFIED_ROUTE_NO_IMPLEMENTATION_DELTA"],"passed":true},
+    {
+      "name": "authority-owned inventory resists producer shrink, expansion and subject substitution",
+      "subresults": [
+        {"mutation":"producer shrinks declared required set and payload together","expected":["HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE"],"actual":["HOLD_HYDRAULIC_FUNCTION_ROUTE_COVERAGE_INCOMPLETE"]},
+        {"mutation":"producer adds an unanchored hose ID","expected":["HOLD_HYDRAULIC_UNANCHORED_HOSE_ID"],"actual":["HOLD_HYDRAULIC_UNANCHORED_HOSE_ID"]},
+        {"mutation":"receipt substitutes a different inventory subject","expected":["HOLD_HYDRAULIC_INVENTORY_SUBJECT_MISMATCH"],"actual":["HOLD_HYDRAULIC_INVENTORY_SUBJECT_MISMATCH"]}
+      ],
+      "passed": true
+    }
+  ]
+}
