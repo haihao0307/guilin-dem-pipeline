@@ -1,0 +1,131 @@
+{
+  "schema": "kaopu.candidate.hydraulic-port-connectivity-result/1",
+  "caseId": "CANDIDATE_GEOMETRY_TIME_NOT_RELATION_GRAPH_001",
+  "refinementId": "N325_ZX85_HYDRAULIC_PORT_CONNECTIVITY",
+  "passed": 12,
+  "total": 12,
+  "fixtureOnly": true,
+  "productionReplay": "NOT_RUN",
+  "endpointToleranceState": "UNKNOWN_IN_PRODUCTION",
+  "results": [
+    {
+      "name": "valid side-pair endpoint graph preserves four accepted hoses",
+      "expected": [],
+      "actual": [],
+      "passed": true
+    },
+    {
+      "name": "missing side-hose connection",
+      "expected": [
+        "HOLD_HYDRAULIC_ENDPOINT_PORT_UNRESOLVED"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_ENDPOINT_PORT_UNRESOLVED"
+      ],
+      "passed": true
+    },
+    {
+      "name": "side hose targets wrong central assembly",
+      "expected": [
+        "HOLD_HYDRAULIC_WRONG_TARGET_ASSEMBLY"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_WRONG_TARGET_ASSEMBLY"
+      ],
+      "passed": true
+    },
+    {
+      "name": "visual proximity is not a topology edge",
+      "expected": [
+        "HOLD_HYDRAULIC_VISUAL_PROXIMITY_NOT_CONNECTIVITY"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_VISUAL_PROXIMITY_NOT_CONNECTIVITY"
+      ],
+      "passed": true
+    },
+    {
+      "name": "midspan crossing cannot count as connection",
+      "expected": [
+        "HOLD_HYDRAULIC_MIDSPAN_INTERSECTION_AS_CONNECTION"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_MIDSPAN_INTERSECTION_AS_CONNECTION"
+      ],
+      "passed": true
+    },
+    {
+      "name": "two hoses cannot silently share one port",
+      "expected": [
+        "HOLD_HYDRAULIC_SHARED_PORT_WITHOUT_JUNCTION"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_SHARED_PORT_WITHOUT_JUNCTION"
+      ],
+      "passed": true
+    },
+    {
+      "name": "accepted direct hose digest must remain frozen",
+      "expected": [
+        "HOLD_HYDRAULIC_PROTECTED_HOSE_REGRESSION"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_PROTECTED_HOSE_REGRESSION"
+      ],
+      "passed": true
+    },
+    {
+      "name": "source head is mandatory",
+      "expected": [
+        "HOLD_HYDRAULIC_SOURCE_HEAD_MISSING"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_SOURCE_HEAD_MISSING"
+      ],
+      "passed": true
+    },
+    {
+      "name": "unknown endpoint tolerance cannot claim pass",
+      "expected": [
+        "HOLD_HYDRAULIC_CONNECTIVITY_PASS_WITHOUT_TOLERANCE",
+        "HOLD_HYDRAULIC_ENDPOINT_TOLERANCE_UNFROZEN"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_CONNECTIVITY_PASS_WITHOUT_TOLERANCE",
+        "HOLD_HYDRAULIC_ENDPOINT_TOLERANCE_UNFROZEN"
+      ],
+      "passed": true
+    },
+    {
+      "name": "endpoint gap over frozen tolerance",
+      "expected": [
+        "HOLD_HYDRAULIC_ENDPOINT_GAP_EXCEEDS_TOLERANCE"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_ENDPOINT_GAP_EXCEEDS_TOLERANCE"
+      ],
+      "passed": true
+    },
+    {
+      "name": "observed route replay is mandatory",
+      "expected": [
+        "HOLD_HYDRAULIC_ROUTE_RECEIPT_MISSING"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_ROUTE_RECEIPT_MISSING"
+      ],
+      "passed": true
+    },
+    {
+      "name": "dangling port reference fails closed",
+      "expected": [
+        "HOLD_HYDRAULIC_ENDPOINT_PORT_UNRESOLVED"
+      ],
+      "actual": [
+        "HOLD_HYDRAULIC_ENDPOINT_PORT_UNRESOLVED"
+      ],
+      "passed": true
+    }
+  ],
+  "decision": "CANDIDATE_EXISTING_RELATION_GRAPH_REFINED_WITH_HYDRAULIC_PORT_TOPOLOGY_HOLD_PRODUCTION_REPLAY_UNVERIFIED"
+}

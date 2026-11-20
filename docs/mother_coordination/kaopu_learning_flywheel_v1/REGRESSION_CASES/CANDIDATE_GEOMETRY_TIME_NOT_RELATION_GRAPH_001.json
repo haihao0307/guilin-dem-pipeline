@@ -1,0 +1,218 @@
+{
+  "schema": "kaopu.regression-case.candidate/1",
+  "id": "CANDIDATE_GEOMETRY_TIME_NOT_RELATION_GRAPH_001",
+  "status": "Candidate",
+  "failureClass": "geometry/time equivalence or stable identities are promoted to parent/subordinate/transmission relationship proof",
+  "boundedSubject": "A6 wheel relationship-verification scope only",
+  "observation": {
+    "package": "A6_SPACETIME_R01_WHEEL_VERIFIED_CHECKPOINT_20261101.zip",
+    "libraryIdentity": "libfile_2cabe4dab46c8191b45f04e641c12ca2",
+    "libraryVersionObserved": 13,
+    "archiveSha256": "1bf084b6de355c37538e1cb6b070945163aeb9137e1730957919f61a2a5a060b",
+    "positiveEvidence": [
+      "14 wheelsets, 28 wheel faces, 5 shared wheelset models, and 624 named leaf boundary views are recorded",
+      "known parent matrices and 624 leaf world points are compared against the independent source generator at multiple shared Times",
+      "the package explicitly leaves physical contact, bearings, loads, suspension, brakes, and couplers unknown"
+    ],
+    "remainingGap": "No explicit, separately gated transmission/kinematic edge graph establishes which axle or driver drives each wheel. Shared Time and a correct world matrix are evidence of numerical motion equivalence, not by themselves a transmission relationship receipt."
+  },
+  "followups": [
+    {
+      "run": "N228",
+      "subjectVersion": 20,
+      "archiveSha256": "8fb6cedbdf48416902b60b9cb8633911654043435e16b085177cb12fcead658e",
+      "freshPackageDelta": "679 files were added and 5 old v12 checkpoint-history files removed, but the current wheel contract, canonical train, three wheel/assembly test files, current evaluator, and wheel builder are byte-identical to N227 version 13.",
+      "counterexample": {
+        "instanceID": "train88/A6/A4/drive_wheel_rear",
+        "mutation": "Time.axleID: locomotive.driver.1 -> tender.tender.1",
+        "wrongButKnownToken": true,
+        "canonicalImportAccepted": true,
+        "evaluationAccepted": true,
+        "sharedTimes": 3,
+        "matrixScalarComparisons": 30240,
+        "changedMatrixScalars": 0,
+        "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
+      },
+      "packageTestReplay": "18/18 current wheel, canonical-binding, and assembly tests passed on the unmodified v20 package; this preserves positive geometry/time evidence but is not an axle-relation negative test."
+    },
+    {
+      "run": "N229",
+      "subjectVersion": 27,
+      "archiveSha256": "4e6a823a900cc113c683a6d5c0aa769084d5cea0ed512a220a359b7e92b228a0",
+      "freshPackageDelta": "516 paths were added and 1 path removed relative to v20; no same-path file changed. The current wheel contract, canonical train, current evaluator, wheel builder, and three current wheel/assembly test files remain byte-identical. The relevant new native-time-adapter-r01 selects an exclusive native versus static frame authority and intentionally reuses evaluateCurrent.",
+      "positiveReplay": "18/18 current wheel/canonical-binding/assembly tests and 5/5 native frame-authority adapter tests passed on the unmodified v27 package.",
+      "counterexample": {
+        "instanceID": "train88/A6/A4/drive_wheel_rear",
+        "mutation": "Time.axleID: locomotive.driver.1 -> tender.tender.1",
+        "wrongButKnownToken": true,
+        "canonicalImportAccepted": true,
+        "currentEvaluationAccepted": true,
+        "currentSharedTimes": 3,
+        "currentMatrixScalarComparisons": 30240,
+        "currentChangedMatrixScalars": 0,
+        "nativeFrameAuthorityAccepted": true,
+        "nativeFrameAuthorityQueries": 7038,
+        "nativeFrameAuthorityMatrixScalarComparisons": 110256,
+        "nativeFrameAuthorityChangedMatrixScalars": 0,
+        "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
+      },
+      "scope": "The new adapter is valuable for preventing static/dynamic double composition, but it is not an axle/driver relationship gate and does not consume Time.axleID."
+    }
+  ],
+  "invariant": [
+    "Identity, placement, structural/subordinate, and transmission/kinematic relations are separate claim layers.",
+    "A broad relationship-verified label requires resolved references and negative controls for every claimed layer.",
+    "UNKNOWN physical attachment remains UNKNOWN and is not silently promoted or used to invalidate a bounded logical-graph candidate.",
+    "A hydraulic hose is connected only by resolved endpoint-to-port topology; visual proximity, overlap, intersection, or shared screen-space position is not connectivity evidence.",
+    "Already accepted direct hoses are protected invariants and must remain digest-identical while the side-pair defect is repaired."
+  ],
+  "decisionTable": [
+    {
+      "case": "all required logical edges resolve and match scope",
+      "decision": "ACCEPT_LOGICAL_RELATION_GRAPH_CANDIDATE"
+    },
+    {
+      "case": "placement parent absent",
+      "decision": "HOLD_PARENT_RELATION_UNRESOLVED"
+    },
+    {
+      "case": "placement parent exists but belongs to wrong assembly",
+      "decision": "HOLD_PARENT_SCOPE_MISMATCH"
+    },
+    {
+      "case": "member bypasses declared owner",
+      "decision": "HOLD_SUBORDINATE_RELATION_MISMATCH"
+    },
+    {
+      "case": "geometry/time passes but no transmission edge exists",
+      "decision": "HOLD_TRANSMISSION_RELATION_UNBOUND"
+    },
+    {
+      "case": "transmission edge driver is missing or wrong role",
+      "decision": "HOLD_TRANSMISSION_DRIVER_UNRESOLVED"
+    },
+    {
+      "case": "wrong-but-known axle token imports and evaluates with identical frames",
+      "decision": "HOLD_AXLE_RELATION_METADATA_NOT_RUNTIME_OR_VERIFIER_BOUND"
+    },
+    {
+      "case": "hydraulic hose endpoint or port reference missing",
+      "decision": "HOLD_HYDRAULIC_ENDPOINT_PORT_UNRESOLVED"
+    },
+    {
+      "case": "hose terminates on the wrong assembly",
+      "decision": "HOLD_HYDRAULIC_WRONG_TARGET_ASSEMBLY"
+    },
+    {
+      "case": "geometry appears close but no endpoint topology edge exists",
+      "decision": "HOLD_HYDRAULIC_VISUAL_PROXIMITY_NOT_CONNECTIVITY"
+    },
+    {
+      "case": "midspan intersection is counted as a connection",
+      "decision": "HOLD_HYDRAULIC_MIDSPAN_INTERSECTION_AS_CONNECTION"
+    },
+    {
+      "case": "multiple hoses share a port without an explicit junction",
+      "decision": "HOLD_HYDRAULIC_SHARED_PORT_WITHOUT_JUNCTION"
+    },
+    {
+      "case": "previously accepted direct hose changes during side-pair repair",
+      "decision": "HOLD_HYDRAULIC_PROTECTED_HOSE_REGRESSION"
+    }
+  ],
+  "candidateReceiptFields": [
+    "identityGraphRef",
+    "placementEdgeCount",
+    "placementVerifierVerdict",
+    "subordinateEdgeCount",
+    "subordinateVerifierVerdict",
+    "transmissionEdgeCount",
+    "transmissionDriverRefsResolved",
+    "kinematicLawCheck",
+    "physicalAttachmentStatus",
+    "geometryTimeReceiptRef",
+    "sourceHead",
+    "referenceFrame",
+    "hydraulicHoseObjectIds",
+    "fromPortIds",
+    "toPortIds",
+    "connectionMode",
+    "endpointDistances",
+    "endpointTolerance",
+    "explicitJunctionIds",
+    "routeSampleHash",
+    "protectedHoseDigestSet",
+    "observedPortGraphReplay"
+  ],
+  "scopeBoundary": "Does not reject the package, alter the train asset, certify engineering or physical attachment, or require a global OS change. It only prevents broad relationship claims from inheriting geometry/time evidence. N325 does not identify the speech-transcribed component, invent hidden hydraulic routing, modify geometry, or set a production endpoint tolerance without measurement.",
+  "route": "Vehicle/Mechanical Mother via issue #91",
+  "state": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "Candidate probes only",
+    "GATE_RUN": "Candidate 7-control relation-graph replay plus exact v20 and v27 mutation replays",
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "scopeExtensions": [
+    "N325 ZX85 side-hose pair to upper-pipe endpoint connectivity"
+  ],
+  "n325HydraulicRefinement": {
+    "refinementId": "N325_ZX85_HYDRAULIC_PORT_CONNECTIVITY",
+    "boundedQuestion": "Can the existing relation-graph regression reject two side hoses that visually reach or intersect the upper route but do not terminate on the required upper-pipe ports, while freezing the four already-correct direct boom hoses?",
+    "triggeringObservation": {
+      "kind": "REPEATED_USER_PRODUCTION_CORRECTION",
+      "date": "2026-11-20",
+      "canonicalTruth": [
+        "Four direct boom hoses are already correct and must not be changed.",
+        "The two side hoses must connect to the upper pipe.",
+        "Routing the two side hoses into the central area is wrong."
+      ],
+      "unresolvedLabel": "The speech-transcribed component label remains UNKNOWN; this candidate does not normalize it without a source."
+    },
+    "currentBestViewComparison": "N227–N229 separates geometry/time proof from relation-graph proof, but its fixtures are wheel/axle-specific. N325 adds hydraulic endpoint, port, junction, and protected-invariant semantics without creating a new regression ID.",
+    "teacherStatus": "NO_NOVELTY",
+    "minimumReceipt": [
+      "sourceHead",
+      "referenceFrame",
+      "sideHoseObjectIds",
+      "fromPortIds",
+      "toPortIds",
+      "connectionMode",
+      "endpointDistances",
+      "endpointToleranceState",
+      "endpointTolerance",
+      "explicitJunctionIds",
+      "routeSampleHash",
+      "protectedDirectHoseIds",
+      "protectedHoseDigestSet",
+      "observedPortGraphReplay"
+    ],
+    "holds": [
+      "HOLD_HYDRAULIC_ROUTE_RECEIPT_MISSING",
+      "HOLD_HYDRAULIC_SOURCE_HEAD_MISSING",
+      "HOLD_HYDRAULIC_ENDPOINT_PORT_UNRESOLVED",
+      "HOLD_HYDRAULIC_WRONG_TARGET_ASSEMBLY",
+      "HOLD_HYDRAULIC_VISUAL_PROXIMITY_NOT_CONNECTIVITY",
+      "HOLD_HYDRAULIC_MIDSPAN_INTERSECTION_AS_CONNECTION",
+      "HOLD_HYDRAULIC_SHARED_PORT_WITHOUT_JUNCTION",
+      "HOLD_HYDRAULIC_PROTECTED_HOSE_REGRESSION",
+      "HOLD_HYDRAULIC_ENDPOINT_TOLERANCE_UNFROZEN",
+      "HOLD_HYDRAULIC_CONNECTIVITY_PASS_WITHOUT_TOLERANCE",
+      "HOLD_HYDRAULIC_ENDPOINT_GAP_EXCEEDS_TOLERANCE"
+    ],
+    "fixtureResult": "12/12 PASS",
+    "productionReplay": "NOT_RUN",
+    "endpointToleranceState": "UNKNOWN_IN_PRODUCTION",
+    "decision": "CANDIDATE_EXISTING_RELATION_GRAPH_REFINED_WITH_HYDRAULIC_PORT_TOPOLOGY_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+    "route": "ZX85 Front Attachment / Hydraulic Mother only via issue #91",
+    "lifecycle": {
+      "POSTED": false,
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": "candidate regression refinement only",
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
+  }
+}
