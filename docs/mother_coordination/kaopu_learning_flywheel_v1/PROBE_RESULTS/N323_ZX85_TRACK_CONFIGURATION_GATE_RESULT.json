@@ -1,0 +1,22 @@
+{
+  "caseId": "ZX85-TRACK-CONFIGURATION-001-N323",
+  "runAt": "2026-11-20T11:41:15+08:00",
+  "passed": 11,
+  "total": 11,
+  "fixtureOnly": true,
+  "productionReplay": "NOT_RUN",
+  "results": [
+    {"fixture": "source-backed rubber configuration passes", "pass": true, "holds": []},
+    {"fixture": "active variant is mandatory", "pass": true, "holds": ["HOLD_TRACK_ACTIVE_VARIANT_MISSING"]},
+    {"fixture": "variants are mutually exclusive", "pass": true, "holds": ["HOLD_TRACK_MULTIPLE_ACTIVE_VARIANTS"]},
+    {"fixture": "invented variant is rejected", "pass": true, "holds": ["HOLD_TRACK_VARIANT_UNSUPPORTED"]},
+    {"fixture": "rubber configuration requires 2940 mm length", "pass": true, "holds": ["HOLD_TRACK_VARIANT_DIMENSION_MISMATCH"]},
+    {"fixture": "rubber configuration requires source weight", "pass": true, "holds": ["HOLD_TRACK_VARIANT_WEIGHT_MISMATCH"]},
+    {"fixture": "variant swap cannot be material only", "pass": true, "holds": ["HOLD_TRACK_MATERIAL_ONLY_SUBSTITUTE"]},
+    {"fixture": "rollers cannot be nested in swappable track", "pass": true, "holds": ["HOLD_TRACK_SHARED_RUNNING_GEAR_INSIDE_VARIANT"]},
+    {"fixture": "rubber configuration application is paved road", "pass": true, "holds": ["HOLD_TRACK_APPLICATION_CONTRADICTION"]},
+    {"fixture": "source pages are mandatory", "pass": true, "holds": ["HOLD_TRACK_VARIANT_SOURCE_MISSING"]},
+    {"fixture": "production replay is mandatory", "pass": true, "holds": ["HOLD_TRACK_CONFIGURATION_REPLAY_MISSING"]}
+  ],
+  "decision": "CANDIDATE_TRACK_CONFIGURATION_CONTRACT_DEFINED_HOLD_PRODUCTION_REPLAY_UNVERIFIED"
+}
