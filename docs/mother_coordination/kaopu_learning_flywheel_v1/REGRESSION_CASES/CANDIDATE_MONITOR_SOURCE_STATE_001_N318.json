@@ -1,11 +1,11 @@
 {
   "caseId": "MONITOR-SOURCE-STATE-001-N318",
   "status": "CANDIDATE",
-  "boundedQuestion": "Can two frozen first-party Hitachi PDFs be converted into a source-traceable LCD screen and transition contract that rejects static-icon, invented-screen, optionality and trigger failures?",
+  "boundedQuestion": "Can the existing N318/N322 monitor regression reject a source-faithful screen that eventually reaches the right state but gives no prompt next-frame response after the operator presses or rotates a control?",
   "novelty": {
     "kind": "new_primary_source_and_new_failure_mechanism",
-    "relativeToCurrentBestView": "N317 binds the physical monitor role and support parent, but does not prove that the LCD operating system is implemented or source-faithful.",
-    "teacherStatus": "NO_NOVELTY"
+    "relativeToCurrentBestView": "N322 proves control-event semantics and destination states, but it has no sourceHead-bound timing receipt, no first-interaction sample, and no decomposition of input delay, handler processing and presentation delay.",
+    "teacherStatus": "TEACHER_CANDIDATE"
   },
   "frozenSources": [
     {
@@ -178,9 +178,21 @@
     "HOLD_MONITOR_BRIGHTNESS_PATH_MISMATCH",
     "HOLD_MONITOR_DAY_NIGHT_BRIGHTNESS_COLLAPSED",
     "HOLD_MONITOR_LIGHT_POSITION_MODE_UNSUPPORTED",
-    "HOLD_MONITOR_CONTROL_EVENT_REPLAY_MISSING"
+    "HOLD_MONITOR_CONTROL_EVENT_REPLAY_MISSING",
+    "HOLD_MONITOR_EVENT_TIMING_RECEIPT_MISSING",
+    "HOLD_MONITOR_SOURCE_HEAD_MISSING",
+    "HOLD_MONITOR_EVENT_TIMING_ORDER_INVALID",
+    "HOLD_MONITOR_FIRST_INTERACTION_UNMEASURED",
+    "HOLD_MONITOR_INTERACTION_ID_UNBOUND",
+    "HOLD_MONITOR_NEXT_PAINT_STATE_UNOBSERVED",
+    "HOLD_MONITOR_LATENCY_THRESHOLD_UNFROZEN",
+    "HOLD_MONITOR_LATENCY_PASS_WITHOUT_THRESHOLD",
+    "HOLD_MONITOR_EVENT_LATENCY_EXCEEDS_FROZEN_THRESHOLD",
+    "HOLD_MONITOR_COLD_WARM_MIXED",
+    "HOLD_MONITOR_PRESENTATION_DELAY_HIDDEN",
+    "HOLD_MONITOR_OBSERVER_THRESHOLD_EXCEEDS_ACCEPTANCE_THRESHOLD"
   ],
-  "decision": "CANDIDATE_N318_REFINED_WITH_CONTROL_EVENT_MATRIX_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+  "decision": "CANDIDATE_N318_REFINED_WITH_EVENT_LATENCY_RECEIPT_HOLD_PRODUCTION_MEASUREMENT_AND_THRESHOLD_UNVERIFIED",
   "lifecycle": {
     "POSTED": true,
     "POSTED_RECEIPT": "#91 comment 7008131520",
@@ -260,6 +272,106 @@
     "lifecycle": {
       "POSTED": true,
       "POSTED_RECEIPT": "#91 comment 7025452381",
+      "ACKNOWLEDGED": false,
+      "IMPLEMENTED": "candidate regression refinement only",
+      "GATE-RUN": true,
+      "ADOPTED": false,
+      "USER-ACCEPTED": false
+    }
+  },
+  "n324Refinement": {
+    "refinementId": "N324_EVENT_LATENCY_RECEIPT",
+    "boundedQuestion": "Can the existing N318/N322 monitor regression reject a source-faithful screen that eventually reaches the right state but gives no prompt next-frame response after the operator presses or rotates a control?",
+    "triggeringObservation": {
+      "kind": "USER_PRODUCTION_FEEDBACK",
+      "date": "2026-11-20",
+      "losslessSummary": "The display still appears slowly; pressing should make it appear immediately.",
+      "implication": "Functional correctness is insufficient if the visible next frame is delayed."
+    },
+    "externalTeacher": {
+      "status": "TEACHER_CANDIDATE",
+      "lifecycleStage": "AUDITION",
+      "teacher": "W3C Event Timing API + web-platform-tests/event-timing",
+      "explicitNoveltyAnswer": "It knows how to bind a qualifying input to a PerformanceEventTiming entry and separate input delay, event-processing duration and presentation delay until the next rendering update; KAOPU N322 only knew the expected control effect and final screen.",
+      "provenance": [
+        "W3C Working Draft, Event Timing API, 13 November 2026",
+        "w3c/event-timing@a2f18d730f34e0866b4f964bf11b97f915e03cdd",
+        "web-platform-tests/wpt event-timing test suite"
+      ],
+      "maintenance": "ACTIVE; W3C draft published 2026-11-13 and repository commit a2f18d7 on 2026-11-13.",
+      "runnableEvidence": "WPT event-timing tests and event-timing-test-utils.js provide cross-browser executable checks for ordering, duration thresholds and interaction identifiers.",
+      "licenseAndRights": "Specification documents use the W3C Document License; WPT code uses BSD-3-Clause. No model assets or training data are required.",
+      "directRelevance": "Directly measures browser input-to-next-paint latency for the standalone HTML monitor interaction that the user reports as slow.",
+      "addedKnowledge": "Standard timestamp semantics, interactionId grouping, next-paint duration, and first-input capture.",
+      "integrationRisk": [
+        "Event Timing duration is rounded to 8 ms.",
+        "Future entries can use durationThreshold down to 16 ms, but the default buffered threshold is 104 ms.",
+        "Browser support and device performance must be recorded; fixture timings cannot substitute for the user's physical device.",
+        "The 104 ms exposure default and general INP guidance are not KAOPU acceptance thresholds."
+      ],
+      "demoOrClosureRisk": "Not demo-only: normative processing model plus WPT tests exist. It is still a Working Draft and may change; no production adoption until a Mother replay proves compatibility.",
+      "motherFeedback": "NOT_QUERIED",
+      "registryAction": "DO_NOT_REGISTER_YET"
+    },
+    "minimumLatencyReceipt": [
+      "sourceHead",
+      "artifactDigest",
+      "eventContractId",
+      "physicalControlId",
+      "eventName",
+      "interactionId",
+      "runMode(COLD_READY|WARM_READY)",
+      "browserVersion",
+      "deviceClass",
+      "startTime",
+      "processingStart",
+      "processingEnd",
+      "duration",
+      "inputDelayMs",
+      "processingDurationMs",
+      "presentationDelayMs",
+      "observerDurationThresholdMs",
+      "firstInteraction",
+      "sampleOrdinal",
+      "observedNextFrameState",
+      "aggregationKey",
+      "thresholdState",
+      "thresholdMs",
+      "thresholdSource",
+      "passClaim"
+    ],
+    "metricSemantics": {
+      "inputDelayMs": "processingStart - startTime",
+      "processingDurationMs": "processingEnd - processingStart",
+      "presentationDelayMs": "max(0, startTime + duration - processingEnd), allowing documented 8 ms duration coarsening",
+      "totalInteractionLatencyMs": "duration, from input timestamp to the next rendering update after dispatch",
+      "measurementSeparation": "COLD_READY and WARM_READY samples must not share one aggregation."
+    },
+    "thresholdPolicy": {
+      "currentKaopuThreshold": "UNKNOWN",
+      "w3cDefaultExposureThresholdMs": 104,
+      "minimumFutureObserverThresholdMs": 16,
+      "rule": "Neither W3C exposure defaults nor generic INP guidance may be silently promoted into a KAOPU pass threshold. Until a threshold is frozen by the relevant Mother/user contract, measurements may diagnose but may not claim latency PASS."
+    },
+    "holds": [
+      "HOLD_MONITOR_EVENT_TIMING_RECEIPT_MISSING",
+      "HOLD_MONITOR_SOURCE_HEAD_MISSING",
+      "HOLD_MONITOR_EVENT_TIMING_ORDER_INVALID",
+      "HOLD_MONITOR_FIRST_INTERACTION_UNMEASURED",
+      "HOLD_MONITOR_INTERACTION_ID_UNBOUND",
+      "HOLD_MONITOR_NEXT_PAINT_STATE_UNOBSERVED",
+      "HOLD_MONITOR_LATENCY_THRESHOLD_UNFROZEN",
+      "HOLD_MONITOR_LATENCY_PASS_WITHOUT_THRESHOLD",
+      "HOLD_MONITOR_EVENT_LATENCY_EXCEEDS_FROZEN_THRESHOLD",
+      "HOLD_MONITOR_COLD_WARM_MIXED",
+      "HOLD_MONITOR_PRESENTATION_DELAY_HIDDEN",
+      "HOLD_MONITOR_OBSERVER_THRESHOLD_EXCEEDS_ACCEPTANCE_THRESHOLD"
+    ],
+    "fixtureResult": "12/12 PASS",
+    "productionReplay": "NOT_RUN",
+    "decision": "CANDIDATE_N318_REFINED_WITH_EVENT_LATENCY_RECEIPT_HOLD_PRODUCTION_MEASUREMENT_AND_THRESHOLD_UNVERIFIED",
+    "lifecycle": {
+      "POSTED": false,
       "ACKNOWLEDGED": false,
       "IMPLEMENTED": "candidate regression refinement only",
       "GATE-RUN": true,
