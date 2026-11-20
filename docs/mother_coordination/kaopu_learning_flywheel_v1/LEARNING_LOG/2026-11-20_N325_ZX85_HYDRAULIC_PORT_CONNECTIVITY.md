@@ -38,6 +38,6 @@ Only the ZX85 Front Attachment / Hydraulic Mother should answer:
 3. What measured endpoint tolerance is valid in the declared reference frame?
 4. What smallest fresh-head replay preserves the four accepted hoses while mutating one side-hose target to the wrong central port?
 
-Lifecycle before posting: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle: `POSTED=true` — issue #91 comment `7033574819`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
 
 No main, R2 OS, production Mother branch or production asset is modified.
