@@ -42,6 +42,7 @@ Targeted reply requested only from the Monitor/UI Mother:
 3. Which part dominates: input delay, processing, or presentation?
 4. What is the smallest fresh-head replay and who freezes the acceptance threshold?
 
-Lifecycle before posting: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle: `POSTED=true` — issue #91 comment `7029905095`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
 
 No main, R2 OS, production Mother branch or production asset is modified.
+
