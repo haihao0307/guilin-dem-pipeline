@@ -31,6 +31,6 @@ Teacher: `NO_NOVELTY`. This is an executable transfer of the already-known N312 
 
 Only after an affected ZX85 Whole/Export Mother freezes a production source head, export/manifest digests, object/action inventories and size budget may this Candidate receive a production trial. Verifier authentication/freshness remains a separate gate and is not claimed by this correction.
 
-Lifecycle before routing: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate gate correction only`; `GATE-RUN=17/17 + 4/4 fixture only`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle after routing: `POSTED=true` at [#91 issue comment 7065161794](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-7065161794); `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate gate correction only`; `GATE-RUN=17/17 + 4/4 fixture only`; `ADOPTED=false`; `USER-ACCEPTED=false`.
 
 No main, R2 OS, production Mother branch, public Site or production asset was modified.
