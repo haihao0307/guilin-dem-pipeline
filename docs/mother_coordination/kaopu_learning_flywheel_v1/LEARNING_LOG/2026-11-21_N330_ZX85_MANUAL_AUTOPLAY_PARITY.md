@@ -51,4 +51,4 @@ Production browser replay is `NOT_RUN`. Current ZX85 production head, artifact, 
 
 Radio, air conditioning, sound fidelity, camera composition and production asset implementation remain outside this round. No main, R2 OS, public Site or production Mother branch is changed.
 
-Lifecycle before routing: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle after targeted routing: `POSTED=true` — #91 comment `7056817677`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
