@@ -2,7 +2,7 @@
   "schema": "kaopu.regression-refinement-candidate/1.3",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
-  "status": "CANDIDATE_LOCAL_TRIAL_ONLY",
+  "status": "HOLD_GATE_FAIL_LOCAL_AUDIT",
   "n331BoundedQuestion": "Can one small reusable excavator export prove that all authority-required function-generated runtime objects and actions reconstruct offline while teacher/reference bytes, legacy assets and baked production meshes remain outside the package?",
   "realFeedback": "The user asked to save the current pure-function excavator as a small reusable file, including its actions, without old teacher/reference assets.",
   "deduplication": {
@@ -122,8 +122,24 @@
     "HOLD_EXPORT_CLEAN_ROOM_ACTION_GRAPH_MISMATCH"
   ],
   "fixtureResult": "16/16 PASS",
+  "n332VerifierFailure": {
+    "exactN331Subject": "automation/n331-zx85-function-export-closure-20261121@38638a0c71c289f9113c26e1bcc9ad3ddb8a52ea",
+    "boundedQuestion": "Can N331 accept a clean-room observation made against a different export digest than the delivered export?",
+    "counterexample": "The receipt names delivered export digest A while the clean-room observation explicitly names different digest B. All other observation fields are clean. N331 ignores observedExportDigest and returns no HOLD.",
+    "expected": "HOLD_EXPORT_OBSERVATION_SUBJECT_MISMATCH",
+    "actual": [],
+    "falseAccept": true,
+    "rootCause": "N331 binds the receipt to an export digest but does not bind the independent observation, payload scan, runtime-input trace, generator births or two-run determinism record to that same digest.",
+    "requiredBoundedCorrection": [
+      "observation must carry observedExportDigest and manifestDigest",
+      "verifier must compare both against the delivered receipt subject before consuming any clean-room facts",
+      "a clean observation from another export returns HOLD_EXPORT_OBSERVATION_SUBJECT_MISMATCH",
+      "retain N331 16/16 as insufficient fixture history rather than overwriting it as valid contract proof"
+    ],
+    "productionReplay": "NOT_RUN"
+  },
   "productionReplay": "NOT_RUN",
-  "decision": "CANDIDATE_FUNCTION_EXPORT_CLOSURE_HOLD_PRODUCTION_SUBJECT_AND_SIZE_BUDGET_UNKNOWN",
+  "decision": "HOLD_GATE_FAIL_N331_EXPORT_OBSERVATION_SUBJECT_UNBOUND",
   "teacher": {
     "status": "NO_NOVELTY",
     "reason": "N285/N286/N308/N309/N328/N330 already supply the needed clean-room, dependency, exclusion, inventory and action-graph principles; this round makes their combination executable for one new user export failure."
@@ -134,6 +150,14 @@
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": "candidate regression refinement only",
     "GATE_RUN": "fixture only",
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "n332Lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "independent adversarial audit only; correction not yet implemented",
+    "GATE_RUN": "FAIL on exact N331 commit",
     "ADOPTED": false,
     "USER_ACCEPTED": false
   },
