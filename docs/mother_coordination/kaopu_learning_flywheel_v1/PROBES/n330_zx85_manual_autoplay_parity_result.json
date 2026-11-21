@@ -1,0 +1,26 @@
+{
+  "probe": "N330_ZX85_MANUAL_AUTOPLAY_PARITY_GATE",
+  "fixtureOnly": true,
+  "priorN329Replay": "19/19 PASS (inherited result)",
+  "passed": 12,
+  "total": 12,
+  "results": [
+    {"name": "manual pointer and autoplay share one behavior graph", "status": "PASS", "holds": []},
+    {"name": "autoplay cannot substitute for missing manual mode", "status": "PASS", "holds": ["HOLD_CONTROL_MODE_COVERAGE_INCOMPLETE"]},
+    {"name": "unanchored control mode is rejected", "status": "PASS", "holds": ["HOLD_CONTROL_MODE_UNANCHORED"]},
+    {"name": "script-dispatched pointer events do not prove manual control", "status": "PASS", "holds": ["HOLD_MANUAL_POINTER_PATH_UNVERIFIED", "HOLD_MANUAL_POINTER_EVENT_UNTRUSTED"]},
+    {"name": "webdriver virtual pointer cannot be claimed as physical human input", "status": "PASS", "holds": ["HOLD_MANUAL_INPUT_ORIGIN_OVERCLAIM"]},
+    {"name": "pointer must hit the declared machine control", "status": "PASS", "holds": ["HOLD_MANUAL_POINTER_TARGET_MISMATCH"]},
+    {"name": "manual input needs later observable lineage", "status": "PASS", "holds": ["HOLD_MANUAL_POINTER_PATH_UNVERIFIED"]},
+    {"name": "autoplay label without scheduler trace is rejected", "status": "PASS", "holds": ["HOLD_AUTOPLAY_TRIGGER_OR_SCHEDULER_MISSING"]},
+    {"name": "prerecorded autoplay substitute is rejected", "status": "PASS", "holds": ["HOLD_AUTOPLAY_MEDIA_SUBSTITUTE"]},
+    {"name": "manual and autoplay cannot use different behavior graphs", "status": "PASS", "holds": ["HOLD_MANUAL_AUTOPLAY_BEHAVIOR_GRAPH_DIVERGED"]},
+    {"name": "mode receipts must bind the exact artifact subject", "status": "PASS", "holds": ["HOLD_CONTROL_MODE_SUBJECT_MISMATCH"]},
+    {"name": "producer cannot omit one manual control action", "status": "PASS", "holds": ["HOLD_MANUAL_AUTOPLAY_ACTION_COVERAGE_MISMATCH"]}
+  ],
+  "productionBrowserReplayVerified": false,
+  "physicalHumanInputProvenanceVerified": false,
+  "teacherStatus": "TEACHER_CANDIDATE",
+  "teacherLifecycle": "AUDITION",
+  "decision": "CANDIDATE_N321_REFINED_WITH_MANUAL_POINTER_AND_AUTOPLAY_PARITY_HOLD_PRODUCTION_BROWSER_REPLAY_UNVERIFIED"
+}

@@ -1,11 +1,35 @@
 {
   "caseId": "ZX85-CONTROL-MAPPING-001-N321",
   "status": "CANDIDATE",
-  "boundedQuestion": "Can the existing source-bound ZX85 control regression reject a stitched or causally disconnected demo even when every individual control, motion, engine sound and vibration appears somewhere?",
+  "boundedQuestion": "Can the existing ZX85 control regression reject a candidate whose autoplay works but whose real browser pointer path cannot operate the machine, or whose manual and autoplay modes drive different behavior graphs?",
   "novelty": {
-    "kind": "fresh_user_correction_to_uninterrupted_authority_owned_causal_trace",
-    "relativeToCurrentBestView": "N319 checks the pilot interlock and N321 checks individual control mappings, but neither requires all authority-owned actions, engine feedback and resulting motion to share one fresh uninterrupted run, monotonic frame clock and causal lineage.",
-    "teacherStatus": "NO_NOVELTY"
+    "kind": "fresh_user_correction_to_dual_path_pointer_and_autoplay_parity",
+    "relativeToCurrentBestView": "N329 requires one uninterrupted autoplay trace, but it can still pass when no browser pointer can operate the excavator, when JavaScript dispatchEvent() only simulates controls, or when manual and autoplay paths use different action graphs.",
+    "teacherStatus": "TEACHER_CANDIDATE"
+  },
+  "teacherAudition": {
+    "lifecycle": "AUDITION",
+    "candidate": "WHATWG DOM + W3C Pointer Events/WebDriver + Web Platform Tests",
+    "sourceProvenance": [
+      "https://dom.spec.whatwg.org/#dom-event-istrusted",
+      "https://www.w3.org/TR/pointerevents/",
+      "https://www.w3.org/TR/webdriver2/#actions",
+      "https://github.com/web-platform-tests/wpt/tree/master/pointerevents",
+      "https://github.com/web-platform-tests/wpt/tree/master/webdriver"
+    ],
+    "recentMaintenance": {
+      "whatwgDomHead": "e4f4f4f0ace83fe6c52ab68e047351ce7f2dcd69 (2026-11-15)",
+      "pointerEventsHead": "7affe62fa4332543f8b13c56292104e4e9dfa517 (2026-10-08)",
+      "webdriverHead": "7667c72e3b3e23e8029eda7f2184760e1b8ab9d2 (2026-11-09)",
+      "wptObservedHead": "108900567c9ab243804afc8f77bf92dd34529aae (2026-11-21)"
+    },
+    "runnableEvidence": "WPT supplies cross-browser pointerevents and WebDriver action suites, including testdriver/WebDriver pointer actions and event recording fixtures.",
+    "license": "WHATWG specification text CC BY 4.0 with source-code portions BSD-3-Clause; W3C WebDriver repository W3C Software and Document License; WPT BSD-3-Clause.",
+    "directRelevance": "The user requires actual mouse control plus one-click autoplay in a standalone browser artifact.",
+    "novelKnowledge": "Event.isTrusted=true means user-agent-dispatched, not necessarily a physical human event; WebDriver defines a virtual pointer input source that can exercise the real browser input path. Therefore KAOPU must not equate isTrusted with human provenance, but can use WebDriver pointer actions to verify that the actual pointer path reaches the same behavior graph as autoplay without making the user first-line QA.",
+    "dependenciesAndRisk": "Requires a browser/WebDriver or equivalent real pointer-action runner; device/browser differences, hit-target layout, pointer capture and coordinate transforms can affect replay. isTrusted alone is insufficient provenance.",
+    "demoOnlyOrClosedRisk": "Not demo-only; open standards plus executable WPT. No model, training-data, commercial API or closed runtime dependency.",
+    "auditionDecision": "TEACHER_CANDIDATE_FOR_ONE_BOUNDED_POINTER_PROVENANCE_AND_MODE_PARITY_TRIAL"
   },
   "frozenSource": {
     "documentId": "HITACHI_75U5A_85USB5A_OPERATOR_MANUAL_V0",
@@ -84,6 +108,64 @@
       "production geometry or asset changes"
     ]
   },
+  "dualControlModeContract": {
+    "authorityOwner": "TASK_ANCHOR_OR_INDEPENDENT_VERIFIER",
+    "requiredModeIds": ["MANUAL_POINTER", "AUTO_SEQUENCE"],
+    "expectedActionIdsByMode": {
+      "MANUAL_POINTER": [
+        "PILOT_UNLOCK",
+        "LEFT_JOYSTICK_FORWARD_ARM_ROLL_OUT",
+        "LEFT_JOYSTICK_BACKWARD_ARM_ROLL_IN",
+        "LEFT_JOYSTICK_RIGHT_SWING_RIGHT",
+        "LEFT_JOYSTICK_LEFT_SWING_LEFT",
+        "RIGHT_JOYSTICK_FORWARD_BOOM_LOWER",
+        "RIGHT_JOYSTICK_BACKWARD_BOOM_RAISE",
+        "RIGHT_JOYSTICK_LEFT_BUCKET_ROLL_IN",
+        "RIGHT_JOYSTICK_RIGHT_BUCKET_ROLL_OUT",
+        "TRAVEL_FORWARD",
+        "TRAVEL_REVERSE",
+        "PIVOT_ONE_CRAWLER",
+        "SPIN_OPPOSED_CRAWLERS",
+        "NEUTRAL_STOP"
+      ],
+      "AUTO_SEQUENCE": [
+        "IGNITION_START",
+        "ENGINE_FEEDBACK_RUNNING",
+        "PILOT_UNLOCK",
+        "LEFT_JOYSTICK_FORWARD_ARM_ROLL_OUT",
+        "LEFT_JOYSTICK_BACKWARD_ARM_ROLL_IN",
+        "LEFT_JOYSTICK_RIGHT_SWING_RIGHT",
+        "LEFT_JOYSTICK_LEFT_SWING_LEFT",
+        "RIGHT_JOYSTICK_FORWARD_BOOM_LOWER",
+        "RIGHT_JOYSTICK_BACKWARD_BOOM_RAISE",
+        "RIGHT_JOYSTICK_LEFT_BUCKET_ROLL_IN",
+        "RIGHT_JOYSTICK_RIGHT_BUCKET_ROLL_OUT",
+        "TRAVEL_FORWARD",
+        "TRAVEL_REVERSE",
+        "PIVOT_ONE_CRAWLER",
+        "SPIN_OPPOSED_CRAWLERS",
+        "NEUTRAL_STOP",
+        "PILOT_LOCK",
+        "ENGINE_STOP"
+      ]
+    },
+    "sharedSubjectRequirements": [
+      "Both modes bind the same sourceHead, artifactDigest, actionMappingDigest and behaviorGraphDigest.",
+      "Each mode is verified by an independent browser replay; a label or button presence is not implementation proof.",
+      "Manual pointer events must be user-agent-dispatched and hit the declared control target; Event.isTrusted is not described as proof of a physical human.",
+      "WebDriver virtual pointer actions are allowed for verifier replay so the user is not first-line QA.",
+      "JavaScript dispatchEvent() or direct state mutation does not prove the manual pointer path.",
+      "Autoplay requires one bound trigger plus scheduler trace; prerecorded video or an unrelated animation timeline is rejected.",
+      "Mode-specific input provenance may differ, but both must reach the same source-bound action graph and observable semantics."
+    ],
+    "provenanceStates": [
+      "PHYSICAL_POINTER",
+      "WEBDRIVER_VIRTUAL_POINTER",
+      "SCRIPT_DISPATCH_UNTRUSTED",
+      "AUTO_SEQUENCE_SCHEDULER",
+      "UNKNOWN"
+    ]
+  },
   "coordinateFrameRule": "Semantic motion is frozen by the manual. A production numeric sign is valid only when the receipt declares actuator axis, positive direction and machine frame; an undeclared numeric sign is UNKNOWN.",
   "minimumReceipt": [
     "taskAnchorExpectedActionIds",
@@ -107,6 +189,19 @@
     "pilotState",
     "neutralStopObserved",
     "browserDeviceRunMode"
+    ,"requiredModeIds"
+    ,"expectedActionIdsByMode"
+    ,"actionMappingDigest"
+    ,"behaviorGraphDigest"
+    ,"inputProvenance"
+    ,"eventIsTrusted"
+    ,"pointerType"
+    ,"pointerId"
+    ,"hitTargetId"
+    ,"webdriverActionReceipt"
+    ,"autoTriggerEventId"
+    ,"schedulerId"
+    ,"schedulerTraceDigest"
   ],
   "holds": [
     "HOLD_CONTROL_MAPPING_SOURCE_MISSING",
@@ -129,12 +224,23 @@
     "HOLD_DEMO_CAUSAL_ORDER_INVALID",
     "HOLD_DEMO_ENGINE_FEEDBACK_CAUSALITY_MISSING",
     "HOLD_DEMO_INPUT_TO_OBSERVABLE_LINEAGE_MISSING",
+    "HOLD_CONTROL_MODE_COVERAGE_INCOMPLETE",
+    "HOLD_CONTROL_MODE_UNANCHORED",
+    "HOLD_CONTROL_MODE_SUBJECT_MISMATCH",
+    "HOLD_MANUAL_POINTER_PATH_UNVERIFIED",
+    "HOLD_MANUAL_POINTER_EVENT_UNTRUSTED",
+    "HOLD_MANUAL_INPUT_ORIGIN_OVERCLAIM",
+    "HOLD_MANUAL_POINTER_TARGET_MISMATCH",
+    "HOLD_AUTOPLAY_TRIGGER_OR_SCHEDULER_MISSING",
+    "HOLD_AUTOPLAY_MEDIA_SUBSTITUTE",
+    "HOLD_MANUAL_AUTOPLAY_ACTION_COVERAGE_MISMATCH",
+    "HOLD_MANUAL_AUTOPLAY_BEHAVIOR_GRAPH_DIVERGED",
     "HOLD_CONTROL_PRODUCTION_REPLAY_MISSING"
   ],
-  "decision": "CANDIDATE_N321_REFINED_WITH_SINGLE_RUN_CAUSAL_TRACE_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
+  "decision": "CANDIDATE_N321_REFINED_WITH_MANUAL_POINTER_AND_AUTOPLAY_PARITY_HOLD_PRODUCTION_BROWSER_REPLAY_UNVERIFIED",
   "lifecycle": {
-    "POSTED": true,
-    "POSTED_RECEIPT": "#91 comment 7053424000",
+    "POSTED": false,
+    "POSTED_RECEIPT": null,
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": "candidate regression refinement only",
     "GATE-RUN": true,
@@ -144,13 +250,16 @@
   "dedupRouting": {
     "N319": "APPLICABLE_PREREQUISITE_ONLY: pilot start and motion-authority interlock remains authoritative.",
     "N321": "UPDATED_IN_PLACE: this case keeps its source-bound control mappings and adds uninterrupted causal-trace proof.",
+    "N329": "UPDATED_IN_PLACE: uninterrupted autoplay remains required; N330 adds the missing independent manual-pointer path and shared-graph parity.",
     "N324": "PARTIAL_METHOD_REUSE_ONLY: event-to-next-paint timing concepts are reused, but monitor latency is not reopened.",
-    "N328": "METHOD_REUSE_ONLY: the expected action inventory is authority-owned so Producer cannot shrink the demo scope."
+    "N328": "METHOD_REUSE_ONLY: expected mode/action inventories are authority-owned so Producer cannot omit the manual path.",
+    "webPlatformTeacher": "AUDITION_ONLY: standards and WPT inform one ZX85 trial; not adopted globally."
   },
   "boundaries": [
     "The fixture proves gate semantics, not a production ZX85 implementation or visual quality.",
+    "Event.isTrusted=true is never described as proof that a physical human operated the mouse; PHYSICAL_POINTER versus WEBDRIVER_VIRTUAL_POINTER remains explicit.",
     "Radio rights/channel choice, air conditioning and audio fidelity are separate bounded questions and remain UNKNOWN here.",
     "No Mother branch, production asset, main branch, public Site or R2 rule is modified."
   ],
-  "nextAction": "ZX85 Cabin/Control Mother should replay the authority-owned action sequence on one fresh standalone-HTML run and return the same-run event lineage; no stitched montage or prerecorded substitute qualifies."
+  "nextAction": "ZX85 Cabin/Control Mother should return two independent same-head browser receipts: WebDriver pointer actions exercising the manual machine controls, and one-click autoplay exercising the same behavior graph; button presence or script-dispatched events do not qualify."
 }
