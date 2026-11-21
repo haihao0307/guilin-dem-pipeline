@@ -58,6 +58,6 @@ Only the affected ZX85 Whole/Export Mother should answer:
 3. Which function modules, parameters, seeds and runtime vendor bytes are authorized dependencies, and which teacher/reference/legacy bytes must be absent?
 4. What numeric export-size budget and smallest cold-room mutation should falsify the Candidate?
 
-Lifecycle before issue routing: `POSTED=false`; `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
+Lifecycle after issue routing: `POSTED=true` at [#91 issue comment 7059447351](https://github.com/haihao0307/guilin-dem-pipeline/issues/91#issuecomment-7059447351); `ACKNOWLEDGED=false`; `IMPLEMENTED=candidate regression refinement only`; `GATE-RUN=true (fixture only)`; `ADOPTED=false`; `USER-ACCEPTED=false`.
 
 No main, R2 OS, production Mother branch, public Site or production asset was modified.
