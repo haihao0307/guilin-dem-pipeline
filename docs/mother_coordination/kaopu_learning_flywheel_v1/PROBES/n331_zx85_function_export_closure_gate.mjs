@@ -46,6 +46,15 @@ export function verifyFunctionExport(anchor, receipt, observation) {
 
   const manifest = receipt?.manifest || [];
   const manifestIds = new Set(manifest.map(entry => entry.id));
+  const computedManifestDigest = sha256(manifest);
+  if (!receipt?.manifestDigest || receipt.manifestDigest !== computedManifestDigest) {
+    holds.add('HOLD_EXPORT_MANIFEST_DIGEST_MISMATCH');
+  }
+  if (observation?.observedExportDigest !== receipt?.exportDigest ||
+      observation?.observedManifestDigest !== receipt?.manifestDigest ||
+      observation?.subjectBindingVerified !== true) {
+    holds.add('HOLD_EXPORT_OBSERVATION_SUBJECT_MISMATCH');
+  }
   const forbiddenRoles = new Set([
     'TEACHER_REFERENCE_BYTES',
     'LEGACY_ASSET_BYTES',
@@ -134,6 +143,7 @@ const baseReceipt = {
   exportPolicyDigest: policyDigest,
   packageSizeBytes: 1_250_000,
   manifest,
+  manifestDigest: sha256(manifest),
   observedRuntimeObjectIds: objects,
   observedActionIds: actions,
   actionInventoryDigest: sha256([...actions].sort()),
@@ -156,6 +166,9 @@ const run = {
 };
 
 const baseObservation = {
+  observedExportDigest: baseReceipt.exportDigest,
+  observedManifestDigest: baseReceipt.manifestDigest,
+  subjectBindingVerified: true,
   coldRoom: true,
   networkRequestCount: 0,
   remoteUrls: [],
@@ -170,12 +183,13 @@ const baseObservation = {
 const clone = value => structuredClone(value);
 const cases = [
   ['valid function-only export closure', baseAnchor, baseReceipt, baseObservation, []],
+  ['clean-room observation belongs to another export', baseAnchor, baseReceipt, { ...baseObservation, observedExportDigest: sha256('different-export'), subjectBindingVerified: false }, ['HOLD_EXPORT_OBSERVATION_SUBJECT_MISMATCH']],
   ['missing authority anchor', { ...baseAnchor, authorityRef: '' }, baseReceipt, baseObservation, ['HOLD_EXPORT_ANCHOR_INCOMPLETE']],
   ['stale source subject', baseAnchor, { ...baseReceipt, sourceHead: 'old-head' }, baseObservation, ['HOLD_EXPORT_SUBJECT_MISMATCH']],
   ['producer shrinks object inventory', baseAnchor, { ...baseReceipt, observedRuntimeObjectIds: objects.slice(0, -1) }, baseObservation, ['HOLD_EXPORT_OBJECT_INVENTORY_MISMATCH']],
   ['producer omits required action', baseAnchor, { ...baseReceipt, observedActionIds: actions.slice(0, -1) }, baseObservation, ['HOLD_EXPORT_ACTION_INVENTORY_MISMATCH']],
-  ['teacher bytes bundled', baseAnchor, { ...baseReceipt, manifest: [...manifest, { id: 'teacher', path: 'teacher.glb', role: 'TEACHER_REFERENCE_BYTES', sha256: sha256('teacher'), rightsState: 'REFERENCE_ONLY' }] }, baseObservation, ['HOLD_EXPORT_FORBIDDEN_PAYLOAD_ROLE']],
-  ['legacy mesh bundled', baseAnchor, { ...baseReceipt, manifest: [...manifest, { id: 'legacy', path: 'old.glb', role: 'LEGACY_ASSET_BYTES', sha256: sha256('legacy'), rightsState: 'UNKNOWN' }] }, baseObservation, ['HOLD_EXPORT_FORBIDDEN_PAYLOAD_ROLE']],
+  ['teacher bytes bundled', baseAnchor, { ...baseReceipt, manifest: [...manifest, { id: 'teacher', path: 'teacher.glb', role: 'TEACHER_REFERENCE_BYTES', sha256: sha256('teacher'), rightsState: 'REFERENCE_ONLY' }] }, baseObservation, ['HOLD_EXPORT_FORBIDDEN_PAYLOAD_ROLE', 'HOLD_EXPORT_MANIFEST_DIGEST_MISMATCH']],
+  ['legacy mesh bundled', baseAnchor, { ...baseReceipt, manifest: [...manifest, { id: 'legacy', path: 'old.glb', role: 'LEGACY_ASSET_BYTES', sha256: sha256('legacy'), rightsState: 'UNKNOWN' }] }, baseObservation, ['HOLD_EXPORT_FORBIDDEN_PAYLOAD_ROLE', 'HOLD_EXPORT_MANIFEST_DIGEST_MISMATCH']],
   ['hidden serialized geometry detected', baseAnchor, baseReceipt, { ...baseObservation, serializedGeometryPayloadBytes: 8192, forbiddenPayloadSignaturesDetected: ['base64-glb'] }, ['HOLD_EXPORT_SERIALIZED_GEOMETRY_OR_HIDDEN_ASSET']],
   ['runtime opens unmanifested input', baseAnchor, baseReceipt, { ...baseObservation, openedInputIds: [...baseObservation.openedInputIds, 'secret-mesh'] }, ['HOLD_EXPORT_UNDECLARED_RUNTIME_INPUT']],
   ['remote runtime fetch', baseAnchor, baseReceipt, { ...baseObservation, networkRequestCount: 1, remoteUrls: ['https://example.invalid/mesh.glb'] }, ['HOLD_EXPORT_NOT_OFFLINE_CLEAN_ROOM', 'HOLD_EXPORT_REMOTE_RUNTIME_DEPENDENCY']],
@@ -193,7 +207,7 @@ const results = cases.map(([name, anchor, receipt, observation, expected]) => {
 });
 
 const output = {
-  schema: 'kaopu.n331.function-export-closure-result/1',
+  schema: 'kaopu.n331.function-export-closure-result/1.1',
   boundedQuestion: 'Can one small reusable excavator export prove that required function-generated objects and actions reconstruct offline while teacher/reference and legacy asset bytes remain outside the package?',
   sourceBranchBase: 'automation/n330-zx85-manual-autoplay-parity-20261121@894c310963463f0dc3f1e4abfea63eb75f153aeb',
   fixtureOnly: true,

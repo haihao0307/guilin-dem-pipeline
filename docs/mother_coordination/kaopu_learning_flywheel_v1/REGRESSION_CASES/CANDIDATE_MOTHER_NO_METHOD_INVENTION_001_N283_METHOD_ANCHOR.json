@@ -2,7 +2,7 @@
   "schema": "kaopu.regression-refinement-candidate/1.3",
   "candidateId": "MOTHER-NO-METHOD-INVENTION-001-N283-METHOD-ANCHOR",
   "refines": "MOTHER-NO-METHOD-INVENTION-001",
-  "status": "HOLD_GATE_FAIL_LOCAL_AUDIT",
+  "status": "CANDIDATE_CORRECTION_LOCAL_TRIAL_ONLY",
   "n331BoundedQuestion": "Can one small reusable excavator export prove that all authority-required function-generated runtime objects and actions reconstruct offline while teacher/reference bytes, legacy assets and baked production meshes remain outside the package?",
   "realFeedback": "The user asked to save the current pure-function excavator as a small reusable file, including its actions, without old teacher/reference assets.",
   "deduplication": {
@@ -121,7 +121,7 @@
     "HOLD_EXPORT_NONDETERMINISTIC_RECONSTRUCTION",
     "HOLD_EXPORT_CLEAN_ROOM_ACTION_GRAPH_MISMATCH"
   ],
-  "fixtureResult": "16/16 PASS",
+  "fixtureResult": "N331 historical 16/16 retained as insufficient; N333 corrected suite 17/17 PASS",
   "n332VerifierFailure": {
     "exactN331Subject": "automation/n331-zx85-function-export-closure-20261121@38638a0c71c289f9113c26e1bcc9ad3ddb8a52ea",
     "boundedQuestion": "Can N331 accept a clean-room observation made against a different export digest than the delivered export?",
@@ -138,8 +138,22 @@
     ],
     "productionReplay": "NOT_RUN"
   },
+  "n333Correction": {
+    "exactParentFailure": "automation/n332-n331-export-observation-subject-audit-20261121@762a9dea4a51c8a0d8d815dba74690436e2c2411",
+    "boundedChange": [
+      "receipt manifestDigest must equal the digest recomputed from the delivered manifest",
+      "observation observedExportDigest must equal receipt exportDigest",
+      "observation observedManifestDigest must equal receipt manifestDigest",
+      "subjectBindingVerified must be true before clean-room facts are consumed"
+    ],
+    "correctedRegression": "The 16 original N331 fixtures remain; the exact N332 different-export observation is the 17th fixture.",
+    "result": "17/17 PASS",
+    "focusedSubjectBindingProbe": "4/4 PASS",
+    "productionReplay": "NOT_RUN",
+    "remainingBoundary": "Verifier authentication/freshness and production export bytes remain separate gates and are not claimed by this correction."
+  },
   "productionReplay": "NOT_RUN",
-  "decision": "HOLD_GATE_FAIL_N331_EXPORT_OBSERVATION_SUBJECT_UNBOUND",
+  "decision": "CANDIDATE_N331_OBSERVATION_SUBJECT_BOUND_HOLD_PRODUCTION_REPLAY_UNVERIFIED",
   "teacher": {
     "status": "NO_NOVELTY",
     "reason": "N285/N286/N308/N309/N328/N330 already supply the needed clean-room, dependency, exclusion, inventory and action-graph principles; this round makes their combination executable for one new user export failure."
@@ -159,6 +173,14 @@
     "ACKNOWLEDGED": false,
     "IMPLEMENTED": "independent adversarial audit only; correction not yet implemented",
     "GATE_RUN": "FAIL on exact N331 commit",
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "n333Lifecycle": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": "candidate gate correction only",
+    "GATE_RUN": "17/17 inherited-plus-counterexample fixture and 4/4 focused subject-binding fixture",
     "ADOPTED": false,
     "USER_ACCEPTED": false
   },
