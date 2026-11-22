@@ -1,0 +1,140 @@
+{
+  "caseId": "SPECIALIST-HANDOFF-ANCHOR-AND-RETIREMENT-001",
+  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_PRODUCTION_VALIDATED",
+  "scope": "Coordinator and bounded specialist H workflow after an independently verified output is anchored",
+  "boundedQuestion": "Can a specialist H exit after a verified anchor without forwarding mutable full history or confusing handoff events with acceptance and retirement?",
+  "realFailure": {
+    "userCorrection": "For simple objects such as the air-conditioner and lock, use the correct method, anchor good work, continue from that anchor, and let the specialist H exit instead of remaining a slow long-lived execution dependency.",
+    "existingCoverage": "R3 requires real replacement/cancellation receipts and preserves the accepted baseline, but it has no executable distinction among handoff event, target acknowledgement, independent acceptance, write fencing, run closure and retirement.",
+    "nonDuplicateDelta": "This case adds typed and filtered handoff semantics plus an explicit retirement receipt. It does not replace R3 or the N331 export-closure case."
+  },
+  "teacherCandidate": {
+    "name": "OpenAI Agents SDK Python handoff and lifecycle semantics",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION",
+    "exactCommit": "6c4e4a29cd08eef454db6980d74da6afc8939d24",
+    "release": "v0.25.0",
+    "releaseDate": "2026-11-18",
+    "screening": {
+      "sourceProvenance": "Official OpenAI repository and documentation; exact commit and release pinned.",
+      "maintenanceActivity": "v0.25.0 released 2026-11-18; exact inspected main commit dated 2026-11-20.",
+      "runnableCodeTestsData": "Public Python source and pytest suites, including test_handoff_tool.py, test_agent_hooks.py and ScriptedModel-based tests.",
+      "licenseAndRights": "MIT; no third-party asset bytes required.",
+      "directRelevance": "Provides strict typed handoff input, context filtering, dynamic handoff enablement and explicit lifecycle callbacks.",
+      "noveltyOverCurrentBestView": "It concretely proves that handoff and source-agent on_end are different events, and supplies executable schema/filter semantics for scoped transfer. KAOPU R3 states replacement policy but lacks these event boundaries.",
+      "dependenciesAndIntegrationRisk": "Python package plus model/API for real use; unit tests can use ScriptedModel. Server-managed conversation history cannot use handoff input filters. Shared mutable agent/tool objects are unsafe across concurrent runs.",
+      "failureBoundaries": "Handoffs stay within one run; the SDK does not provide KAOPU artifact authority, independent acceptance, write fencing, cross-process termination or user acceptance. Input guardrails cover the first agent and output guardrails the final agent only."
+    },
+    "explicitNoveltyAnswer": "For the bounded problem of retiring H after a valid transfer, the SDK knows that transfer should use a strict typed envelope and an explicit context filter, while a handoff callback does not imply source on_end, acceptance or retirement.",
+    "sources": [
+      "https://openai.github.io/openai-agents-python/handoffs/",
+      "https://openai.github.io/openai-agents-python/ref/lifecycle/",
+      "https://github.com/openai/openai-agents-python/blob/6c4e4a29cd08eef454db6980d74da6afc8939d24/tests/test_handoff_tool.py",
+      "https://github.com/openai/openai-agents-python/blob/6c4e4a29cd08eef454db6980d74da6afc8939d24/tests/test_agent_hooks.py",
+      "https://github.com/openai/openai-agents-python/releases/tag/v0.25.0",
+      "https://github.com/openai/openai-agents-python/blob/main/LICENSE"
+    ]
+  },
+  "taskAnchorRequired": [
+    "taskId",
+    "specialistRole",
+    "specialistIdentity",
+    "sourceHead",
+    "acceptedBaselineDigest",
+    "requiredOutputSchemaDigest",
+    "allowedContextIds",
+    "expectedArtifactRole",
+    "independentVerifierPolicyDigest",
+    "exitPolicy",
+    "postRetirementCapabilityPolicy"
+  ],
+  "handoffEnvelopeRequired": [
+    "handoffReceiptId",
+    "fromSpecialistIdentity",
+    "toCoordinatorIdentity",
+    "taskAnchorDigest",
+    "schemaDigest",
+    "forwardedContextIds",
+    "outputArtifactDigest",
+    "outputRole",
+    "specialistLimitations",
+    "handoffObservedAt"
+  ],
+  "deliveryReceiptRequired": [
+    "verifiedArtifactDigest",
+    "schemaValidationResult",
+    "contextScopeValidationResult",
+    "independentVerifierIdentity",
+    "independentVerifierDecision",
+    "targetAcknowledgementReceipt",
+    "anchorCommitOrObjectDigest",
+    "lastWriteFenceReceipt",
+    "runClosureReceipt",
+    "postRetirementCapabilities",
+    "retirementDecision"
+  ],
+  "stateSemantics": [
+    "ACTIVE",
+    "HANDOFF_POSTED",
+    "ACKNOWLEDGED",
+    "VERIFIED_ANCHORED",
+    "WRITE_FENCED",
+    "RUN_CLOSED",
+    "RETIRED"
+  ],
+  "auditRules": [
+    "A handoff event is not target acknowledgement, artifact acceptance or specialist retirement.",
+    "Only allowlisted Task Anchor, accepted artifact and Delivery Receipt context may cross the handoff boundary; rejected candidates and mutable full history are excluded by default.",
+    "The handoff payload must validate against an authority-pinned strict schema digest.",
+    "The independently verified artifact digest must equal the artifact digest named by the handoff envelope.",
+    "Intermediate specialist output needs its own verifier gate; a final-agent output guardrail cannot retroactively validate it.",
+    "Retirement requires target acknowledgement, independent verification, an anchored artifact, a last-write fence, actual run closure and an empty post-retirement capability set.",
+    "Source-agent on_end is not a retirement authority and may not occur at handoff.",
+    "Successor work references the anchored artifact digest, not the retired specialist session or mutable conversation history."
+  ],
+  "holdStates": [
+    "HOLD_HANDOFF_NOT_OBSERVED",
+    "HOLD_HANDOFF_SCHEMA_MISMATCH",
+    "HOLD_HANDOFF_CONTEXT_SCOPE_LEAK",
+    "HOLD_HANDOFF_ARTIFACT_SUBJECT_MISMATCH",
+    "HOLD_SPECIALIST_OUTPUT_UNVERIFIED",
+    "HOLD_HANDOFF_NOT_ACKNOWLEDGED",
+    "HOLD_SPECIALIST_RETIREMENT_UNPROVEN",
+    "HOLD_RETIREMENT_DERIVED_FROM_MISSING_ON_END",
+    "HOLD_RETIRED_SPECIALIST_CAPABILITIES_STILL_ACTIVE"
+  ],
+  "syntheticReplay": {
+    "probePath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/specialist_handoff_retirement_probe_n337.mjs",
+    "resultPath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/specialist_handoff_retirement_result_n337.json",
+    "passed": 9,
+    "total": 9,
+    "teacherPackageExecuted": false,
+    "productionMotherRun": false
+  },
+  "minimumSingleMotherTrial": {
+    "target": "one simple air-conditioner or lock object handled by one bounded specialist H",
+    "falsifiableSequence": "H produces one exact artifact -> independent verifier accepts exact digest -> coordinator ACKs -> anchor is written -> last-write fence installed -> run is closed -> H loses all production-write capabilities -> successor reopens exact anchor without H session history",
+    "success": "Successor reproduces and continues from the accepted artifact digest with no write from retired H and no rejected-history inheritance.",
+    "failure": "Any digest mismatch, missing ACK/verifier/fence/closure receipt, history leakage, or post-retirement write capability."
+  },
+  "coordination": {
+    "issue": 91,
+    "commentId": 7076091176,
+    "route": "Coordinator and Mechanical-Material execution line using specialist H",
+    "requestedResponse": [
+      "current problem relevance",
+      "existing executable coverage",
+      "minimum context worth transferring",
+      "minimum falsifiable single-object trial"
+    ]
+  },
+  "adoption": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE_RUN": "synthetic only",
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  },
+  "rollback": "Delete the N337 candidate-only branch; no main, R2 OS, production Mother branch, asset, meeting or notification is changed."
+}
