@@ -1,0 +1,74 @@
+{
+  "probeId": "N336-CORROSION-GEOMETRY-DISPLACEMENT-AND-ORIENTATION",
+  "boundedQuestion": "Can one corrosion state prove real outward geometry displacement across plate, lock and air-conditioner shell without shader-only fallback or unexplained top/side morphology drift?",
+  "decision": "CANDIDATE_CONTRACT_PASSED_SYNTHETIC_REPLAY_NOT_PRODUCTION_VALIDATED",
+  "sourceFacts": {
+    "ostiReport": {
+      "authority": "US DOE OSTI",
+      "reportId": "BMI-1317",
+      "url": "https://www.osti.gov/servlets/purl/4268078",
+      "boundedFact": "An oxide/metal volume ratio above one means the oxide occupies more volume; high ratios can create compressive stress and cracking.",
+      "excludedUse": "Not a visual rust recipe, displacement amplitude, or current asset-specific qualification source."
+    }
+  },
+  "requiredFamilies": [
+    "steel-plate",
+    "lock",
+    "air-conditioner-shell"
+  ],
+  "requiredOrientations": [
+    "top",
+    "side"
+  ],
+  "results": [
+    {
+      "id": "color-only-heavy-rust",
+      "expected": "REJECT_SHADER_ONLY_CORROSION",
+      "actual": "REJECT_SHADER_ONLY_CORROSION",
+      "passed": true
+    },
+    {
+      "id": "green-spot-color-without-protrusion",
+      "expected": "REJECT_GREEN_SPOT_WITHOUT_PROTRUSION",
+      "actual": "REJECT_GREEN_SPOT_WITHOUT_PROTRUSION",
+      "passed": true
+    },
+    {
+      "id": "top-face-stretch-artifact",
+      "expected": "REJECT_UNEXPLAINED_FACE_ORIENTATION_DRIFT",
+      "actual": "REJECT_UNEXPLAINED_FACE_ORIENTATION_DRIFT",
+      "passed": true
+    },
+    {
+      "id": "plate-only-not-shared-with-lock-and-ac",
+      "expected": "REJECT_UNPROVEN_ASSET_FAMILY_TRANSFER",
+      "actual": "REJECT_UNPROVEN_ASSET_FAMILY_TRANSFER",
+      "passed": true
+    },
+    {
+      "id": "material-and-geometry-use-different-corrosion-fields",
+      "expected": "REJECT_UNBOUND_MATERIAL_GEOMETRY_FIELDS",
+      "actual": "REJECT_UNBOUND_MATERIAL_GEOMETRY_FIELDS",
+      "passed": true
+    },
+    {
+      "id": "producer-self-verifies",
+      "expected": "REJECT_PRODUCER_SELF_VERIFICATION",
+      "actual": "REJECT_PRODUCER_SELF_VERIFICATION",
+      "passed": true
+    },
+    {
+      "id": "shared-field-real-displacement-orientation-slices-independent-verifier",
+      "expected": "CANDIDATE_CORROSION_GEOMETRY_CONTRACT_BOUND",
+      "actual": "CANDIDATE_CORROSION_GEOMETRY_CONTRACT_BOUND",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "limitations": [
+    "Synthetic contract replay only; no production Mother artifact was available in the coordination issue.",
+    "The 0.15 orientation-distance threshold is a falsifiable audition value, not Canonical Truth.",
+    "The OSTI report supports volume-growth and stress semantics only; it does not prescribe a renderer, texture, or displacement magnitude.",
+    "Runtime speed and edge-rust performance are outside this bounded question."
+  ]
+}
