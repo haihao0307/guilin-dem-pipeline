@@ -1,0 +1,22 @@
+{
+  "regressionId": "CANDIDATE-CORROSION-FIELD-ORIENTATION-BIAS-001",
+  "status": "CANDIDATE",
+  "boundedQuestion": "Can the same isotropic corrosion field avoid grid-axis-dependent top-versus-side deformation before any exposure-direction term is introduced?",
+  "appliesTo": ["Material Mother", "Mechanical Mother", "N336 corrosion geometry contract"],
+  "teacherStatus": "TEACHER_CANDIDATE",
+  "teacherLifecycle": "AUDITION",
+  "hypothesis": "A boundary-aware partial-area-centroid discretization should reduce orientation spread relative to cell-center quadrature without changing the corrosion-field semantics.",
+  "requiredChecks": [
+    "same delta, kappa and m for all schemes",
+    "sweep wave-vector direction from 0 through 90 degrees",
+    "report normalized orientation spread for FA, PA_HHB and PA_AC",
+    "PA_AC spread lower than FA and at least 20x smaller at the pinned audition parameters"
+  ],
+  "holdIfFailed": "HOLD_CORROSION_FIELD_ORIENTATION_BIAS",
+  "mustNotClaim": [
+    "3D mesh displacement verified",
+    "oxide growth calibrated",
+    "steel plate, lock or AC housing production transfer passed",
+    "orientation correction adopted globally"
+  ]
+}
