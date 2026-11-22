@@ -1,0 +1,139 @@
+{
+  "caseId": "CORROSION-GEOMETRY-DISPLACEMENT-AND-SURFACE-ORIENTATION-001",
+  "status": "CANDIDATE_SYNTHETIC_REPLAY_PASSED_NOT_PRODUCTION_VALIDATED",
+  "scope": "Material and Mechanical Mother corrosion condition transfer across steel plate, lock and air-conditioner shell",
+  "boundedQuestion": "Can one corrosion state prove real outward geometry displacement across plate, lock and air-conditioner shell without shader-only fallback or unexplained top/side morphology drift?",
+  "userCorrection": {
+    "observedAt": "2026-11-22 Asia/Shanghai",
+    "facts": [
+      "Rust must alter geometry rather than only color.",
+      "Green spot corrosion must protrude rather than remain a color-only mark.",
+      "Corrosion function 2-1-1-2 is valuable and should remain in audition, but its top and bottom planar faces look stretched and fake compared with the side surface.",
+      "The same corrosion relation should transfer to locks and air-conditioner shells."
+    ]
+  },
+  "relationshipToExistingRegression": {
+    "caseId": "MECHANICAL-STANDARD-IDENTITY-AND-DIMENSION-PROVENANCE-001",
+    "nonDuplicateDelta": "The existing case verifies substrate/protection/exposure provenance for a corrosion condition. It does not verify actual mesh displacement, material-geometry field binding, face-orientation slices, or cross-asset transfer."
+  },
+  "sourceFacts": [
+    {
+      "authority": "US DOE OSTI",
+      "sourceId": "BMI-1317",
+      "url": "https://www.osti.gov/servlets/purl/4268078",
+      "boundedFact": "An oxide/metal volume ratio above one means the oxide occupies more volume; very high ratios can generate compressive stress and cracking.",
+      "excludedUse": "Not a visual recipe, asset-specific displacement amplitude, renderer recommendation, or current qualification authority."
+    }
+  ],
+  "failureMechanisms": [
+    "CORROSION_COLOR_OR_NORMAL_ONLY_WITHOUT_MESH_DELTA",
+    "GREEN_SPOT_COLOR_WITHOUT_OUTWARD_DISPLACEMENT",
+    "TOP_FACE_STRETCH_ARTIFACT",
+    "UNEXPLAINED_FACE_ORIENTATION_MORPHOLOGY_DRIFT",
+    "MATERIAL_AND_GEOMETRY_DRIVEN_BY_UNBOUND_CORROSION_FIELDS",
+    "PLATE_ONLY_RESULT_PROMOTED_TO_LOCK_AND_AIR_CONDITIONER_TRANSFER",
+    "PRODUCER_SELF_VERIFICATION"
+  ],
+  "taskAnchorRequired": [
+    "corrosionModelId",
+    "corrosionFunctionRevision",
+    "substrateMaterial",
+    "protectiveSystem",
+    "serviceEnvironment",
+    "exposureHistory",
+    "conditionState",
+    "severity",
+    "corrosionFieldDigest",
+    "referenceMeshDigest",
+    "geometryDisplacementRoute",
+    "requiredAssetFamilies",
+    "requiredFaceOrientations",
+    "requiredViewpoints",
+    "orientationCause",
+    "forbiddenShaderOnlyFallback"
+  ],
+  "deliveryReceiptRequired": [
+    "producedArtifactDigest",
+    "corrosionFieldDigest",
+    "shaderFieldDigest",
+    "geometryFieldDigest",
+    "referenceMeshDigest",
+    "deformedMeshDigest",
+    "geometryDeltaDigest",
+    "maxOutwardDisplacement",
+    "signedDisplacementPercentiles",
+    "nonzeroDisplacedVertexRatio",
+    "silhouetteOrDepthDeltaByView",
+    "topSideOrientationSliceMetrics",
+    "assetFamilyTransferResults",
+    "shaderOnlyFallbackUsed",
+    "producerIdentity",
+    "verifierIdentity"
+  ],
+  "negativeControls": [
+    {
+      "name": "heavy rust changes only shader",
+      "expected": "REJECT_SHADER_ONLY_CORROSION"
+    },
+    {
+      "name": "green spot has no outward displacement",
+      "expected": "REJECT_GREEN_SPOT_WITHOUT_PROTRUSION"
+    },
+    {
+      "name": "top face differs from side without a bound orientation cause",
+      "expected": "REJECT_UNEXPLAINED_FACE_ORIENTATION_DRIFT"
+    },
+    {
+      "name": "only steel plate is tested",
+      "expected": "REJECT_UNPROVEN_ASSET_FAMILY_TRANSFER"
+    },
+    {
+      "name": "shader and geometry use different corrosion fields",
+      "expected": "REJECT_UNBOUND_MATERIAL_GEOMETRY_FIELDS"
+    },
+    {
+      "name": "producer verifies its own output",
+      "expected": "REJECT_PRODUCER_SELF_VERIFICATION"
+    }
+  ],
+  "positiveControl": {
+    "input": "shared corrosion field + distinct reference/deformed mesh digests + nonzero outward displacement + top/side slices + plate/lock/air-conditioner transfer + independent verifier",
+    "expected": "CANDIDATE_CORROSION_GEOMETRY_CONTRACT_BOUND"
+  },
+  "syntheticReplay": {
+    "probePath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/corrosion_geometry_contract_probe_n336.mjs",
+    "resultPath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/corrosion_geometry_contract_result_n336.json",
+    "passed": 7,
+    "total": 7,
+    "productionMotherRun": false
+  },
+  "auditionThresholds": {
+    "topSideDistributionDistanceMax": 0.15,
+    "status": "CANDIDATE_NOT_CANONICAL"
+  },
+  "outOfScope": [
+    "Edge-rust runtime performance",
+    "Green-spot runtime performance",
+    "A physically universal displacement magnitude",
+    "Automatic replacement of production corrosion functions"
+  ],
+  "coordination": {
+    "issue": 91,
+    "commentId": 7073726842,
+    "route": "Material / Mechanical Mother",
+    "requestedResponse": [
+      "current problem relevance",
+      "existing coverage",
+      "principles, code or data worth learning",
+      "minimum falsifiable production trial"
+    ]
+  },
+  "adoption": {
+    "POSTED": true,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE_RUN": false,
+    "ADOPTED": false,
+    "USER_ACCEPTED": false
+  }
+}
