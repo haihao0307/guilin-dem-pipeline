@@ -1,0 +1,104 @@
+{
+  "caseId": "N341-PROCESS-BOUND-MASK-IDENTITY-GATE",
+  "passed": 10,
+  "productionAuthorityTrustRoot": "UNKNOWN",
+  "productionMotherRun": false,
+  "results": [
+    {
+      "actual": [],
+      "expected": [],
+      "name": "valid distinct process bindings",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_CROSS_PROCESS_MASK_CONSTRUCTION_ALIASING",
+        "HOLD_CROSS_PROCESS_OBSERVED_MASK_ALIASING"
+      ],
+      "expected": [
+        "HOLD_CROSS_PROCESS_MASK_CONSTRUCTION_ALIASING",
+        "HOLD_CROSS_PROCESS_OBSERVED_MASK_ALIASING"
+      ],
+      "name": "N340 decoy seed diversity with one actual generic mask",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_CROSS_PROCESS_OBSERVED_MASK_ALIASING"
+      ],
+      "expected": [
+        "HOLD_CROSS_PROCESS_OBSERVED_MASK_ALIASING"
+      ],
+      "name": "different constructors collapse to the same observed mask",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_PROCESS_MASK_COVERAGE_INCOMPLETE"
+      ],
+      "expected": [
+        "HOLD_PROCESS_MASK_COVERAGE_INCOMPLETE"
+      ],
+      "name": "missing expected process",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_UNANCHORED_PROCESS_MASK"
+      ],
+      "expected": [
+        "HOLD_UNANCHORED_PROCESS_MASK"
+      ],
+      "name": "unanchored process",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_MASK_OBSERVATION_SUBJECT_MISMATCH"
+      ],
+      "expected": [
+        "HOLD_MASK_OBSERVATION_SUBJECT_MISMATCH"
+      ],
+      "name": "observation from another artifact",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_PRODUCER_SELF_VERIFICATION"
+      ],
+      "expected": [
+        "HOLD_PRODUCER_SELF_VERIFICATION"
+      ],
+      "name": "Producer self-verifies",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_VERIFIER_POLICY_MISMATCH"
+      ],
+      "expected": [
+        "HOLD_VERIFIER_POLICY_MISMATCH"
+      ],
+      "name": "untrusted verifier policy",
+      "pass": true
+    },
+    {
+      "actual": [
+        "HOLD_AUTHORITY_ANCHOR_NOT_TRUSTED"
+      ],
+      "expected": [
+        "HOLD_AUTHORITY_ANCHOR_NOT_TRUSTED"
+      ],
+      "name": "Producer-shrunk anchor without trusted digest",
+      "pass": true
+    },
+    {
+      "actual": [],
+      "expected": [],
+      "name": "authority explicitly permits one causal cross-process alias",
+      "pass": true
+    }
+  ],
+  "status": "PASS",
+  "total": 10
+}
