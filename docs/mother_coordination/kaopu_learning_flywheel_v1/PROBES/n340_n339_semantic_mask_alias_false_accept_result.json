@@ -1,0 +1,39 @@
+{
+  "caseId": "N340-N339-SEMANTIC-MASK-ALIAS-FALSE-ACCEPT",
+  "auditedCandidate": {
+    "branch": "automation/n339-layer-channel-ownership-20261123",
+    "head": "ae2d8494c5bc4f525c1b48ae82b8c6395b00507a",
+    "probeBlob": "a6e1f9727c93a899418979bef17cdc0d9863ee22"
+  },
+  "teacherSubject": {
+    "repository": "TheJanusStream/symbios-texture",
+    "commit": "0a873d279c5535723d4dad9160816f0682fe6524",
+    "sourceSha256": "98a11f08040934122c9894bc35e1d9ddffaf141a3da6cc65b56de5a99baa9291"
+  },
+  "adversarialMutation": {
+    "description": "edge wear, corrosion, crevice dirt and streaks all derive their working mask from the same seed, scale, octave count and generator while unrelated seed literals remain elsewhere in executable tests/helpers",
+    "sharedExpression": "noise_grid(w, h, cfg.seed.wrapping_add(0xABCD), 4.0, 2)",
+    "sharedMaskExpressionCount": 4,
+    "harnessSha256": "3c21d2f2a369e767d31489827950e3af463ecca2034cec171993f187c0fab67f"
+  },
+  "expected": "HOLD_CROSS_PROCESS_MASK_ALIASING",
+  "actual": "PASS_STATIC_SOURCE_AUDITION",
+  "falseAccept": true,
+  "n339SyntacticEvidenceStillSatisfied": {
+    "layerOrder": true,
+    "declaredChannelWrites": true,
+    "zeroStateFieldsPresent": true,
+    "requiredTestNamesPresent": true,
+    "distinctSeedLiteralCountAtLeastFive": true,
+    "observedSeedLiterals": [
+      "0x0BAD",
+      "0x0D19",
+      "0x57EA",
+      "0x7005",
+      "0xABCD"
+    ]
+  },
+  "rootCause": "N339 counts distinct seed literals across the whole source but does not bind each process to its actual mask-construction digest and does not compare observed single-layer masks.",
+  "decision": "HOLD_GATE_FAIL_N339_SEED_LITERAL_DIVERSITY_IS_NOT_PROCESS_MASK_IDENTITY",
+  "productionMotherRun": false
+}
