@@ -1,0 +1,108 @@
+{
+  "caseId": "MATERIAL-WEATHERING-LAYER-ORDER-AND-CHANNEL-OWNERSHIP-001",
+  "status": "CANDIDATE_STATIC_AUDITION_PASSED_NOT_PRODUCTION_VALIDATED",
+  "scope": "Material Mother layered weathering; Mechanical Mother only when consuming the same material state",
+  "boundedQuestion": "Can each weathering process prove its order, mask identity and legal channel writes without one generic noise field silently driving unrelated processes?",
+  "relationshipToExistingRegression": {
+    "caseId": "CORROSION-GEOMETRY-DISPLACEMENT-AND-SURFACE-ORIENTATION-001",
+    "nonDuplicateDelta": "N336 proves real corrosion geometry delta and material/geometry field binding. This case proves process-layer order, per-process channel ownership, cross-process mask separation and zero-strength identity."
+  },
+  "teacher": {
+    "repository": "TheJanusStream/symbios-texture",
+    "commit": "0a873d279c5535723d4dad9160816f0682fe6524",
+    "weatheringBlob": "4e1565e887e1133286476f425a48c16fd063a867",
+    "license": "MIT",
+    "status": "TEACHER_CANDIDATE",
+    "lifecycle": "AUDITION"
+  },
+  "failureMechanisms": [
+    "ONE_GENERIC_NOISE_DRIVES_UNRELATED_WEATHERING_PROCESSES",
+    "UNDECLARED_LAYER_CHANNEL_WRITE",
+    "WEATHERING_LAYER_ORDER_DRIFT",
+    "ZERO_STRENGTH_CHANGES_EXISTING_MATERIAL",
+    "ALL_LAYERS_TEST_MASKS_SINGLE_LAYER_MISWIRING",
+    "CAUSALLY_LINKED_CHANNELS_USE_UNBOUND_PROCESS_MASKS",
+    "CORROSION_COLOR_WITHOUT_REQUIRED_N336_GEOMETRY_PROOF"
+  ],
+  "taskAnchorRequired": [
+    "layerGraphDigest",
+    "orderedProcessIds",
+    "processMaskIds",
+    "processSeedDomains",
+    "channelOwnershipMatrix",
+    "zeroStateBaselineDigest",
+    "corrosionFieldDigest",
+    "n336Applicability"
+  ],
+  "deliveryReceiptRequired": [
+    "producedArtifactDigest",
+    "layerGraphDigest",
+    "singleLayerRunDigests",
+    "channelDeltaMatrix",
+    "unexpectedChannelWrites",
+    "crossProcessMaskAliases",
+    "zeroStateOutputDigest",
+    "zeroStateIdentityPass",
+    "layerOrderObserved",
+    "n336GateResultWhenApplicable",
+    "producerIdentity",
+    "verifierIdentity"
+  ],
+  "negativeControls": [
+    {
+      "name": "one generic noise mask drives wear, corrosion, dirt and runoff",
+      "expected": "HOLD_CROSS_PROCESS_MASK_ALIASING"
+    },
+    {
+      "name": "runoff streak layer changes height without declared ownership",
+      "expected": "HOLD_UNDECLARED_LAYER_CHANNEL_WRITE"
+    },
+    {
+      "name": "all layer amounts are zero but output digest changes",
+      "expected": "HOLD_ZERO_STATE_IDENTITY_DRIFT"
+    },
+    {
+      "name": "only an all-layers-on result is tested",
+      "expected": "HOLD_SINGLE_LAYER_COVERAGE_MISSING"
+    },
+    {
+      "name": "corrosion shares its own causal mask across color, roughness, metallic loss and relief",
+      "expected": "PASS_CAUSAL_PROCESS_MASK_SHARING"
+    },
+    {
+      "name": "corrosion has material change but no N336 geometry proof",
+      "expected": "HOLD_N336_CORROSION_GEOMETRY_GATE"
+    }
+  ],
+  "positiveControl": {
+    "input": "ordered process graph + distinct process masks/seed domains + one-layer runs + declared channel writes only + zero-state identity + N336 pass when corrosion geometry is required",
+    "expected": "CANDIDATE_LAYER_CHANNEL_OWNERSHIP_BOUND"
+  },
+  "auditionEvidence": {
+    "probePath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/layer_channel_ownership_probe_n339.py",
+    "resultPath": "docs/mother_coordination/kaopu_learning_flywheel_v1/PROBES/layer_channel_ownership_result_n339.json",
+    "staticAuditPassed": true,
+    "upstreamActionsRunId": 42577470457,
+    "upstreamActionsConclusion": "success",
+    "localCargoAvailable": false,
+    "productionMotherRun": false
+  },
+  "coordination": {
+    "issue": 91,
+    "route": "Material Mother; Mechanical Mother only for current corrosion-consuming assets",
+    "requestedResponse": [
+      "current problem relevance",
+      "existing coverage",
+      "principles, code or data worth learning",
+      "minimum falsifiable production trial"
+    ]
+  },
+  "adoption": {
+    "POSTED": false,
+    "ACKNOWLEDGED": false,
+    "IMPLEMENTED": false,
+    "GATE-RUN": false,
+    "ADOPTED": false,
+    "USER-ACCEPTED": false
+  }
+}
