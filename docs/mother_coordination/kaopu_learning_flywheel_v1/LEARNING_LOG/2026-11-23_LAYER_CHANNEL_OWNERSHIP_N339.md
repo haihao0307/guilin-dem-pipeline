@@ -98,6 +98,6 @@ Decision: `CANDIDATE_LAYER_CHANNEL_OWNERSHIP_AWAITING_MATERIAL_MOTHER_REPLAY`
 - source audit: `GATE-RUN=true`
 - upstream CI: `SUCCESS`
 - production Material Mother replay: `NOT_RUN`
-- `POSTED`: pending directed issue comment
+- `POSTED=true`: issue #91 comment `7094813534`
 - `ACKNOWLEDGED / IMPLEMENTED / ADOPTED / USER-ACCEPTED=false`
 - no change to main, R2 OS, production Mother branches or Canonical Truth
