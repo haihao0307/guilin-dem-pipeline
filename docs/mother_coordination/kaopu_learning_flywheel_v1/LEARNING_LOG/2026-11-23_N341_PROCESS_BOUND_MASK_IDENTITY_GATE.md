@@ -74,5 +74,5 @@ Decision: `CANDIDATE_N341_PROCESS_BOUND_MASK_IDENTITY_SYNTHETIC_PASS`.
 - no production threshold is introduced;
 - no main, R2 OS, production branch, Canonical Truth or user acceptance state changes.
 
-Lifecycle before routing: `IMPLEMENTED(candidate)=true / GATE-RUN(synthetic)=true`; `POSTED / ACKNOWLEDGED / IMPLEMENTED(production) / ADOPTED / USER-ACCEPTED=false`.
+Lifecycle after routing: `POSTED=true / IMPLEMENTED(candidate)=true / GATE-RUN(synthetic)=true`; `ACKNOWLEDGED / IMPLEMENTED(production) / ADOPTED / USER-ACCEPTED=false`. Issue #91 comment: `7106053675`.
 
