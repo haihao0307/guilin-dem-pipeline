@@ -1,6 +1,6 @@
 {
   "caseId": "MATERIAL-WEATHERING-LAYER-ORDER-AND-CHANNEL-OWNERSHIP-001",
-  "status": "CANDIDATE_STATIC_AUDITION_PASSED_NOT_PRODUCTION_VALIDATED",
+  "status": "HOLD_GATE_FAIL_N339_SEED_LITERAL_DIVERSITY_IS_NOT_PROCESS_MASK_IDENTITY",
   "scope": "Material Mother layered weathering; Mechanical Mother only when consuming the same material state",
   "boundedQuestion": "Can each weathering process prove its order, mask identity and legal channel writes without one generic noise field silently driving unrelated processes?",
   "relationshipToExistingRegression": {
@@ -85,6 +85,22 @@
     "upstreamActionsRunId": 42577470457,
     "upstreamActionsConclusion": "success",
     "localCargoAvailable": false,
+    "productionMotherRun": false
+  },
+  "independentVerification": {
+    "round": "N340",
+    "result": "FALSE_ACCEPT",
+    "expected": "HOLD_CROSS_PROCESS_MASK_ALIASING",
+    "actual": "PASS_STATIC_SOURCE_AUDITION",
+    "counterexample": "four unrelated processes use the same seed/scale/octaves/generator while distinct seed literals remain elsewhere in source",
+    "rootCause": "whole-file seed-literal diversity is not process-bound mask identity",
+    "requiredCorrection": [
+      "authority-owned processId to maskConstructionDigest mapping",
+      "independently derived mapping from the exact tested source/artifact",
+      "single-layer observedMaskDigest per process",
+      "explicit allowedProcessMaskAlias for causal sharing",
+      "N340 adversarial regression"
+    ],
     "productionMotherRun": false
   },
   "coordination": {
